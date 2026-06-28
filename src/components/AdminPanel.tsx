@@ -4,7 +4,7 @@ import {
   LayoutDashboard, CalendarRange, Lock, Bell, FileEdit, Image as ImageIcon, 
   Settings as SettingsIcon, LogOut, Search, ChevronLeft, ChevronRight, Eye, 
   Check, X, Trash2, ShieldAlert, Download, Printer, Plus, Edit2, Info, EyeOff, Save, RefreshCw,
-  MessageSquare, Upload, Layers, MapPin, Star
+  MessageSquare, Upload, Layers, MapPin, Star, Menu
 } from 'lucide-react';
 import { Booking, CMSHomepage, GalleryItem, AdminNotification, CMSTourPackage, CMSHighlightItem } from '../types';
 import { createClient } from '@supabase/supabase-js';
@@ -149,6 +149,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
   // Toast / Status state
   const [toastMessage, setToastMessage] = useState("");
   const [toastType, setToastType] = useState<'success' | 'danger' | 'info'>('success');
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const MONTHS_ID = [
     "Januari", "Februari", "Maret", "April", "Mei", "Juni",
@@ -1337,44 +1338,70 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
         )}
       </AnimatePresence>
 
-      {/* 1. SIDEBAR PANEL */}
-      <aside className="w-full md:w-64 bg-green-deep text-cream flex-shrink-0 flex flex-col justify-between p-6 shadow-2xl relative z-30">
-        <div className="space-y-8">
-          {/* Logo / Header */}
-          <div className="border-b border-green-soft/20 pb-4">
-            <h2 className="font-serif text-2xl font-bold tracking-tight text-cream">Peno Admin</h2>
-            <p className="font-mono text-[10px] text-sand/65 uppercase tracking-widest">Homestay Control Center</p>
-            
-            <div className="mt-3 flex items-center space-x-2 bg-black/15 px-2.5 py-1.5 rounded-lg border border-white/5">
-              <span className="relative flex h-2 w-2">
-                {supabaseStatus === 'connected' && (
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                )}
-                <span className={`relative inline-flex rounded-full h-2 w-2 ${
-                  supabaseStatus === 'connected' 
-                    ? 'bg-emerald-500' 
-                    : supabaseStatus === 'checking' 
-                      ? 'bg-amber-500 animate-pulse' 
-                      : 'bg-rose-500'
-                }`}></span>
-              </span>
-              <span className="font-mono text-[9px] font-bold uppercase tracking-wider text-sand/90">
-                Supabase: {
-                  supabaseStatus === 'connected' 
-                    ? 'Aktif / Connected' 
-                    : supabaseStatus === 'checking' 
-                      ? 'Checking...' 
-                      : 'Inactive / Error'
-                }
-              </span>
+      {/* 1. SIDEBAR BACKDROP OVERLAY */}
+      <AnimatePresence>
+        {sidebarOpen && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/40 backdrop-blur-xs z-30 transition-opacity"
+            onClick={() => setSidebarOpen(false)}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* 2. SIDEBAR PANEL (DRAWER 1/3 SCREEN) */}
+      <aside className={`fixed inset-y-0 left-0 bg-green-deep text-cream flex-shrink-0 flex flex-col justify-between p-6 shadow-2xl z-40 transition-transform duration-300 ease-in-out w-72 sm:w-80 md:w-1/3 max-w-[420px] ${
+        sidebarOpen ? 'translate-x-0' : '-translate-x-full'
+      }`}>
+        <div className="space-y-6 overflow-y-auto max-h-[85vh] pr-1">
+          {/* Logo / Header with Close Button */}
+          <div className="border-b border-green-soft/20 pb-4 flex items-center justify-between">
+            <div>
+              <h2 className="font-serif text-2xl font-bold tracking-tight text-cream">Peno Admin</h2>
+              <p className="font-mono text-[10px] text-sand/65 uppercase tracking-widest">Homestay Control Center</p>
             </div>
+            <button
+              onClick={() => setSidebarOpen(false)}
+              className="p-1.5 text-cream/70 hover:text-cream hover:bg-white/10 rounded-lg transition-colors cursor-pointer"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+
+          <div className="bg-black/15 px-2.5 py-1.5 rounded-lg border border-white/5 flex items-center space-x-2">
+            <span className="relative flex h-2 w-2">
+              {supabaseStatus === 'connected' && (
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+              )}
+              <span className={`relative inline-flex rounded-full h-2 w-2 ${
+                supabaseStatus === 'connected' 
+                  ? 'bg-emerald-500' 
+                  : supabaseStatus === 'checking' 
+                    ? 'bg-amber-500 animate-pulse' 
+                    : 'bg-rose-500'
+              }`}></span>
+            </span>
+            <span className="font-mono text-[9px] font-bold uppercase tracking-wider text-sand/90">
+              Supabase: {
+                supabaseStatus === 'connected' 
+                  ? 'Aktif / Connected' 
+                  : supabaseStatus === 'checking' 
+                    ? 'Checking...' 
+                    : 'Inactive / Error'
+              }
+            </span>
           </div>
 
           {/* Nav links */}
           <nav className="flex flex-col space-y-1">
             <button
-              onClick={() => setActiveTab('dashboard')}
-              className={`flex items-center space-x-3 px-4 py-3 rounded-xl font-sans text-sm font-medium transition-all text-left ${
+              onClick={() => {
+                setActiveTab('dashboard');
+                setSidebarOpen(false);
+              }}
+              className={`flex items-center space-x-3 px-4 py-3 rounded-xl font-sans text-sm font-medium transition-all text-left w-full cursor-pointer ${
                 activeTab === 'dashboard' ? 'bg-green-soft text-cream border-l-4 border-sand shadow-md' : 'text-cream/80 hover:bg-cream/10 hover:text-cream'
               }`}
             >
@@ -1383,8 +1410,11 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
             </button>
 
             <button
-              onClick={() => setActiveTab('bookings')}
-              className={`flex items-center space-x-3 px-4 py-3 rounded-xl font-sans text-sm font-medium transition-all text-left ${
+              onClick={() => {
+                setActiveTab('bookings');
+                setSidebarOpen(false);
+              }}
+              className={`flex items-center space-x-3 px-4 py-3 rounded-xl font-sans text-sm font-medium transition-all text-left w-full cursor-pointer ${
                 activeTab === 'bookings' ? 'bg-green-soft text-cream border-l-4 border-sand shadow-md' : 'text-cream/80 hover:bg-cream/10 hover:text-cream'
               }`}
             >
@@ -1393,8 +1423,11 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
             </button>
 
             <button
-              onClick={() => setActiveTab('calendar')}
-              className={`flex items-center space-x-3 px-4 py-3 rounded-xl font-sans text-sm font-medium transition-all text-left ${
+              onClick={() => {
+                setActiveTab('calendar');
+                setSidebarOpen(false);
+              }}
+              className={`flex items-center space-x-3 px-4 py-3 rounded-xl font-sans text-sm font-medium transition-all text-left w-full cursor-pointer ${
                 activeTab === 'calendar' ? 'bg-green-soft text-cream border-l-4 border-sand shadow-md' : 'text-cream/80 hover:bg-cream/10 hover:text-cream'
               }`}
             >
@@ -1403,8 +1436,11 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
             </button>
 
             <button
-              onClick={() => setActiveTab('tours')}
-              className={`flex items-center space-x-3 px-4 py-3 rounded-xl font-sans text-sm font-medium transition-all text-left ${
+              onClick={() => {
+                setActiveTab('tours');
+                setSidebarOpen(false);
+              }}
+              className={`flex items-center space-x-3 px-4 py-3 rounded-xl font-sans text-sm font-medium transition-all text-left w-full cursor-pointer ${
                 activeTab === 'tours' ? 'bg-green-soft text-cream border-l-4 border-sand shadow-md' : 'text-cream/80 hover:bg-cream/10 hover:text-cream'
               }`}
             >
@@ -1413,8 +1449,11 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
             </button>
 
             <button
-              onClick={() => setActiveTab('notifications')}
-              className={`flex items-center space-x-3 px-4 py-3 rounded-xl font-sans text-sm font-medium transition-all text-left ${
+              onClick={() => {
+                setActiveTab('notifications');
+                setSidebarOpen(false);
+              }}
+              className={`flex items-center space-x-3 px-4 py-3 rounded-xl font-sans text-sm font-medium transition-all text-left w-full cursor-pointer ${
                 activeTab === 'notifications' ? 'bg-green-soft text-cream border-l-4 border-sand shadow-md' : 'text-cream/80 hover:bg-cream/10 hover:text-cream'
               }`}
             >
@@ -1428,8 +1467,11 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
             </button>
 
             <button
-              onClick={() => setActiveTab('header')}
-              className={`flex items-center space-x-3 px-4 py-3 rounded-xl font-sans text-sm font-medium transition-all text-left ${
+              onClick={() => {
+                setActiveTab('header');
+                setSidebarOpen(false);
+              }}
+              className={`flex items-center space-x-3 px-4 py-3 rounded-xl font-sans text-sm font-medium transition-all text-left w-full cursor-pointer ${
                 activeTab === 'header' ? 'bg-green-soft text-cream border-l-4 border-sand shadow-md' : 'text-cream/80 hover:bg-cream/10 hover:text-cream'
               }`}
             >
@@ -1438,8 +1480,11 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
             </button>
 
             <button
-              onClick={() => setActiveTab('gallery')}
-              className={`flex items-center space-x-3 px-4 py-3 rounded-xl font-sans text-sm font-medium transition-all text-left ${
+              onClick={() => {
+                setActiveTab('gallery');
+                setSidebarOpen(false);
+              }}
+              className={`flex items-center space-x-3 px-4 py-3 rounded-xl font-sans text-sm font-medium transition-all text-left w-full cursor-pointer ${
                 activeTab === 'gallery' ? 'bg-green-soft text-cream border-l-4 border-sand shadow-md' : 'text-cream/80 hover:bg-cream/10 hover:text-cream'
               }`}
             >
@@ -1448,8 +1493,11 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
             </button>
 
             <button
-              onClick={() => setActiveTab('cms')}
-              className={`flex items-center space-x-3 px-4 py-3 rounded-xl font-sans text-sm font-medium transition-all text-left ${
+              onClick={() => {
+                setActiveTab('cms');
+                setSidebarOpen(false);
+              }}
+              className={`flex items-center space-x-3 px-4 py-3 rounded-xl font-sans text-sm font-medium transition-all text-left w-full cursor-pointer ${
                 activeTab === 'cms' ? 'bg-green-soft text-cream border-l-4 border-sand shadow-md' : 'text-cream/80 hover:bg-cream/10 hover:text-cream'
               }`}
             >
@@ -1458,8 +1506,11 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
             </button>
 
             <button
-              onClick={() => setActiveTab('settings')}
-              className={`flex items-center space-x-3 px-4 py-3 rounded-xl font-sans text-sm font-medium transition-all text-left ${
+              onClick={() => {
+                setActiveTab('settings');
+                setSidebarOpen(false);
+              }}
+              className={`flex items-center space-x-3 px-4 py-3 rounded-xl font-sans text-sm font-medium transition-all text-left w-full cursor-pointer ${
                 activeTab === 'settings' ? 'bg-green-soft text-cream border-l-4 border-sand shadow-md' : 'text-cream/80 hover:bg-cream/10 hover:text-cream'
               }`}
             >
@@ -1471,19 +1522,29 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
 
         {/* Logout action */}
         <button
-          onClick={handleLogout}
-          className="flex items-center space-x-3 px-4 py-3 rounded-xl font-sans text-sm font-medium text-rose-300 hover:bg-rose-500/10 hover:text-rose-400 mt-8 transition-colors text-left"
+          onClick={() => {
+            setSidebarOpen(false);
+            handleLogout();
+          }}
+          className="flex items-center space-x-3 px-4 py-3 rounded-xl font-sans text-sm font-medium text-rose-300 hover:bg-rose-500/10 hover:text-rose-400 mt-8 transition-colors text-left w-full cursor-pointer"
         >
           <LogOut className="w-4 h-4" />
           <span>Keluar Portal</span>
         </button>
       </aside>
 
-      {/* 2. TOPBAR + CONTENT PANEL */}
+      {/* 3. TOPBAR + CONTENT PANEL */}
       <div className="flex-grow flex flex-col min-w-0">
         {/* Topbar sticky header */}
         <header className="bg-white border-b border-gray-100 sticky top-0 z-20 px-8 py-4 flex justify-between items-center shadow-sm">
           <div className="flex items-center space-x-4">
+            <button
+              onClick={() => setSidebarOpen(true)}
+              className="p-2 -ml-2 text-green-deep hover:bg-gray-100 rounded-xl transition-colors cursor-pointer flex items-center justify-center border border-gray-100 hover:border-green-soft/30 shadow-xs"
+              title="Buka Navigasi"
+            >
+              <Menu className="w-6 h-6" />
+            </button>
             <h1 className="text-xl font-serif font-bold text-green-deep capitalize">
               {activeTab === 'cms' ? 'CMS Pengelola Konten' : 
                activeTab === 'block' ? 'Manajemen Not Available (Tutup Tanggal)' : 

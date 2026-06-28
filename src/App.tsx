@@ -807,31 +807,6 @@ export default function App() {
 
           <div className="max-w-6xl mx-auto px-6 pt-8 flex flex-col sm:flex-row justify-between items-center text-xs text-cream/50 font-sans font-light relative z-10 gap-4">
             <div>&copy; {new Date().getFullYear()} {settings.homestayName}. All rights reserved.</div>
-            <div className="flex space-x-6 items-center">
-              <a 
-                href="/supabase" 
-                onClick={(e) => { 
-                  e.preventDefault(); 
-                  navigateToPage('supabase');
-                }} 
-                className="text-emerald-400 font-bold hover:text-emerald-300 transition-colors flex items-center space-x-1"
-              >
-                <span>⚡ Supabase Hub</span>
-              </a>
-
-              <span className="text-white/10 select-none">|</span>
-
-              <a 
-                href="/admin" 
-                onClick={(e) => { 
-                  e.preventDefault(); 
-                  navigateToPage('admin');
-                }} 
-                className="hover:text-sand transition-colors"
-              >
-                Portal Admin
-              </a>
-            </div>
           </div>
         </footer>
       )}
