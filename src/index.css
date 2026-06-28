@@ -1,0 +1,99 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=DM+Sans:wght@300;400;500;700&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "DM Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-serif: "Playfair Display", ui-serif, Georgia, serif;
+  
+  --color-green-deep: #1e3a2f;
+  --color-green-medium: #2d5a45;
+  --color-green-soft: #4a8a68;
+  --color-cream: #f7f3ec;
+  --color-sand: #e8dfc8;
+  --color-coffee: #6b4c35;
+  --color-booking-red: #c0392b;
+  
+  --color-avail: #a8d5b0;
+  --color-avail-text: #1e3a2f;
+  --color-booked: #f1a7a0;
+  --color-booked-text: #7a1a14;
+  --color-selected: #1e3a2f;
+  --color-in-range: rgba(74, 138, 104, 0.2);
+}
+
+@layer base {
+  body {
+    background-color: var(--color-cream);
+    color: var(--color-green-deep);
+    font-family: var(--font-sans);
+    overflow-x: hidden;
+    scroll-behavior: smooth;
+  }
+}
+
+/* Custom continuous pulse/glow animation for WhatsApp button */
+@keyframes soft-pulse {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(74, 138, 104, 0.4);
+  }
+  50% {
+    transform: scale(1.03);
+    box-shadow: 0 0 15px 5px rgba(74, 138, 104, 0.2);
+  }
+}
+
+.animate-soft-pulse {
+  animation: soft-pulse 3s infinite ease-in-out;
+}
+
+
+
+/* Custom coffee slow rotation & orbit animations */
+@keyframes coffee-spin-slow {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes coffee-pulse-slow {
+  0%, 100% { transform: scale(0.96) rotate(0deg); opacity: 0.85; }
+  50% { transform: scale(1.05) rotate(180deg); opacity: 0.98; }
+}
+
+.animate-coffee-spin-slow {
+  animation: coffee-spin-slow 35s linear infinite;
+}
+
+.animate-coffee-pulse-slow {
+  animation: coffee-pulse-slow 15s ease-in-out infinite;
+}
+
+@keyframes float-gentle {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  50% { transform: translateY(-3px) rotate(12deg); }
+}
+
+.animate-float-gentle {
+  animation: float-gentle 5s ease-in-out infinite;
+}
+
+/* Custom Minimalist Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-cream);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-green-soft);
+  border-radius: 8px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-green-medium);
+}
+
+
