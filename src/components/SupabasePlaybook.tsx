@@ -415,90 +415,94 @@ export function SupabasePlaybook() {
   // SQL Script Snippets
   const sqlSnippets = {
     fullSetup: `-- ==========================================
--- 🛠️ DATABASE SCHEMA & AUTH PROFILE SYNC SETUP
+-- 🛠️ DATABASE SCHEMA & SETUP FOR PENO HOMESTAY
 -- Paste this script directly in your Supabase SQL Editor
 -- ==========================================
 
--- 1. Create [todos] table with relation to auth.users
-create table todos (
-  id uuid default gen_random_uuid() primary key,
+-- 1. Create [peno_bookings] table
+create table if not exists peno_bookings (
+  id text primary key,
   created_at timestamp with time zone default timezone('utc'::text, now()) not null,
-  title text not null,
-  is_complete boolean default false not null,
-  user_id uuid default auth.uid() references auth.users(id) on delete cascade not null
+  status text not null default 'pending',
+  check_in timestamp with time zone not null,
+  check_out timestamp with time zone not null,
+  nights integer not null,
+  total_eur numeric not null,
+  guest_name text not null,
+  guest_email text not null,
+  guest_wa text not null,
+  guest_count integer not null default 1,
+  notes text
 );
 
--- 2. Create public [profiles] table that mirrors auth.users
-create table profiles (
-  id uuid references auth.users(id) on delete cascade primary key,
-  updated_at timestamp with time zone default timezone('utc'::text, now()),
-  username text unique,
-  full_name text,
-  avatar_url text
+-- 2. Create [peno_blocked] table
+create table if not exists peno_blocked (
+  date_str text primary key,
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
 
--- 3. Enable Row Level Security (RLS) on both tables
-alter table todos enable row level security;
-alter table profiles enable row level security;
+-- 3. Create [peno_cms] table
+create table if not exists peno_cms (
+  id text primary key,
+  data jsonb not null default '{}'::jsonb,
+  updated_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
+
+-- 4. Enable Row Level Security (RLS) on all tables
+alter table peno_bookings enable row level security;
+alter table peno_blocked enable row level security;
+alter table peno_cms enable row level security;
 
 -- ==========================================
 -- 🔒 ROW LEVEL SECURITY (RLS) POLICIES
 -- ==========================================
 
--- Todos Policies:
-create policy "Users can view their own todos"
-  on todos for select
-  using (auth.uid() = user_id);
-
-create policy "Users can insert their own todos"
-  on todos for insert
-  with check (auth.uid() = user_id);
-
-create policy "Users can update their own todos"
-  on todos for update
-  using (auth.uid() = user_id);
-
-create policy "Users can delete their own todos"
-  on todos for delete
-  using (auth.uid() = user_id);
-
--- Profiles Policies:
-create policy "Public profiles are viewable by everyone"
-  on profiles for select
+-- 5. peno_bookings Policies:
+create policy "Allow anyone to view bookings"
+  on peno_bookings for select
   using (true);
 
-create policy "Users can update their own profile"
-  on profiles for update
-  using (auth.uid() = id);
+create policy "Allow anyone to insert bookings"
+  on peno_bookings for insert
+  with check (true);
 
--- ==========================================
--- ⚡ AUTO-PROFILE SYNCHRONIZER TRIGGER
--- Creates a record in 'profiles' on user Signup
--- ==========================================
+create policy "Allow anyone to update bookings"
+  on peno_bookings for update
+  using (true);
 
-create or replace function public.handle_new_user()
-returns trigger as $$
-begin
-  insert into public.profiles (id, full_name, avatar_url, username)
-  values (
-    new.id, 
-    coalesce(new.raw_user_meta_data->>'full_name', 'Unnamed User'), 
-    coalesce(new.raw_user_meta_data->>'avatar_url', ''),
-    split_part(new.email, '@', 1) || '_' || substr(new.id::text, 1, 4)
-  );
-  return new;
-end;
-$$ language plpgsql security definer;
+create policy "Allow anyone to delete bookings"
+  on peno_bookings for delete
+  using (true);
 
--- Trigger execution
-create or replace trigger on_auth_user_created
-  after insert on auth.users
-  for each row execute procedure public.handle_new_user();`,
+-- 6. peno_blocked Policies:
+create policy "Allow anyone to view blocked dates"
+  on peno_blocked for select
+  using (true);
 
+create policy "Allow anyone to insert blocked dates"
+  on peno_blocked for insert
+  with check (true);
+
+create policy "Allow anyone to delete blocked dates"
+  on peno_blocked for delete
+  using (true);
+
+-- 7. peno_cms Policies:
+create policy "Allow anyone to view CMS contents"
+  on peno_cms for select
+  using (true);
+
+create policy "Allow anyone to insert/update CMS contents"
+  on peno_cms for insert
+  with check (true);
+
+create policy "Allow anyone to update CMS contents"
+  on peno_cms for update
+  using (true);`,
     storageSetup: `-- ==========================================
 -- 📦 SUPABASE STORAGE PUBLIC BUCKET SETUP
 -- Run this to configure the 'avatars' storage bucket
--- and enforce RLS rules for user folders.
+-- and allow public uploads/management.
 -- ==========================================
 
 -- 1. Create public 'avatars' bucket if it doesn't exist
@@ -508,37 +512,25 @@ on conflict (id) do nothing;
 
 -- 2. Storage Policies for Avatars bucket
 
--- Read Access: Anyone can read/download avatar files
-create policy "Avatar files are publicly accessible"
+-- Read Access: Anyone can read/download avatar/gallery files
+create policy "Public files are publicly accessible"
   on storage.objects for select
   using (bucket_id = 'avatars');
 
--- Insert Access: Logged-in users can upload files to their personal directory
-create policy "Authenticated users can upload avatars"
+-- Insert Access: Anyone can upload files to 'avatars'
+create policy "Anyone can upload to avatars"
   on storage.objects for insert
-  with check (
-    bucket_id = 'avatars' 
-    and auth.role() = 'authenticated'
-    and (storage.foldername(name))[1] = auth.uid()::text
-  );
+  with check (bucket_id = 'avatars');
 
--- Update Access: Logged-in users can update their own files
-create policy "Authenticated users can update their own avatars"
+-- Update Access: Anyone can update files in 'avatars'
+create policy "Anyone can update avatars"
   on storage.objects for update
-  using (
-    bucket_id = 'avatars'
-    and auth.role() = 'authenticated'
-    and (storage.foldername(name))[1] = auth.uid()::text
-  );
+  using (bucket_id = 'avatars');
 
--- Delete Access: Logged-in users can delete their own files
-create policy "Authenticated users can delete their own avatars"
+-- Delete Access: Anyone can delete files in 'avatars'
+create policy "Anyone can delete avatars"
   on storage.objects for delete
-  using (
-    bucket_id = 'avatars'
-    and auth.role() = 'authenticated'
-    and (storage.foldername(name))[1] = auth.uid()::text
-  );`
+  using (bucket_id = 'avatars');`
   };
 
   // Next.js 15 Files Catalog

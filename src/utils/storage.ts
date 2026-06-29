@@ -214,14 +214,21 @@ export function saveBookings(data: Booking[]) {
   
   // Async sync bookings to individual records in Supabase
   const localIds = data.map(b => b.id);
+  const isAdmin = typeof window !== 'undefined' && sessionStorage.getItem("peno_admin_auth") === "true";
   
   const performSync = async () => {
     try {
-      if (localIds.length > 0) {
-        // Delete records not in local list
-        await supabase.from('peno_bookings').delete().not('id', 'in', `(${localIds.join(',')})`);
-      } else {
-        await supabase.from('peno_bookings').delete().neq('id', 'xxx_none_xxx');
+      // Deletions are ONLY allowed for logged-in Admin in Admin Panel.
+      // This protects bookings made by other users from being cleared by visitors.
+      if (isAdmin) {
+        if (localIds.length > 0) {
+          // Delete records not in local list
+          const { error: delError } = await supabase.from('peno_bookings').delete().not('id', 'in', `(${localIds.map(id => `'${id}'`).join(',')})`);
+          if (delError) console.warn("Supabase booking sync delete warning:", delError.message);
+        } else {
+          const { error: delError } = await supabase.from('peno_bookings').delete().neq('id', 'xxx_none_xxx');
+          if (delError) console.warn("Supabase booking sync delete-all warning:", delError.message);
+        }
       }
       
       if (data.length > 0) {
@@ -239,7 +246,11 @@ export function saveBookings(data: Booking[]) {
           guest_count: Number(b.guest_count),
           notes: b.notes || null
         }));
-        await supabase.from('peno_bookings').upsert(formatted);
+        
+        const { error: upsertError } = await supabase.from('peno_bookings').upsert(formatted);
+        if (upsertError) {
+          console.error("Supabase booking upsert error:", upsertError.message);
+        }
       }
     } catch (e) {
       console.error("Failed to sync bookings list to Supabase:", e);
