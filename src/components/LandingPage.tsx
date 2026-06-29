@@ -48,10 +48,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({
     "https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?auto=format&fit=crop&q=80&w=1200"  // Lush green garden of a tropical villa
   ], []);
 
-  // Filter out any valid user-uploaded URLs from the gallery
+  // Filter and sort the gallery items to display
   const sortedGallery = React.useMemo(() => {
     return [...galleryData]
-      .filter(item => item.showInGallery !== false && item.url && item.url.trim().length > 0)
+      .filter(item => item.showInGallery !== false)
       .sort((a, b) => a.order - b.order);
   }, [galleryData]);
 

@@ -163,29 +163,8 @@ export default function App() {
     // Refresh state after initialization
     setHomepageData(getHomepage());
     
-    // Migration: Move uploaded header photos from gallery to header only
     const rawGallery = getGallery();
-    let migrated = false;
-    const updatedGallery = rawGallery.map(item => {
-      // If it is an uploaded photo (has a url) AND is shown in the header slideshow (showInSlideshow is true or undefined)
-      // AND is currently also enabled for the gallery, we move it out of the gallery so it's ONLY in the header.
-      if (item.url && item.url.trim().length > 0 && item.showInSlideshow !== false && item.showInGallery !== false) {
-        migrated = true;
-        return {
-          ...item,
-          showInGallery: false,
-          showInSlideshow: true
-        };
-      }
-      return item;
-    });
-
-    if (migrated) {
-      saveGallery(updatedGallery);
-      setGalleryData(updatedGallery);
-    } else {
-      setGalleryData(rawGallery);
-    }
+    setGalleryData(rawGallery);
     setBookings(getBookings());
     setBlockedDates(getBlockedDates());
     setNotifications(getNotifications());

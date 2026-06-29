@@ -985,17 +985,29 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
     try {
       const fileExt = selectedImageFile.name.split('.').pop();
       const fileName = `gallery/${Date.now()}-${Math.round(Math.random() * 1e9)}.${fileExt}`;
-      const bucketName = 'avatars'; // Menggunakan bucket avatars yang dijamin ada
       
-      const { data, error } = await supabase.storage
+      // Try to upload to 'gallery' bucket first, fall back to 'avatars' if there is any issue
+      let bucketName = 'gallery';
+      let uploadResult = await supabase.storage
         .from(bucketName)
         .upload(fileName, selectedImageFile, {
           cacheControl: '3600',
           upsert: true
         });
 
-      if (error) {
-        throw new Error(error.message);
+      if (uploadResult.error) {
+        console.warn("Failed to upload to 'gallery' bucket, trying 'avatars' bucket...", uploadResult.error.message);
+        bucketName = 'avatars';
+        uploadResult = await supabase.storage
+          .from(bucketName)
+          .upload(fileName, selectedImageFile, {
+            cacheControl: '3600',
+            upsert: true
+          });
+      }
+
+      if (uploadResult.error) {
+        throw new Error(uploadResult.error.message);
       }
 
       // Mengambil URL Publik
