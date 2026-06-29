@@ -88,14 +88,7 @@ export const DEFAULT_HOMEPAGE: CMSHomepage = {
   }
 };
 
-export const DEFAULT_GALLERY: GalleryItem[] = [
-  { id: 1, label: "Perkebunan Kopi", category: "Alam", color: "#4a8a68", url: "", order: 1 },
-  { id: 2, label: "Kamar & Teras", category: "Kamar", color: "#6b4c35", url: "", order: 2 },
-  { id: 3, label: "Sungai & Alam", category: "Alam", color: "#2d5a45", url: "", order: 3 },
-  { id: 4, label: "Sarapan & Kopi", category: "Kuliner", color: "#8b6914", url: "", order: 4 },
-  { id: 5, label: "Tur Bersama Peno", category: "Aktivitas", color: "#1e3a2f", url: "", order: 5 },
-  { id: 6, label: "Kawah Ijen", category: "Sekitar", color: "#1a4a6b", url: "", order: 6 }
-];
+export const DEFAULT_GALLERY: GalleryItem[] = [];
 
 export const DEFAULT_SETTINGS = {
   homestayName: "Peno Homestay",
@@ -192,14 +185,17 @@ export function saveHomepage(data: CMSHomepage) {
 
 export function getGallery(): GalleryItem[] {
   const data = safeStorage.getItem("peno_gallery");
-  return data ? JSON.parse(data) : DEFAULT_GALLERY;
+  const list: GalleryItem[] = data ? JSON.parse(data) : DEFAULT_GALLERY;
+  // Filter out any dummy items that don't have a valid url
+  return list.filter(item => item.url && item.url.trim().length > 0);
 }
 
 export function saveGallery(data: GalleryItem[]) {
-  safeStorage.setItem("peno_gallery", JSON.stringify(data));
-  broadcastChange("cms_updated", data);
+  const cleaned = data.filter(item => item.url && item.url.trim().length > 0);
+  safeStorage.setItem("peno_gallery", JSON.stringify(cleaned));
+  broadcastChange("cms_updated", cleaned);
   // Async sync to Supabase
-  supabase.from('peno_cms').upsert({ id: 'gallery', data, updated_at: new Date().toISOString() }).then(({ error }) => {
+  supabase.from('peno_cms').upsert({ id: 'gallery', data: cleaned, updated_at: new Date().toISOString() }).then(({ error }) => {
     if (error) console.error("Error syncing gallery to Supabase:", error);
   });
 }
@@ -409,7 +405,15 @@ export async function fetchAllFromSupabase() {
         if (row.id === 'homepage') {
           safeStorage.setItem("peno_homepage", JSON.stringify(row.data));
         } else if (row.id === 'gallery') {
-          safeStorage.setItem("peno_gallery", JSON.stringify(row.data));
+          const fetchedGallery: GalleryItem[] = row.data || [];
+          const cleanedGallery = fetchedGallery.filter((item: GalleryItem) => item.url && item.url.trim().length > 0);
+          safeStorage.setItem("peno_gallery", JSON.stringify(cleanedGallery));
+          // Proactively update Supabase if the fetched list contained dummy items to clean up database permanently!
+          if (fetchedGallery.length !== cleanedGallery.length) {
+            supabase.from('peno_cms').upsert({ id: 'gallery', data: cleanedGallery, updated_at: new Date().toISOString() }).then(({ error }) => {
+              if (error) console.error("Auto-cleaned gallery table error:", error.message);
+            });
+          }
         } else if (row.id === 'settings') {
           safeStorage.setItem("peno_settings", JSON.stringify(row.data));
         } else if (row.id === 'notifications') {
@@ -467,8 +471,10 @@ export function subscribeToSupabaseRealtime(onUpdate: (type: string, data: any) 
             safeStorage.setItem("peno_homepage", JSON.stringify(row.data));
             onUpdate('homepage', row.data);
           } else if (row.id === 'gallery') {
-            safeStorage.setItem("peno_gallery", JSON.stringify(row.data));
-            onUpdate('gallery', row.data);
+            const fetchedGallery: GalleryItem[] = row.data || [];
+            const cleanedGallery = fetchedGallery.filter((item: GalleryItem) => item.url && item.url.trim().length > 0);
+            safeStorage.setItem("peno_gallery", JSON.stringify(cleanedGallery));
+            onUpdate('gallery', cleanedGallery);
           } else if (row.id === 'settings') {
             safeStorage.setItem("peno_settings", JSON.stringify(row.data));
             onUpdate('settings', row.data);

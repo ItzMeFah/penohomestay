@@ -37,17 +37,6 @@ export const LandingPage: React.FC<LandingPageProps> = ({
   const [currentSlide, setCurrentSlide] = useState(0);
 
   // Fallback high quality stunning stock photos of Peno Homestay & Banyuwangi atmosphere
-  const defaultSlideshowImages = React.useMemo(() => [
-    "https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?auto=format&fit=crop&q=80&w=1200", // Green coffee farm leaves
-    "https://images.unsplash.com/photo-1509042239860-f550ce710b93?auto=format&fit=crop&q=80&w=1200", // Warm cup of coffee in nature
-    "https://images.unsplash.com/photo-1618773928121-c32242e63f39?auto=format&fit=crop&q=80&w=1200", // Cozy rustic room interior
-    "https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?auto=format&fit=crop&q=80&w=1200", // Refreshing clean river and forest
-    "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&q=80&w=1200", // Delicious homemade breakfast & fruits
-    "https://images.unsplash.com/photo-1454496522488-7a8e488e8606?auto=format&fit=crop&q=80&w=1200", // Beautiful mist crater (Kawah Ijen style)
-    "https://images.unsplash.com/photo-1447933601403-0c6688de566e?auto=format&fit=crop&q=80&w=1200", // Scent of roasted robusta beans
-    "https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?auto=format&fit=crop&q=80&w=1200"  // Lush green garden of a tropical villa
-  ], []);
-
   // Filter and sort the gallery items to display
   const sortedGallery = React.useMemo(() => {
     return [...galleryData]
@@ -56,15 +45,11 @@ export const LandingPage: React.FC<LandingPageProps> = ({
   }, [galleryData]);
 
   const slideshowImages = React.useMemo(() => {
-    const uploadedUrls = [...galleryData]
+    return [...galleryData]
       .filter(item => item.showInSlideshow !== false && item.url && item.url.trim().length > 0)
       .sort((a, b) => a.order - b.order)
       .map(item => item.url);
-    
-    // Combine uploaded pictures with default backdrops, keeping exactly 8 elements
-    const combined = [...uploadedUrls, ...defaultSlideshowImages];
-    return combined.slice(0, 8);
-  }, [galleryData, defaultSlideshowImages]);
+  }, [galleryData]);
 
   // Slideshow interval timer (6 seconds interval for elegant crossfading transition)
   React.useEffect(() => {
@@ -146,12 +131,16 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               transition={{ duration: 1.8, ease: [0.4, 0, 0.2, 1] }}
               className="absolute inset-0 w-full h-full"
             >
-              <img
-                src={slideshowImages[currentSlide]}
-                alt="Peno Homestay Backdrop"
-                referrerPolicy="no-referrer"
-                className="w-full h-full object-cover object-center"
-              />
+              {slideshowImages[currentSlide] ? (
+                <img
+                  src={slideshowImages[currentSlide]}
+                  alt="Peno Homestay Backdrop"
+                  referrerPolicy="no-referrer"
+                  className="w-full h-full object-cover object-center"
+                />
+              ) : (
+                <div className="w-full h-full bg-[#1b3322]" />
+              )}
             </motion.div>
           </AnimatePresence>
         </div>
