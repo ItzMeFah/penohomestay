@@ -1190,7 +1190,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
 
     // Spacing
     for (let i = 0; i < startOffset; i++) {
-      dayCells.push(<div key={`empty-${i}`} className="aspect-square bg-gray-50/40 border border-gray-100 rounded-xl" />);
+      dayCells.push(<div key={`empty-${i}`} className="aspect-square w-full bg-gray-50/20 border border-gray-100/40 rounded-lg" />);
     }
 
     // Monthly cells
@@ -1260,67 +1260,56 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
               }
             }
           }}
-          className={`aspect-square min-h-[56px] md:min-h-[72px] p-2 flex flex-col justify-between transition-all duration-200 relative group rounded-xl shadow-xs border ${
+          className={`aspect-square w-full p-1.5 flex flex-col items-center justify-center transition-all duration-200 relative group rounded-xl border ${
             statusType === 'paid'
               ? 'bg-rose-50/70 border-rose-200 text-rose-900 hover:bg-rose-100/70'
               : statusType === 'pending'
                 ? 'bg-amber-50/70 border-amber-200 text-amber-950 hover:bg-amber-100/70'
                 : statusType === 'blocked'
                   ? 'bg-gray-100 border-gray-200 text-gray-500 hover:bg-gray-200/50'
-                  : 'bg-emerald-50/40 border-emerald-100 text-emerald-900 hover:bg-emerald-50/90'
-          } cursor-pointer hover:-translate-y-0.5`}
+                  : 'bg-emerald-50/30 border-emerald-100 text-emerald-900 hover:bg-emerald-50/90'
+          } cursor-pointer hover:scale-105 active:scale-95 shadow-xs`}
         >
-          <div className="flex items-center justify-between">
-            <span className={`text-xs md:text-sm font-extrabold ${
-              statusType === 'paid' ? 'text-rose-700' :
-              statusType === 'pending' ? 'text-amber-700' :
-              statusType === 'blocked' ? 'text-gray-500' : 'text-emerald-800'
-            }`}>{d}</span>
-            
-            {/* Minimal dot indicator */}
-            <span className={`w-2 h-2 rounded-full ${
-              statusType === 'paid' ? 'bg-rose-500 shadow-rose-200 shadow' :
-              statusType === 'pending' ? 'bg-amber-500 shadow-amber-200 shadow' :
-              statusType === 'blocked' ? 'bg-gray-400' : 'bg-emerald-500 shadow-emerald-200 shadow'
-            }`} />
-          </div>
+          {/* Centered clean date number */}
+          <span className={`text-xs sm:text-sm font-extrabold ${
+            statusType === 'paid' ? 'text-rose-700' :
+            statusType === 'pending' ? 'text-amber-700' :
+            statusType === 'blocked' ? 'text-gray-500' : 'text-emerald-800'
+          }`}>
+            {d}
+          </span>
+          
+          {/* Small status indicator dot */}
+          <span className={`w-1.5 h-1.5 rounded-full mt-0.5 ${
+            statusType === 'paid' ? 'bg-rose-500 shadow-rose-200 shadow' :
+            statusType === 'pending' ? 'bg-amber-500 shadow-amber-200 shadow' :
+            statusType === 'blocked' ? 'bg-gray-400' : 'bg-emerald-500 shadow-emerald-200 shadow'
+          }`} />
 
-          <div className="mt-1 w-full overflow-hidden">
-            {statusType === 'paid' && (
-              <span className="text-[8px] md:text-[9px] font-bold tracking-tight truncate block px-1.5 py-0.5 rounded-md bg-rose-500/10 text-rose-800 text-center uppercase">
-                {label.length > 8 ? label.substring(0, 8) + '..' : label}
-              </span>
-            )}
-            {statusType === 'pending' && (
-              <span className="text-[8px] md:text-[9px] font-bold tracking-tight truncate block px-1.5 py-0.5 rounded-md bg-amber-500/15 text-amber-800 text-center uppercase">
-                {label.length > 8 ? label.substring(0, 8) + '..' : label}
-              </span>
-            )}
-            {statusType === 'blocked' && (
-              <span className="text-[8px] md:text-[9px] font-semibold tracking-tight truncate block px-1.5 py-0.5 rounded-md bg-gray-200 text-gray-600 text-center uppercase">
-                BLOCKED
-              </span>
-            )}
-            {statusType === 'available' && (
-              <span className="text-[8px] md:text-[9px] font-bold tracking-tight truncate block px-1.5 py-0.5 rounded-md bg-emerald-500/10 text-emerald-700 text-center uppercase">
-                KOSONG
-              </span>
-            )}
+          {/* Elegant Floating Hover Tooltip */}
+          <div className="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 hidden group-hover:flex flex-col items-center pointer-events-none z-50">
+            <div className="bg-gray-900/95 text-white text-[9px] font-sans font-medium px-2 py-1 rounded-md shadow-lg whitespace-nowrap leading-tight text-center">
+              {statusType === 'paid' && `Lunas: ${label}`}
+              {statusType === 'pending' && `Menunggu: ${label}`}
+              {statusType === 'blocked' && "Ditutup Admin"}
+              {statusType === 'available' && "Tersedia (Kosong)"}
+            </div>
+            <div className="w-1.5 h-1.5 bg-gray-900/95 rotate-45 -mt-1" />
           </div>
         </div>
       );
     }
 
     return (
-      <div className="bg-white rounded-3xl border border-gray-150/40 p-6 shadow-md">
-        <div className="flex items-center justify-between mb-6 border-b border-gray-100 pb-4">
+      <div className="bg-white rounded-3xl border border-gray-150/40 p-4 sm:p-5 shadow-sm">
+        <div className="flex items-center justify-between mb-4 border-b border-gray-100 pb-3">
           <div className="space-y-0.5">
-            <h3 className="font-serif font-bold text-lg text-green-deep">
+            <h3 className="font-serif font-bold text-base text-green-deep">
               {MONTHS_ID[calMonth]} {calYear}
             </h3>
-            <p className="text-[10px] text-gray-400 font-sans">Gunakan panah untuk navigasi bulan</p>
+            <p className="text-[9px] text-gray-400 font-sans">Gunakan panah untuk navigasi</p>
           </div>
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-1.5">
             <button
               onClick={() => {
                 setCalMonth(prev => {
@@ -1331,9 +1320,9 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                   return prev - 1;
                 });
               }}
-              className="p-2 bg-gray-50 hover:bg-gray-100 text-green-deep rounded-xl border border-gray-200 hover:border-green-soft/30 transition-all cursor-pointer flex items-center justify-center shadow-xs"
+              className="p-1.5 bg-gray-50 hover:bg-gray-100 text-green-deep rounded-lg border border-gray-200 hover:border-green-soft/30 transition-all cursor-pointer flex items-center justify-center shadow-xs"
             >
-              <ChevronLeft className="w-4 h-4" />
+              <ChevronLeft className="w-3.5 h-3.5" />
             </button>
             <button
               onClick={() => {
@@ -1341,7 +1330,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                 setCalMonth(today.getMonth());
                 setCalYear(today.getFullYear());
               }}
-              className="px-3 py-1.5 bg-green-deep/5 hover:bg-green-deep/10 text-green-deep font-sans font-bold text-xs rounded-lg transition-colors cursor-pointer"
+              className="px-2 py-1 bg-green-deep/5 hover:bg-green-deep/10 text-green-deep font-sans font-bold text-[10px] rounded-md transition-colors cursor-pointer"
             >
               Bulan Ini
             </button>
@@ -1355,17 +1344,17 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                   return prev + 1;
                 });
               }}
-              className="p-2 bg-gray-50 hover:bg-gray-100 text-green-deep rounded-xl border border-gray-200 hover:border-green-soft/30 transition-all cursor-pointer flex items-center justify-center shadow-xs"
+              className="p-1.5 bg-gray-50 hover:bg-gray-100 text-green-deep rounded-lg border border-gray-200 hover:border-green-soft/30 transition-all cursor-pointer flex items-center justify-center shadow-xs"
             >
-              <ChevronRight className="w-4 h-4" />
+              <ChevronRight className="w-3.5 h-3.5" />
             </button>
           </div>
         </div>
 
-        <div className="grid grid-cols-7 gap-1.5 mb-2 text-center text-[10px] md:text-xs font-bold text-gray-400 uppercase tracking-widest border-b border-gray-100 pb-2.5">
-          {DAYS_ID.map(day => <div key={day} className="py-1">{day}</div>)}
+        <div className="grid grid-cols-7 gap-1 mb-1.5 text-center text-[9px] font-bold text-gray-400 uppercase tracking-widest border-b border-gray-100 pb-1.5">
+          {DAYS_ID.map(day => <div key={day} className="py-0.5">{day}</div>)}
         </div>
-        <div className="grid grid-cols-7 gap-1.5">
+        <div className="grid grid-cols-7 gap-1">
           {dayCells}
         </div>
       </div>
