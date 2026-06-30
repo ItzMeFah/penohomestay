@@ -124,6 +124,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
   const [uploadError, setUploadError] = useState("");
   const [isUploadingCloud, setIsUploadingCloud] = useState(false);
   const [cloudUploadSuccess, setCloudUploadSuccess] = useState<boolean | null>(null);
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
   const [selectedImageFile, setSelectedImageFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -500,31 +501,47 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
 
   // CMS Savers
   const handleSaveCmsHero = () => {
+    setSaveStatus('saving');
     onUpdateHomepage({ ...homepageData, hero: cmsHero });
     showAdminToast("Konten Hero berhasil disimpan!", "success");
+    setSaveStatus('saved');
+    setTimeout(() => setSaveStatus('idle'), 1500);
   };
 
   const handleSaveCmsStats = () => {
+    setSaveStatus('saving');
     onUpdateHomepage({ ...homepageData, stats: cmsStats });
     showAdminToast("Konten Statistik berhasil disimpan!", "success");
+    setSaveStatus('saved');
+    setTimeout(() => setSaveStatus('idle'), 1500);
   };
 
   const handleSaveCmsAbout = () => {
+    setSaveStatus('saving');
     onUpdateHomepage({ ...homepageData, about: cmsAbout });
     showAdminToast("Konten Tentang Kami berhasil disimpan!", "success");
+    setSaveStatus('saved');
+    setTimeout(() => setSaveStatus('idle'), 1500);
   };
 
   const handleSaveCmsFeatures = () => {
+    setSaveStatus('saving');
     onUpdateHomepage({ ...homepageData, features: cmsFeatures });
     showAdminToast("Konten Keunggulan berhasil disimpan!", "success");
+    setSaveStatus('saved');
+    setTimeout(() => setSaveStatus('idle'), 1500);
   };
 
   const handleSaveCmsTestimonials = () => {
+    setSaveStatus('saving');
     onUpdateHomepage({ ...homepageData, testimonials: cmsTestimonials });
     showAdminToast("Ulasan Tamu berhasil disimpan!", "success");
+    setSaveStatus('saved');
+    setTimeout(() => setSaveStatus('idle'), 1500);
   };
 
   const handleSaveCmsInfo = () => {
+    setSaveStatus('saving');
     onUpdateHomepage({ ...homepageData, info: cmsInfo });
     // Also sync Settings Base Price, Checkin, Checkout
     onUpdateSettings({
@@ -534,6 +551,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
       checkOut: cmsInfo.checkout
     });
     showAdminToast("Informasi Menginap berhasil disimpan!", "success");
+    setSaveStatus('saved');
+    setTimeout(() => setSaveStatus('idle'), 1500);
   };
 
   // Gallery CMS Savers
@@ -573,11 +592,21 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
     setShowAddGalleryModal(true);
   };
 
-  const handleSaveGalleryItem = (e: React.FormEvent) => {
+  const handleSaveGalleryItem = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!galleryLabel.trim()) {
       showAdminToast("Label foto tidak boleh kosong!", "danger");
       return;
+    }
+
+    setSaveStatus('saving');
+    let finalUrl = galleryUrl;
+
+    if (selectedImageFile && activeGalleryTab === 'upload') {
+      const uploadedUrl = await handleUploadToSupabase();
+      if (uploadedUrl) {
+        finalUrl = uploadedUrl;
+      }
     }
 
     if (editingGalleryItem) {
@@ -589,7 +618,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
             label: galleryLabel,
             category: galleryCategory,
             color: galleryColor,
-            url: galleryUrl,
+            url: finalUrl,
             order: Number(galleryOrder),
             showInSlideshow: galleryShowInSlideshow,
             showInGallery: galleryShowInGallery
@@ -606,7 +635,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
         label: galleryLabel,
         category: galleryCategory,
         color: galleryColor,
-        url: galleryUrl,
+        url: finalUrl,
         order: Number(galleryOrder),
         showInSlideshow: galleryShowInSlideshow,
         showInGallery: galleryShowInGallery
@@ -614,7 +643,12 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
       onUpdateGallery([...galleryData, newItem]);
       showAdminToast("Item galeri berhasil ditambahkan!", "success");
     }
-    setShowAddGalleryModal(false);
+
+    setSaveStatus('saved');
+    setTimeout(() => {
+      setSaveStatus('idle');
+      setShowAddGalleryModal(false);
+    }, 1500);
   };
 
   const handleDeleteGalleryItem = (id: number) => {
@@ -670,11 +704,21 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
     setShowTourModal(true);
   };
 
-  const handleSaveTour = (e: React.FormEvent) => {
+  const handleSaveTour = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!tourName.trim()) {
       showAdminToast("Nama paket wisata tidak boleh kosong!", "danger");
       return;
+    }
+
+    setSaveStatus('saving');
+    let finalUrl = tourImageUrl;
+
+    if (selectedImageFile && activeTourTab === 'upload') {
+      const uploadedUrl = await handleUploadToSupabase();
+      if (uploadedUrl) {
+        finalUrl = uploadedUrl;
+      }
     }
 
     const inclusionsArray = tourInclusions
@@ -695,7 +739,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
             inclusions: inclusionsArray,
             contactPhone: tourPhone,
             contactSocial: tourSocial,
-            imageUrl: tourImageUrl,
+            imageUrl: finalUrl,
             isActive: tourIsActive
           };
         }
@@ -713,13 +757,18 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
         inclusions: inclusionsArray,
         contactPhone: tourPhone,
         contactSocial: tourSocial,
-        imageUrl: tourImageUrl,
+        imageUrl: finalUrl,
         isActive: tourIsActive
       };
       onUpdateHomepage({ ...homepageData, tours: [...existingTours, newTour] });
       showAdminToast("Paket wisata berhasil ditambahkan!", "success");
     }
-    setShowTourModal(false);
+
+    setSaveStatus('saved');
+    setTimeout(() => {
+      setSaveStatus('idle');
+      setShowTourModal(false);
+    }, 1500);
   };
 
   const handleDeleteTour = (id: number) => {
@@ -758,11 +807,21 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
     setShowHighlightModal(true);
   };
 
-  const handleSaveHighlight = (e: React.FormEvent) => {
+  const handleSaveHighlight = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!highlightTitle.trim()) {
       showAdminToast("Judul highlight tidak boleh kosong!", "danger");
       return;
+    }
+
+    setSaveStatus('saving');
+    let finalUrl = highlightImageUrl;
+
+    if (selectedImageFile && activeHighlightTab === 'upload') {
+      const uploadedUrl = await handleUploadToSupabase();
+      if (uploadedUrl) {
+        finalUrl = uploadedUrl;
+      }
     }
 
     const currentAbout = homepageData.about || { title: "", body: "", highlights: [] };
@@ -776,7 +835,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
             ...h,
             title: highlightTitle,
             description: highlightDescription,
-            imageUrl: highlightImageUrl
+            imageUrl: finalUrl
           };
         }
         return h;
@@ -795,7 +854,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
         id: "hl-" + Date.now(),
         title: highlightTitle,
         description: highlightDescription,
-        imageUrl: highlightImageUrl
+        imageUrl: finalUrl
       };
       onUpdateHomepage({
         ...homepageData,
@@ -806,7 +865,12 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
       });
       showAdminToast("Highlight berhasil ditambahkan!", "success");
     }
-    setShowHighlightModal(false);
+
+    setSaveStatus('saved');
+    setTimeout(() => {
+      setSaveStatus('idle');
+      setShowHighlightModal(false);
+    }, 1500);
   };
 
   const handleDeleteHighlight = (id: string) => {
@@ -971,10 +1035,11 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
   };
 
   // Fungsi mengunggah berkas gambar langsung ke Supabase Storage (Cloud)
-  const handleUploadToSupabase = async () => {
-    if (!selectedImageFile) {
+  const handleUploadToSupabase = async (customFile?: File): Promise<string | null> => {
+    const fileToUpload = customFile || selectedImageFile;
+    if (!fileToUpload) {
       setUploadError("Pilih file gambar terlebih dahulu!");
-      return;
+      return null;
     }
     
     setIsUploadingCloud(true);
@@ -983,14 +1048,14 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
     showAdminToast("Mengunggah foto ke Supabase Storage...", "info");
     
     try {
-      const fileExt = selectedImageFile.name.split('.').pop();
+      const fileExt = fileToUpload.name.split('.').pop();
       const fileName = `gallery/${Date.now()}-${Math.round(Math.random() * 1e9)}.${fileExt}`;
       
       // Try to upload to 'gallery' bucket first, fall back to 'avatars' if there is any issue
       let bucketName = 'gallery';
       let uploadResult = await supabase.storage
         .from(bucketName)
-        .upload(fileName, selectedImageFile, {
+        .upload(fileName, fileToUpload, {
           cacheControl: '3600',
           upsert: true
         });
@@ -1000,7 +1065,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
         bucketName = 'avatars';
         uploadResult = await supabase.storage
           .from(bucketName)
-          .upload(fileName, selectedImageFile, {
+          .upload(fileName, fileToUpload, {
             cacheControl: '3600',
             upsert: true
           });
@@ -1024,6 +1089,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
       }
       setCloudUploadSuccess(true);
       showAdminToast("Foto berhasil diunggah ke Supabase Cloud!", "success");
+      return publicUrl;
     } catch (err: any) {
       console.error("Gagal mengunggah berkas ke Supabase:", err);
       
@@ -1039,6 +1105,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
         showAdminToast("Gagal mengunggah gambar ke cloud.", "danger");
       }
       setCloudUploadSuccess(false);
+      return null;
     } finally {
       setIsUploadingCloud(false);
     }
@@ -1047,6 +1114,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
   // Settings Savers
   const handleSaveSettings = (e: React.FormEvent) => {
     e.preventDefault();
+    setSaveStatus('saving');
     onUpdateSettings({
       homestayName: setHomestayName,
       tagline: setTagline,
@@ -1065,6 +1133,10 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
     });
 
     showAdminToast("Semua pengaturan sistem berhasil disimpan!", "success");
+    setSaveStatus('saved');
+    setTimeout(() => {
+      setSaveStatus('idle');
+    }, 1500);
   };
 
   // Booking Filters / Sorters Processing
@@ -1118,7 +1190,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
 
     // Spacing
     for (let i = 0; i < startOffset; i++) {
-      dayCells.push(<div key={`empty-${i}`} className="h-16 border border-gray-100 bg-gray-50/20" />);
+      dayCells.push(<div key={`empty-${i}`} className="aspect-square bg-gray-50/40 border border-gray-100 rounded-xl" />);
     }
 
     // Monthly cells
@@ -1152,26 +1224,22 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
 
       const isBlocked = blockedDates.includes(key);
 
-      let cellClass = "";
+      let statusType: 'available' | 'paid' | 'pending' | 'blocked' = 'available';
       let label = "";
 
       if (activeBooking) {
         if (activeBooking.status === 'paid') {
-          cellClass = "bg-rose-500 hover:bg-rose-600 text-white border-rose-600 font-bold cursor-pointer";
+          statusType = 'paid';
         } else {
-          cellClass = "bg-amber-400 hover:bg-amber-500 text-amber-900 border-amber-500 font-bold cursor-pointer";
+          statusType = 'pending';
         }
-        const name = activeBooking.guest_name;
-        const formattedName = (name.startsWith("Mr.") || name.startsWith("Mrs.") || name.startsWith("Mr./Mrs.")) 
-          ? name 
-          : `Mr./Mrs. ${name}`;
-        label = formattedName;
+        label = activeBooking.guest_name;
       } else if (isBlocked) {
-        cellClass = "bg-rose-500 hover:bg-rose-600 text-white border-rose-600 font-bold cursor-pointer";
-        label = "BOOKED";
+        statusType = 'blocked';
+        label = "BLOCKED";
       } else {
-        cellClass = "bg-emerald-500 hover:bg-emerald-600 text-white border-emerald-600 font-bold cursor-pointer";
-        label = "TERSEDIA";
+        statusType = 'available';
+        label = "KOSONG";
       }
 
       dayCells.push(
@@ -1192,58 +1260,112 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
               }
             }
           }}
-          className={`h-16 p-1.5 border border-white/10 flex flex-col justify-between transition-colors relative group rounded-lg shadow-sm ${cellClass}`}
+          className={`aspect-square min-h-[56px] md:min-h-[72px] p-2 flex flex-col justify-between transition-all duration-200 relative group rounded-xl shadow-xs border ${
+            statusType === 'paid'
+              ? 'bg-rose-50/70 border-rose-200 text-rose-900 hover:bg-rose-100/70'
+              : statusType === 'pending'
+                ? 'bg-amber-50/70 border-amber-200 text-amber-950 hover:bg-amber-100/70'
+                : statusType === 'blocked'
+                  ? 'bg-gray-100 border-gray-200 text-gray-500 hover:bg-gray-200/50'
+                  : 'bg-emerald-50/40 border-emerald-100 text-emerald-900 hover:bg-emerald-50/90'
+          } cursor-pointer hover:-translate-y-0.5`}
         >
-          <span className="text-xs font-bold text-white/90">{d}</span>
-          {label && (
-            <span className="text-[9px] uppercase font-bold tracking-tight truncate px-1 rounded bg-black/20 text-white text-center leading-normal">
-              {label}
-            </span>
-          )}
+          <div className="flex items-center justify-between">
+            <span className={`text-xs md:text-sm font-extrabold ${
+              statusType === 'paid' ? 'text-rose-700' :
+              statusType === 'pending' ? 'text-amber-700' :
+              statusType === 'blocked' ? 'text-gray-500' : 'text-emerald-800'
+            }`}>{d}</span>
+            
+            {/* Minimal dot indicator */}
+            <span className={`w-2 h-2 rounded-full ${
+              statusType === 'paid' ? 'bg-rose-500 shadow-rose-200 shadow' :
+              statusType === 'pending' ? 'bg-amber-500 shadow-amber-200 shadow' :
+              statusType === 'blocked' ? 'bg-gray-400' : 'bg-emerald-500 shadow-emerald-200 shadow'
+            }`} />
+          </div>
+
+          <div className="mt-1 w-full overflow-hidden">
+            {statusType === 'paid' && (
+              <span className="text-[8px] md:text-[9px] font-bold tracking-tight truncate block px-1.5 py-0.5 rounded-md bg-rose-500/10 text-rose-800 text-center uppercase">
+                {label.length > 8 ? label.substring(0, 8) + '..' : label}
+              </span>
+            )}
+            {statusType === 'pending' && (
+              <span className="text-[8px] md:text-[9px] font-bold tracking-tight truncate block px-1.5 py-0.5 rounded-md bg-amber-500/15 text-amber-800 text-center uppercase">
+                {label.length > 8 ? label.substring(0, 8) + '..' : label}
+              </span>
+            )}
+            {statusType === 'blocked' && (
+              <span className="text-[8px] md:text-[9px] font-semibold tracking-tight truncate block px-1.5 py-0.5 rounded-md bg-gray-200 text-gray-600 text-center uppercase">
+                BLOCKED
+              </span>
+            )}
+            {statusType === 'available' && (
+              <span className="text-[8px] md:text-[9px] font-bold tracking-tight truncate block px-1.5 py-0.5 rounded-md bg-emerald-500/10 text-emerald-700 text-center uppercase">
+                KOSONG
+              </span>
+            )}
+          </div>
         </div>
       );
     }
 
     return (
-      <div className="bg-white rounded-3xl border border-sand/30 p-6 shadow-md">
-        <div className="flex items-center justify-between mb-6">
-          <button
-            onClick={() => {
-              setCalMonth(prev => {
-                if (prev === 0) {
-                  setCalYear(y => y - 1);
-                  return 11;
-                }
-                return prev - 1;
-              });
-            }}
-            className="p-2 bg-cream hover:bg-sand/40 text-green-deep rounded-full"
-          >
-            <ChevronLeft className="w-5 h-5" />
-          </button>
-          <h3 className="font-serif font-bold text-xl text-green-deep">
-            {MONTHS_ID[calMonth]} {calYear}
-          </h3>
-          <button
-            onClick={() => {
-              setCalMonth(prev => {
-                if (prev === 11) {
-                  setCalYear(y => y + 1);
-                  return 0;
-                }
-                return prev + 1;
-              });
-            }}
-            className="p-2 bg-cream hover:bg-sand/40 text-green-deep rounded-full"
-          >
-            <ChevronRight className="w-5 h-5" />
-          </button>
+      <div className="bg-white rounded-3xl border border-gray-150/40 p-6 shadow-md">
+        <div className="flex items-center justify-between mb-6 border-b border-gray-100 pb-4">
+          <div className="space-y-0.5">
+            <h3 className="font-serif font-bold text-lg text-green-deep">
+              {MONTHS_ID[calMonth]} {calYear}
+            </h3>
+            <p className="text-[10px] text-gray-400 font-sans">Gunakan panah untuk navigasi bulan</p>
+          </div>
+          <div className="flex items-center space-x-2">
+            <button
+              onClick={() => {
+                setCalMonth(prev => {
+                  if (prev === 0) {
+                    setCalYear(y => y - 1);
+                    return 11;
+                  }
+                  return prev - 1;
+                });
+              }}
+              className="p-2 bg-gray-50 hover:bg-gray-100 text-green-deep rounded-xl border border-gray-200 hover:border-green-soft/30 transition-all cursor-pointer flex items-center justify-center shadow-xs"
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </button>
+            <button
+              onClick={() => {
+                const today = new Date();
+                setCalMonth(today.getMonth());
+                setCalYear(today.getFullYear());
+              }}
+              className="px-3 py-1.5 bg-green-deep/5 hover:bg-green-deep/10 text-green-deep font-sans font-bold text-xs rounded-lg transition-colors cursor-pointer"
+            >
+              Bulan Ini
+            </button>
+            <button
+              onClick={() => {
+                setCalMonth(prev => {
+                  if (prev === 11) {
+                    setCalYear(y => y + 1);
+                    return 0;
+                  }
+                  return prev + 1;
+                });
+              }}
+              className="p-2 bg-gray-50 hover:bg-gray-100 text-green-deep rounded-xl border border-gray-200 hover:border-green-soft/30 transition-all cursor-pointer flex items-center justify-center shadow-xs"
+            >
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
         </div>
 
-        <div className="grid grid-cols-7 gap-1 mb-2 text-center text-xs font-semibold text-green-soft uppercase tracking-wider border-b border-sand/15 pb-2">
-          {DAYS_ID.map(day => <div key={day}>{day}</div>)}
+        <div className="grid grid-cols-7 gap-1.5 mb-2 text-center text-[10px] md:text-xs font-bold text-gray-400 uppercase tracking-widest border-b border-gray-100 pb-2.5">
+          {DAYS_ID.map(day => <div key={day} className="py-1">{day}</div>)}
         </div>
-        <div className="grid grid-cols-7 gap-1">
+        <div className="grid grid-cols-7 gap-1.5">
           {dayCells}
         </div>
       </div>
@@ -1880,19 +2002,29 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
           {/* TAB 3: CALENDAR KETERSEDIAAN VIEW */}
           {activeTab === 'calendar' && (
             <div className="space-y-6">
-              <div className="bg-white rounded-2xl border border-gray-100 p-5 flex flex-wrap items-center justify-between gap-4 shadow-sm">
-                <div className="space-y-1">
-                  <h3 className="font-serif font-bold text-lg text-green-deep">Peta Ketersediaan Homestay</h3>
-                  <p className="font-sans text-xs text-gray-500">Klik nama tamu untuk melihat rincian pemesanan, atau klik langsung pada sel tanggal kosong untuk mengubah status ketersediaan (Booked / Tersedia) secara instan.</p>
+              <div className="bg-white rounded-3xl border border-gray-100 p-6 flex flex-col md:flex-row items-center justify-between gap-4 shadow-sm">
+                <div className="space-y-1 text-center md:text-left">
+                  <h3 className="font-serif font-bold text-lg text-green-deep">Peta Ketersediaan & Hunian</h3>
+                  <p className="font-sans text-xs text-gray-500 leading-relaxed">
+                    Kelola ketersediaan kamar homestay. Klik sel tanggal kosong untuk menutup/membuka tanggal secara instan, atau klik pesanan berwarna merah/kuning untuk melihat detail tamu lengkap.
+                  </p>
                 </div>
-                <div className="flex space-x-4 text-xs">
-                  <div className="flex items-center space-x-2">
-                    <div className="w-3.5 h-3.5 bg-rose-500 border border-rose-600 rounded shadow-sm" />
-                    <span className="font-bold text-rose-600">BOOKED (MERAH)</span>
+                <div className="flex flex-wrap gap-3 justify-center items-center text-xs shrink-0 border-t md:border-t-0 border-gray-100 pt-3 md:pt-0 w-full md:w-auto">
+                  <div className="flex items-center space-x-2 bg-emerald-50 px-2.5 py-1.5 rounded-xl border border-emerald-100 shadow-xs">
+                    <div className="w-2.5 h-2.5 bg-emerald-500 rounded-full shadow-emerald-200 shadow" />
+                    <span className="font-bold text-emerald-800 uppercase tracking-wider text-[10px]">Tersedia</span>
                   </div>
-                  <div className="flex items-center space-x-2">
-                    <div className="w-3.5 h-3.5 bg-emerald-500 border border-emerald-600 rounded shadow-sm" />
-                    <span className="font-bold text-emerald-600">TERSEDIA (HIJAU)</span>
+                  <div className="flex items-center space-x-2 bg-rose-50 px-2.5 py-1.5 rounded-xl border border-rose-100 shadow-xs">
+                    <div className="w-2.5 h-2.5 bg-rose-500 rounded-full shadow-rose-200 shadow" />
+                    <span className="font-bold text-rose-800 uppercase tracking-wider text-[10px]">Lunas (Paid)</span>
+                  </div>
+                  <div className="flex items-center space-x-2 bg-amber-50 px-2.5 py-1.5 rounded-xl border border-amber-100 shadow-xs">
+                    <div className="w-2.5 h-2.5 bg-amber-500 rounded-full shadow-amber-200 shadow" />
+                    <span className="font-bold text-amber-800 uppercase tracking-wider text-[10px]">Menunggu (Pending)</span>
+                  </div>
+                  <div className="flex items-center space-x-2 bg-gray-100 px-2.5 py-1.5 rounded-xl border border-gray-200 shadow-xs">
+                    <div className="w-2.5 h-2.5 bg-gray-400 rounded-full" />
+                    <span className="font-bold text-gray-700 uppercase tracking-wider text-[10px]">Ditutup Admin</span>
                   </div>
                 </div>
               </div>
@@ -2047,10 +2179,25 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                     </div>
                     <button
                       onClick={handleSaveCmsHero}
-                      className="inline-flex items-center space-x-2 bg-green-deep hover:bg-green-mid text-cream font-semibold px-6 py-2.5 rounded-xl text-sm shadow cursor-pointer"
+                      disabled={saveStatus !== 'idle'}
+                      className="inline-flex items-center space-x-2 bg-green-deep hover:bg-green-mid disabled:bg-gray-400 text-cream font-semibold px-6 py-2.5 rounded-xl text-sm shadow cursor-pointer transition-all"
                     >
-                      <Save className="w-4 h-4" />
-                      <span>Simpan Perubahan Hero</span>
+                      {saveStatus === 'saving' ? (
+                        <>
+                          <RefreshCw className="w-4 h-4 animate-spin" />
+                          <span>Saving...</span>
+                        </>
+                      ) : saveStatus === 'saved' ? (
+                        <>
+                          <Check className="w-4 h-4" />
+                          <span>Saved</span>
+                        </>
+                      ) : (
+                        <>
+                          <Save className="w-4 h-4" />
+                          <span>Save changes</span>
+                        </>
+                      )}
                     </button>
                   </div>
                 )}
@@ -2093,10 +2240,25 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                     </div>
                     <button
                       onClick={handleSaveCmsStats}
-                      className="inline-flex items-center space-x-2 bg-green-deep hover:bg-green-mid text-cream font-semibold px-6 py-2.5 rounded-xl text-sm shadow cursor-pointer"
+                      disabled={saveStatus !== 'idle'}
+                      className="inline-flex items-center space-x-2 bg-green-deep hover:bg-green-mid disabled:bg-gray-400 text-cream font-semibold px-6 py-2.5 rounded-xl text-sm shadow cursor-pointer transition-all"
                     >
-                      <Save className="w-4 h-4" />
-                      <span>Simpan Statistik</span>
+                      {saveStatus === 'saving' ? (
+                        <>
+                          <RefreshCw className="w-4 h-4 animate-spin" />
+                          <span>Saving...</span>
+                        </>
+                      ) : saveStatus === 'saved' ? (
+                        <>
+                          <Check className="w-4 h-4" />
+                          <span>Saved</span>
+                        </>
+                      ) : (
+                        <>
+                          <Save className="w-4 h-4" />
+                          <span>Save changes</span>
+                        </>
+                      )}
                     </button>
                   </div>
                 )}
@@ -2129,10 +2291,25 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                       </div>
                       <button
                         onClick={handleSaveCmsAbout}
-                        className="inline-flex items-center space-x-2 bg-green-deep hover:bg-green-mid text-cream font-semibold px-5 py-2 rounded-xl text-xs shadow cursor-pointer transition-all active:scale-95"
+                        disabled={saveStatus !== 'idle'}
+                        className="inline-flex items-center space-x-2 bg-green-deep hover:bg-green-mid disabled:bg-gray-400 text-cream font-semibold px-5 py-2 rounded-xl text-xs shadow cursor-pointer transition-all active:scale-95"
                       >
-                        <Save className="w-3.5 h-3.5" />
-                        <span>Simpan Teks Tentang Kami</span>
+                        {saveStatus === 'saving' ? (
+                          <>
+                            <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                            <span>Saving...</span>
+                          </>
+                        ) : saveStatus === 'saved' ? (
+                          <>
+                            <Check className="w-3.5 h-3.5" />
+                            <span>Saved</span>
+                          </>
+                        ) : (
+                          <>
+                            <Save className="w-3.5 h-3.5" />
+                            <span>Save changes</span>
+                          </>
+                        )}
                       </button>
                     </div>
 
@@ -2241,10 +2418,25 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                     </div>
                     <button
                       onClick={handleSaveCmsFeatures}
-                      className="inline-flex items-center space-x-2 bg-green-deep hover:bg-green-mid text-cream font-semibold px-6 py-2.5 rounded-xl text-sm shadow cursor-pointer"
+                      disabled={saveStatus !== 'idle'}
+                      className="inline-flex items-center space-x-2 bg-green-deep hover:bg-green-mid disabled:bg-gray-400 text-cream font-semibold px-6 py-2.5 rounded-xl text-sm shadow cursor-pointer transition-all"
                     >
-                      <Save className="w-4 h-4" />
-                      <span>Simpan Keunggulan</span>
+                      {saveStatus === 'saving' ? (
+                        <>
+                          <RefreshCw className="w-4 h-4 animate-spin" />
+                          <span>Saving...</span>
+                        </>
+                      ) : saveStatus === 'saved' ? (
+                        <>
+                          <Check className="w-4 h-4" />
+                          <span>Saved</span>
+                        </>
+                      ) : (
+                        <>
+                          <Save className="w-4 h-4" />
+                          <span>Save changes</span>
+                        </>
+                      )}
                     </button>
                   </div>
                 )}
@@ -2287,10 +2479,25 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                     </div>
                     <button
                       onClick={handleSaveCmsTestimonials}
-                      className="inline-flex items-center space-x-2 bg-green-deep hover:bg-green-mid text-cream font-semibold px-6 py-2.5 rounded-xl text-sm shadow cursor-pointer"
+                      disabled={saveStatus !== 'idle'}
+                      className="inline-flex items-center space-x-2 bg-green-deep hover:bg-green-mid disabled:bg-gray-400 text-cream font-semibold px-6 py-2.5 rounded-xl text-sm shadow cursor-pointer transition-all"
                     >
-                      <Save className="w-4 h-4" />
-                      <span>Simpan Ulasan</span>
+                      {saveStatus === 'saving' ? (
+                        <>
+                          <RefreshCw className="w-4 h-4 animate-spin" />
+                          <span>Saving...</span>
+                        </>
+                      ) : saveStatus === 'saved' ? (
+                        <>
+                          <Check className="w-4 h-4" />
+                          <span>Saved</span>
+                        </>
+                      ) : (
+                        <>
+                          <Save className="w-4 h-4" />
+                          <span>Save changes</span>
+                        </>
+                      )}
                     </button>
                   </div>
                 )}
@@ -2351,10 +2558,25 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
 
                     <button
                       onClick={handleSaveCmsInfo}
-                      className="inline-flex items-center space-x-2 bg-green-deep hover:bg-green-mid text-cream font-semibold px-6 py-2.5 rounded-xl text-sm shadow cursor-pointer"
+                      disabled={saveStatus !== 'idle'}
+                      className="inline-flex items-center space-x-2 bg-green-deep hover:bg-green-mid disabled:bg-gray-400 text-cream font-semibold px-6 py-2.5 rounded-xl text-sm shadow cursor-pointer transition-all"
                     >
-                      <Save className="w-4 h-4" />
-                      <span>Simpan Kebijakan Menginap</span>
+                      {saveStatus === 'saving' ? (
+                        <>
+                          <RefreshCw className="w-4 h-4 animate-spin" />
+                          <span>Saving...</span>
+                        </>
+                      ) : saveStatus === 'saved' ? (
+                        <>
+                          <Check className="w-4 h-4" />
+                          <span>Saved</span>
+                        </>
+                      ) : (
+                        <>
+                          <Save className="w-4 h-4" />
+                          <span>Save changes</span>
+                        </>
+                      )}
                     </button>
                   </div>
                 )}
@@ -2859,9 +3081,25 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
 
                 <button
                   type="submit"
-                  className="bg-green-deep hover:bg-green-mid text-cream font-semibold px-8 py-3 rounded-full shadow cursor-pointer text-sm"
+                  disabled={saveStatus !== 'idle'}
+                  className="inline-flex items-center space-x-2 bg-green-deep hover:bg-green-mid disabled:bg-gray-400 text-cream font-semibold px-8 py-3 rounded-full shadow cursor-pointer text-sm transition-all hover:-translate-y-0.5 active:scale-95"
                 >
-                  Simpan Semua Pengaturan
+                  {saveStatus === 'saving' ? (
+                    <>
+                      <RefreshCw className="w-4 h-4 animate-spin" />
+                      <span>Saving...</span>
+                    </>
+                  ) : saveStatus === 'saved' ? (
+                    <>
+                      <Check className="w-4 h-4" />
+                      <span>Saved</span>
+                    </>
+                  ) : (
+                    <>
+                      <Save className="w-4 h-4" />
+                      <span>Save changes</span>
+                    </>
+                  )}
                 </button>
               </form>
             </div>
@@ -3108,31 +3346,14 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                         </div>
                       )}
 
-                      {/* Optional Cloud Upload (Supabase storage) */}
+                      {/* File selected indicator */}
                       {selectedImageFile && (
-                        <div className="flex items-center justify-between bg-emerald-50 border border-emerald-100 p-2.5 rounded-xl">
-                          <div className="min-w-0 flex-1 pr-3">
-                            <p className="text-[10px] font-bold text-emerald-800 truncate">File siap: {selectedImageFile.name}</p>
-                            <p className="text-[9px] text-emerald-600">Anda dapat menyimpan langsung secara luring (Base64) atau unggah ke awan (Supabase Cloud).</p>
+                        <div className="flex items-center space-x-2 bg-emerald-50 border border-emerald-100 p-2.5 rounded-xl">
+                          <Check className="w-4 h-4 text-emerald-600 shrink-0" />
+                          <div className="min-w-0 flex-1">
+                            <p className="text-[10px] font-bold text-emerald-800 truncate">Berkas siap: {selectedImageFile.name}</p>
+                            <p className="text-[9px] text-emerald-600">Akan diunggah otomatis saat Anda mengklik tombol "Save changes" di bawah.</p>
                           </div>
-                          <button
-                            type="button"
-                            disabled={isUploadingCloud}
-                            onClick={handleUploadToSupabase}
-                            className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 disabled:bg-emerald-300 text-white font-semibold rounded-lg text-[10px] shadow transition-colors flex items-center space-x-1 shrink-0"
-                          >
-                            {isUploadingCloud ? (
-                              <>
-                                <RefreshCw className="w-3 h-3 animate-spin" />
-                                <span>Proses...</span>
-                              </>
-                            ) : (
-                              <>
-                                <Upload className="w-3 h-3" />
-                                <span>Upload Cloud</span>
-                              </>
-                            )}
-                          </button>
                         </div>
                       )}
 
@@ -3176,9 +3397,25 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                   </button>
                   <button
                     type="submit"
-                    className="flex-1 py-3 bg-green-deep hover:bg-green-mid text-cream font-semibold rounded-xl text-xs shadow transition-all hover:-translate-y-0.5 active:scale-95 text-center"
+                    disabled={saveStatus !== 'idle'}
+                    className="flex-1 py-3 bg-green-deep hover:bg-green-mid disabled:bg-gray-400 text-cream font-semibold rounded-xl text-xs shadow transition-all hover:-translate-y-0.5 active:scale-95 text-center flex items-center justify-center space-x-2"
                   >
-                    {editingHighlight ? 'Simpan Perubahan' : 'Tambah Highlight'}
+                    {saveStatus === 'saving' ? (
+                      <>
+                        <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                        <span>Saving...</span>
+                      </>
+                    ) : saveStatus === 'saved' ? (
+                      <>
+                        <Check className="w-3.5 h-3.5" />
+                        <span>Saved</span>
+                      </>
+                    ) : (
+                      <>
+                        <Save className="w-3.5 h-3.5" />
+                        <span>Save changes</span>
+                      </>
+                    )}
                   </button>
                 </div>
               </form>
@@ -3509,65 +3746,25 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
 
                         {/* Info / Actions if file selected */}
                         {selectedImageFile && (
-                          <div className="bg-cream/30 rounded-xl p-2 border border-sand/15 space-y-2">
-                            <div className="flex justify-between items-center text-xs">
-                              <div className="truncate pr-2 text-left">
-                                <span className="font-semibold block truncate text-[10px] text-text-dark">{selectedImageFile.name}</span>
-                                <span className="text-gray-400 font-mono text-[8px]">{(selectedImageFile.size / (1024 * 1024)).toFixed(2)} MB</span>
-                              </div>
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  setSelectedImageFile(null);
-                                  setGalleryUrl("");
-                                  if (fileInputRef.current) fileInputRef.current.value = "";
-                                }}
-                                className="text-rose-500 hover:text-rose-700 font-semibold flex-shrink-0 text-[10px]"
-                              >
-                                Batal
-                              </button>
-                            </div>
-
-                            {/* Cloud upload status or option */}
-                            <div className="border-t border-sand/10 pt-1.5 text-left">
-                              <p className="text-[8px] text-gray-500 mb-1.5 leading-relaxed">
-                                Foto siap offline. Unggah ke Cloud Supabase agar terhosting permanen di internet.
+                          <div className="bg-emerald-50 rounded-xl p-2.5 border border-emerald-100 flex items-center space-x-2 text-left">
+                            <Check className="w-4 h-4 text-emerald-600 shrink-0" />
+                            <div className="min-w-0 flex-1">
+                              <p className="text-[10px] font-bold text-emerald-800 truncate">Berkas siap: {selectedImageFile.name}</p>
+                              <p className="text-[9px] text-emerald-600 leading-normal">
+                                Berkas terkompresi otomatis. Foto akan disimpan dan diunggah otomatis saat Anda mengklik "Save changes" di bawah.
                               </p>
-                              
-                              {cloudUploadSuccess === null && (
-                                <button
-                                  type="button"
-                                  disabled={isUploadingCloud}
-                                  onClick={handleUploadToSupabase}
-                                  className="w-full inline-flex items-center justify-center space-x-1.5 bg-green-deep hover:bg-green-mid disabled:bg-gray-300 text-cream text-[10px] font-semibold py-1.5 px-3 rounded-lg shadow transition-all cursor-pointer"
-                                >
-                                  {isUploadingCloud ? (
-                                    <>
-                                      <RefreshCw className="w-3 h-3 animate-spin" />
-                                      <span>Mengunggah...</span>
-                                    </>
-                                  ) : (
-                                    <>
-                                      <Upload className="w-3 h-3" />
-                                      <span>Unggah ke Supabase Storage</span>
-                                    </>
-                                  )}
-                                </button>
-                              )}
-
-                              {cloudUploadSuccess === true && (
-                                <div className="p-2 bg-emerald-50 border border-emerald-150 rounded-lg text-[10px] text-emerald-800 font-semibold flex items-center space-x-1.5">
-                                  <span className="p-0.5 bg-emerald-500 text-white rounded-full text-[7px] leading-none flex items-center justify-center w-3.5 h-3.5">✓</span>
-                                  <span>Berhasil terunggah ke Cloud!</span>
-                                </div>
-                              )}
-
-                              {uploadError && (
-                                <div className="p-2 bg-rose-50 border border-rose-150 rounded-lg text-[9px] text-rose-700 leading-relaxed font-semibold">
-                                  {uploadError}
-                                </div>
-                              )}
                             </div>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setSelectedImageFile(null);
+                                setGalleryUrl("");
+                                if (fileInputRef.current) fileInputRef.current.value = "";
+                              }}
+                              className="text-rose-500 hover:text-rose-700 font-bold flex-shrink-0 text-[10px] pl-2 border-l border-emerald-200"
+                            >
+                              Batal
+                            </button>
                           </div>
                         )}
                       </div>
@@ -3601,9 +3798,25 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                   </button>
                   <button
                     type="submit"
-                    className="px-5 py-2 bg-green-deep hover:bg-green-mid text-cream font-semibold rounded-xl transition-all shadow text-xs"
+                    disabled={saveStatus !== 'idle'}
+                    className="px-5 py-2 bg-green-deep hover:bg-green-mid disabled:bg-gray-400 text-cream font-semibold rounded-xl transition-all shadow text-xs flex items-center space-x-1.5"
                   >
-                    Simpan Item Galeri
+                    {saveStatus === 'saving' ? (
+                      <>
+                        <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                        <span>Saving...</span>
+                      </>
+                    ) : saveStatus === 'saved' ? (
+                      <>
+                        <Check className="w-3.5 h-3.5" />
+                        <span>Saved</span>
+                      </>
+                    ) : (
+                      <>
+                        <Save className="w-3.5 h-3.5" />
+                        <span>Save changes</span>
+                      </>
+                    )}
                   </button>
                 </div>
               </form>
@@ -3806,13 +4019,13 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                           {/* Cloud upload or selected file actions */}
                           <div className="space-y-2">
                             {selectedImageFile && (
-                              <div className="flex items-center justify-between p-2 bg-gray-50 border border-gray-100 rounded-xl">
-                                <div className="flex items-center space-x-2 min-w-0">
-                                  <ImageIcon className="w-4 h-4 text-green-soft flex-shrink-0" />
-                                  <div className="min-w-0 leading-tight">
-                                    <span className="font-semibold block truncate text-[10px] text-text-dark">{selectedImageFile.name}</span>
-                                    <span className="text-gray-400 font-mono text-[8px]">{(selectedImageFile.size / (1024 * 1024)).toFixed(2)} MB</span>
-                                  </div>
+                              <div className="flex items-center space-x-2 bg-emerald-50 border border-emerald-100 p-2.5 rounded-xl">
+                                <Check className="w-4 h-4 text-emerald-600 shrink-0" />
+                                <div className="min-w-0 flex-1 text-left">
+                                  <p className="text-[10px] font-bold text-emerald-800 truncate">Berkas siap: {selectedImageFile.name}</p>
+                                  <p className="text-[9px] text-emerald-600 leading-normal">
+                                    Berkas terkompresi otomatis. Foto akan disimpan dan diunggah otomatis saat Anda mengklik "Save changes" di bawah.
+                                  </p>
                                 </div>
                                 <button
                                   type="button"
@@ -3821,43 +4034,14 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                                     setTourImageUrl("");
                                     if (fileInputRef.current) fileInputRef.current.value = "";
                                   }}
-                                  className="text-rose-500 hover:text-rose-700 font-semibold flex-shrink-0 text-[10px]"
+                                  className="text-rose-500 hover:text-rose-700 font-bold flex-shrink-0 text-[10px] pl-2 border-l border-emerald-200"
                                 >
                                   Batal
                                 </button>
                               </div>
                             )}
-
-                            {selectedImageFile && cloudUploadSuccess !== true && (
-                              <button
-                                type="button"
-                                disabled={isUploadingCloud}
-                                onClick={handleUploadToSupabase}
-                                className="w-full inline-flex items-center justify-center space-x-1.5 bg-green-deep hover:bg-green-mid disabled:bg-gray-300 text-cream text-[10px] font-semibold py-1.5 px-3 rounded-lg shadow transition-all cursor-pointer"
-                              >
-                                {isUploadingCloud ? (
-                                  <>
-                                    <RefreshCw className="w-3 h-3 animate-spin" />
-                                    <span>Mengunggah...</span>
-                                  </>
-                                ) : (
-                                  <>
-                                    <Upload className="w-3 h-3" />
-                                    <span>Unggah ke Supabase Storage</span>
-                                  </>
-                                )}
-                              </button>
-                            )}
-
-                            {cloudUploadSuccess === true && (
-                              <div className="p-2 bg-emerald-50 border border-emerald-150 rounded-lg text-[10px] text-emerald-800 font-semibold flex items-center space-x-1.5">
-                                <span className="p-0.5 bg-emerald-500 text-white rounded-full text-[7px] leading-none flex items-center justify-center w-3.5 h-3.5">✓</span>
-                                <span>Berhasil terunggah ke Cloud!</span>
-                              </div>
-                            )}
-
                             {uploadError && (
-                              <div className="p-2 bg-rose-50 border border-rose-150 rounded-lg text-[9px] text-rose-700 leading-relaxed font-semibold">
+                              <div className="p-2 bg-rose-50 border border-rose-150 rounded-lg text-[9px] text-rose-700 leading-relaxed font-semibold text-left">
                                 {uploadError}
                               </div>
                             )}
@@ -3894,9 +4078,25 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                   </button>
                   <button
                     type="submit"
-                    className="px-5 py-2 bg-green-deep hover:bg-green-mid text-cream font-semibold rounded-xl transition-all shadow text-xs"
+                    disabled={saveStatus !== 'idle'}
+                    className="px-5 py-2 bg-green-deep hover:bg-green-mid disabled:bg-gray-400 text-cream font-semibold rounded-xl transition-all shadow text-xs flex items-center space-x-1.5"
                   >
-                    {editingTour ? "Simpan Perubahan" : "Tambah Paket Wisata"}
+                    {saveStatus === 'saving' ? (
+                      <>
+                        <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                        <span>Saving...</span>
+                      </>
+                    ) : saveStatus === 'saved' ? (
+                      <>
+                        <Check className="w-3.5 h-3.5" />
+                        <span>Saved</span>
+                      </>
+                    ) : (
+                      <>
+                        <Save className="w-3.5 h-3.5" />
+                        <span>Save changes</span>
+                      </>
+                    )}
                   </button>
                 </div>
               </form>
