@@ -2,7 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
   ChevronLeft, ChevronRight, Calendar, User, Mail, Phone, 
-  MessageSquare, CheckCircle2, ArrowRight, X, Info, Clock, Shield, Compass, MapPin
+  MessageSquare, CheckCircle2, ArrowRight, X, Info, Clock, Shield, Compass, MapPin,
+  Trees, Coffee, Footprints, Sprout, Droplets, Sparkles, Home, ChevronDown, ChevronUp
 } from 'lucide-react';
 import { Booking, CMSHomepage } from '../types';
 import { SwayingCoffeeTree, CoffeeBean, CoffeeLeaf } from './CoffeeDecoration';
@@ -61,6 +62,8 @@ export const BookingEngine: React.FC<BookingEngineProps> = ({
   const [hoveredDate, setHoveredDate] = useState<Date | null>(null);
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
   const [successBooking, setSuccessBooking] = useState<Booking | null>(null);
+  const [activeInfoTab, setActiveInfoTab] = useState<'amenities' | 'itinerary'>('itinerary');
+  const [expandedItinerary, setExpandedItinerary] = useState<number | null>(0);
 
   // Form states
   const [guestName, setGuestName] = useState("");
@@ -566,8 +569,8 @@ export const BookingEngine: React.FC<BookingEngineProps> = ({
               </div>
 
               {/* Amenities & Guidelines Card */}
-              <div id="info" className="bg-white border border-sand/30 rounded-3xl p-6 md:p-8 shadow-sm grid grid-cols-1 lg:grid-cols-12 gap-8 items-center scroll-mt-24">
-                <div className="lg:col-span-5 space-y-4">
+              <div id="info" className="bg-white border border-sand/30 rounded-3xl p-6 md:p-8 shadow-sm grid grid-cols-1 lg:grid-cols-12 gap-8 items-start scroll-mt-24">
+                <div className="lg:col-span-5 space-y-4 lg:sticky lg:top-24">
                   <span className="text-green-soft font-mono text-xs uppercase tracking-widest font-semibold block">
                     {lang === 'ID' ? 'Panduan Menginap' : 'Stay Guidelines'}
                   </span>
@@ -613,64 +616,218 @@ export const BookingEngine: React.FC<BookingEngineProps> = ({
                   </div>
                 </div>
 
-                <div className="lg:col-span-7 grid grid-cols-1 sm:grid-cols-2 gap-5">
-                  {/* Facilities Box */}
-                  <div className="bg-cream/40 p-4 rounded-2xl border border-sand/20 space-y-2.5">
-                    <h4 className="font-serif text-sm font-bold text-green-deep flex items-center space-x-2">
-                      <Info className="w-4 h-4 text-green-soft" />
+                <div className="lg:col-span-7 space-y-5">
+                  {/* Classy Minimalist Tab Buttons */}
+                  <div className="flex space-x-2 border-b border-sand/15 pb-2">
+                    <button
+                      type="button"
+                      onClick={() => setActiveInfoTab('itinerary')}
+                      className={`flex items-center space-x-2 px-4 py-2 rounded-xl text-xs font-bold tracking-wide transition-all duration-200 cursor-pointer ${
+                        activeInfoTab === 'itinerary'
+                          ? 'bg-green-deep text-cream shadow-sm scale-102'
+                          : 'bg-cream/40 text-text-dark hover:bg-cream/80'
+                      }`}
+                    >
+                      <Compass className="w-3.5 h-3.5" />
+                      <span>{lang === 'ID' ? 'Itinerary & Aktivitas' : 'Itinerary & Activities'}</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setActiveInfoTab('amenities')}
+                      className={`flex items-center space-x-2 px-4 py-2 rounded-xl text-xs font-bold tracking-wide transition-all duration-200 cursor-pointer ${
+                        activeInfoTab === 'amenities'
+                          ? 'bg-green-deep text-cream shadow-sm scale-102'
+                          : 'bg-cream/40 text-text-dark hover:bg-cream/80'
+                      }`}
+                    >
+                      <Home className="w-3.5 h-3.5" />
                       <span>{lang === 'ID' ? 'Fasilitas Homestay' : 'Homestay Amenities'}</span>
-                    </h4>
-                    <ul className="space-y-1">
-                      {homepageData.info.facilities.map((fac, idx) => {
-                        const getFacilityText = (text: string) => {
-                          if (lang === 'ID') return text;
-                          const f = text.toLowerCase();
-                          if (f.includes('kopi') || f.includes('teh')) return "Complimentary estate tea & coffee (unlimited)";
-                          if (f.includes('sarapan')) return "Authentic Indonesian breakfast included";
-                          if (f.includes('kasur') || f.includes('king') || f.includes('spring')) return "Comfortable king-size spring beds";
-                          if (f.includes('wifi') || f.includes('internet')) return "High-speed Wi-Fi internet access";
-                          if (f.includes('mandi') || f.includes('air hangat')) return "Clean bathroom with hot shower";
-                          if (f.includes('parkir')) return "Spacious, secure free parking area";
-                          return text;
-                        };
-
-                        return (
-                          <li key={idx} className="flex items-center space-x-2 font-sans text-xs text-text-mid font-light">
-                            <span className="w-1 h-1 rounded-full bg-green-soft" />
-                            <span>{getFacilityText(fac)}</span>
-                          </li>
-                        );
-                      })}
-                    </ul>
+                    </button>
                   </div>
 
-                  {/* Activities Box */}
-                  <div className="bg-cream/40 p-4 rounded-2xl border border-sand/20 space-y-2.5">
-                    <h4 className="font-serif text-sm font-bold text-green-deep flex items-center space-x-2">
-                      <Compass className="w-4 h-4 text-green-soft" />
-                      <span>{lang === 'ID' ? 'Aktivitas Menarik' : 'Exciting Activities'}</span>
-                    </h4>
-                    <ul className="space-y-1">
-                      {homepageData.info.activities.map((act, idx) => {
-                        const getActivityText = (text: string) => {
-                          if (lang === 'ID') return text;
-                          const a = text.toLowerCase();
-                          if (a.includes('kopi') || a.includes('edukasi')) return "Coffee estate & traditional brewing tour";
-                          if (a.includes('ijen') || a.includes('kawah')) return "Guided night hiking to Mount Ijen Crater";
-                          if (a.includes('etawa') || a.includes('kambing')) return "Milking experience with local dairy goats";
-                          if (a.includes('sungai') || a.includes('trekking')) return "Jungle trekking & natural river swimming";
-                          if (a.includes('banyuwangi') || a.includes('wisata')) return "Custom local Banyuwangi nature excursions";
-                          return text;
-                        };
+                  {/* Tab Contents with AnimatePresence */}
+                  <div className="min-h-[300px]">
+                    {activeInfoTab === 'itinerary' ? (
+                      <motion.div
+                        initial={{ opacity: 0, y: 5 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="space-y-3"
+                      >
+                        {/* Interactive Accordion List */}
+                        <div className="space-y-2.5">
+                          {[
+                            {
+                              id: 0,
+                              title: lang === 'ID' ? 'Staycation di Tengah Kebun Kopi' : 'Staycation Amidst Coffee Plantation',
+                              subtitle: lang === 'ID' ? '🌿 Pengalaman staycation asri & sejuk' : '🌿 Refreshing & cool retreat',
+                              desc: lang === 'ID' 
+                                ? 'Nikmati pengalaman menginap di homestay dengan pemandangan langsung hamparan kebun kopi yang asri dan sejuk. Cocok untuk healing bersama keluarga maupun teman.'
+                                : 'Enjoy a staycation experience with a direct view of the beautiful, cool coffee plantation. Perfect for healing with family or friends.',
+                              icon: Trees,
+                              color: 'text-emerald-700 bg-emerald-50 border-emerald-100'
+                            },
+                            {
+                              id: 1,
+                              title: lang === 'ID' ? 'Coffee Tour Experience' : 'Coffee Tour Experience',
+                              subtitle: lang === 'ID' ? '☕ Tur edukasi kopi dari hulu ke hilir' : '☕ Bean-to-cup educational tour',
+                              desc: lang === 'ID' 
+                                ? 'Bagi yang ingin mengenal lebih dalam tentang kopi, tersedia paket tur kebun kopi. Anda bisa belajar proses budidaya kopi dari awal hingga panen, mengenal jenis-jenis kopi lokal, melihat proses pengolahan kopi secara langsung, serta menikmati kopi segar langsung dari sumbernya.'
+                                : 'For those who want to know more about coffee, a coffee garden tour package is available. Learn the coffee cultivation process from seeds to harvest, identify local coffee varieties, watch the processing firsthand, and enjoy fresh coffee straight from the source.',
+                              bullets: lang === 'ID' ? [
+                                'Belajar proses budidaya kopi dari awal hingga panen',
+                                'Mengenal jenis-jenis kopi lokal',
+                                'Melihat proses pengolahan kopi secara langsung',
+                                'Menikmati kopi fresh langsung dari sumbernya'
+                              ] : [
+                                'Learn cultivation from planting to harvesting',
+                                'Discover rich local coffee varieties',
+                                'Watch the processing steps live',
+                                'Savor freshly brewed coffee at the source'
+                              ],
+                              icon: Coffee,
+                              color: 'text-amber-800 bg-amber-50 border-amber-100'
+                            },
+                            {
+                              id: 2,
+                              title: lang === 'ID' ? 'Village & Local Life Tour' : 'Village & Local Life Tour',
+                              subtitle: lang === 'ID' ? '🚶 Berkeliling desa & aktivitas warga' : '🚶 Village stroll & local interaction',
+                              desc: lang === 'ID'
+                                ? 'Tidak hanya kebun kopi, Anda juga bisa berkeliling desa untuk melihat aktivitas sehari-hari masyarakat lokal Gombengsari, mulai dari bertani hingga kegiatan tradisional yang kental dengan keramahan warga.'
+                                : 'Beyond coffee, wander around the village to observe the daily activities of the local Gombengsari community, from farming to traditional warm practices.',
+                              icon: Footprints,
+                              color: 'text-stone-700 bg-stone-50 border-stone-100'
+                            },
+                            {
+                              id: 3,
+                              title: lang === 'ID' ? 'Explore Rice Fields' : 'Explore Rice Fields',
+                              subtitle: lang === 'ID' ? '🌾 Hamparan persawahan hijau menenangkan' : '🌾 Relaxing green paddy views',
+                              desc: lang === 'ID'
+                                ? 'Nikmati suasana persawahan hijau yang menenangkan dengan udara segar khas pedesaan Gombengsari yang sejuk dan menentramkan jiwa.'
+                                : 'Indulge in the relaxing vista of green terraced rice fields with fresh countryside breeze that puts your mind at ease.',
+                              icon: Sprout,
+                              color: 'text-green-700 bg-green-50 border-green-100'
+                            },
+                            {
+                              id: 4,
+                              title: lang === 'ID' ? 'Hidden Waterfall Visit' : 'Hidden Waterfall Visit',
+                              subtitle: lang === 'ID' ? '💧 Segarnya air terjun alami yang asri' : '💧 Pristine natural waterfall escape',
+                              desc: lang === 'ID'
+                                ? 'Lengkapi perjalanan petualangan Anda dengan mengunjungi air terjun alami tersembunyi yang masih asri, jernih, dan sangat cocok untuk refreshing menyegarkan tubuh.'
+                                : 'Complete your adventure by visiting a hidden natural waterfall that is pristine, clear, and perfectly suited for refreshing your mind and body.',
+                              icon: Droplets,
+                              color: 'text-blue-700 bg-blue-50 border-blue-100'
+                            }
+                          ].map((item) => {
+                            const IconComponent = item.icon;
+                            const isExpanded = expandedItinerary === item.id;
+                            return (
+                              <div
+                                key={item.id}
+                                className={`border rounded-2xl transition-all overflow-hidden bg-white hover:shadow-3xs ${
+                                  isExpanded ? 'border-green-soft/30 shadow-3xs' : 'border-gray-150/60'
+                                }`}
+                              >
+                                <button
+                                  type="button"
+                                  onClick={() => setExpandedItinerary(isExpanded ? null : item.id)}
+                                  className="w-full flex items-center justify-between p-3 text-left focus:outline-none transition-colors cursor-pointer hover:bg-gray-50/40"
+                                >
+                                  <div className="flex items-center space-x-3 min-w-0">
+                                    <div className={`w-8 h-8 rounded-xl flex items-center justify-center border shrink-0 ${item.color}`}>
+                                      <IconComponent className="w-4 h-4" />
+                                    </div>
+                                    <div className="min-w-0">
+                                      <h4 className="font-serif font-bold text-xs text-green-deep">{item.title}</h4>
+                                      <p className="font-sans text-[9px] text-gray-400 mt-0.5 font-light">{item.subtitle}</p>
+                                    </div>
+                                  </div>
+                                  <div className="shrink-0 text-gray-400 pl-2">
+                                    {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                                  </div>
+                                </button>
+                                
+                                <AnimatePresence initial={false}>
+                                  {isExpanded && (
+                                    <motion.div
+                                      initial={{ height: 0 }}
+                                      animate={{ height: 'auto' }}
+                                      exit={{ height: 0 }}
+                                      className="overflow-hidden"
+                                    >
+                                      <div className="px-3.5 pb-4 pt-1 border-t border-gray-50 bg-gray-50/10 space-y-2.5">
+                                        <p className="font-sans text-[11px] text-text-mid font-light leading-relaxed">
+                                          {item.desc}
+                                        </p>
+                                        {item.bullets && (
+                                          <ul className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 pt-1 pl-1">
+                                            {item.bullets.map((b, bIdx) => (
+                                              <li key={bIdx} className="flex items-start space-x-2 font-sans text-[11px] text-text-dark font-light">
+                                                <span className="text-amber-500 text-xs leading-none mt-0.5">•</span>
+                                                <span>{b}</span>
+                                              </li>
+                                            ))}
+                                          </ul>
+                                        )}
+                                      </div>
+                                    </motion.div>
+                                  )}
+                                </AnimatePresence>
+                              </div>
+                            );
+                          })}
+                        </div>
 
-                        return (
-                          <li key={idx} className="flex items-center space-x-2 font-sans text-xs text-text-mid font-light">
-                            <span className="w-1 h-1 rounded-full bg-coffee" />
-                            <span>{getActivityText(act)}</span>
-                          </li>
-                        );
-                      })}
-                    </ul>
+                        {/* Elegantly styled "Ideal For" Banner */}
+                        <div className="bg-green-deep/[0.02] border border-green-soft/10 p-3 rounded-2xl flex items-center space-x-3 mt-1.5">
+                          <div className="w-7 h-7 bg-green-deep/5 rounded-xl flex items-center justify-center shrink-0">
+                            <Sparkles className="w-3.5 h-3.5 text-green-soft" />
+                          </div>
+                          <div className="min-w-0 text-left">
+                            <span className="font-serif font-bold text-[10px] text-green-deep block uppercase tracking-wider">
+                              {lang === 'ID' ? 'Cocok Untuk Staycation Anda:' : 'Perfect For Your Staycation:'}
+                            </span>
+                            <span className="font-sans text-[10px] text-text-mid font-light mt-0.5 block">
+                              {lang === 'ID' 
+                                ? 'Healing & refreshing • Edukasi Kopi • Family trip • Foto-foto estetik nuansa alam' 
+                                : 'Healing & refreshing • Coffee education • Family trip • Aesthetic nature photography'}
+                            </span>
+                          </div>
+                        </div>
+                      </motion.div>
+                    ) : (
+                      <motion.div
+                        initial={{ opacity: 0, y: 5 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="bg-cream/20 p-5 rounded-3xl border border-sand/20 space-y-4"
+                      >
+                        <h4 className="font-serif text-xs font-bold text-green-deep flex items-center space-x-2 uppercase tracking-wider">
+                          <Home className="w-4 h-4 text-green-soft" />
+                          <span>{lang === 'ID' ? 'Fasilitas Menginap Terbaik' : 'Premium Homestay Amenities'}</span>
+                        </h4>
+                        <ul className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          {homepageData.info.facilities.map((fac, idx) => {
+                            const getFacilityText = (text: string) => {
+                              if (lang === 'ID') return text;
+                              const f = text.toLowerCase();
+                              if (f.includes('kopi') || f.includes('teh')) return "Complimentary estate tea & coffee (unlimited)";
+                              if (f.includes('sarapan')) return "Authentic Indonesian breakfast included";
+                              if (f.includes('kasur') || f.includes('king') || f.includes('spring')) return "Comfortable king-size spring beds";
+                              if (f.includes('wifi') || f.includes('internet')) return "High-speed Wi-Fi internet access";
+                              if (f.includes('mandi') || f.includes('air hangat')) return "Clean bathroom with hot shower";
+                              if (f.includes('parkir')) return "Spacious, secure free parking area";
+                              return text;
+                            };
+
+                            return (
+                              <li key={idx} className="flex items-center space-x-2.5 font-sans text-xs text-text-dark font-light bg-white/70 p-2.5 rounded-xl border border-sand/10 shadow-3xs">
+                                <span className="w-1.5 h-1.5 rounded-full bg-green-soft shrink-0" />
+                                <span className="leading-snug">{getFacilityText(fac)}</span>
+                              </li>
+                            );
+                          })}
+                        </ul>
+                      </motion.div>
+                    )}
                   </div>
                 </div>
               </div>
