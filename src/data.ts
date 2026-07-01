@@ -28,7 +28,7 @@ export const BUSINESS_INFO = {
   type: "Homestay keluarga autentik di perkebunan kopi",
   rating: 4.9,
   totalReviews: "90+",
-  priceFrom: "€140",
+  priceFrom: "140K",
   whatsappNumber: "+62 812-3380-0631",
   whatsappUrl: "https://wa.me/6281233800631?text=Halo%20Peno%20Homestay!%20Saya%20ingin%20menanyakan%20ketersediaan%20kamar.",
   instagramUser: "@penohomestaybanyuwangi",

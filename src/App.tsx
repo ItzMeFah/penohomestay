@@ -67,41 +67,36 @@ interface LanguageSelectorProps {
 }
 
 function LanguageSelector({ lang, setLang, compact = false }: LanguageSelectorProps) {
-  if (compact) {
-    return (
-      <div className="flex items-center space-x-1 bg-white/10 p-0.5 rounded-full border border-white/10 no-print">
-        {(['ID', 'EN'] as LanguageType[]).map((l) => (
-          <button
-            key={l}
-            onClick={() => setLang(l)}
-            className={`px-2 py-1 rounded-full text-[10px] font-extrabold transition-all cursor-pointer ${
-              lang === l
-                ? 'bg-sand text-green-deep shadow-sm scale-105'
-                : 'text-cream/80 hover:text-cream hover:bg-white/5'
-            }`}
-          >
-            {l}
-          </button>
-        ))}
-      </div>
-    );
-  }
+  const isEnglish = lang === 'EN';
 
   return (
-    <div className="flex items-center bg-green-soft/30 p-1 rounded-full border border-green-soft/20 no-print">
-      {(['ID', 'EN'] as LanguageType[]).map((l) => (
-        <button
-          key={l}
-          onClick={() => setLang(l)}
-          className={`px-3 py-1.5 rounded-full text-xs font-bold tracking-wider transition-all cursor-pointer ${
-            lang === l
-              ? 'bg-sand text-green-deep shadow-md scale-105'
-              : 'text-cream/90 hover:text-cream hover:bg-white/5'
-          }`}
-        >
-          {l}
-        </button>
-      ))}
+    <div className={`flex items-center space-x-2 no-print rounded-2xl border border-white/15 select-none transition-all ${
+      compact ? 'bg-white/10 px-2 py-1' : 'bg-green-soft/20 px-3 py-1.5'
+    }`}>
+      <span className={`text-[10px] md:text-xs font-black font-sans tracking-wide transition-all duration-300 ${!isEnglish ? 'text-sand scale-105' : 'text-cream/40'}`}>ID</span>
+      
+      <label className="relative inline-flex items-center cursor-pointer">
+        <input 
+          type="checkbox" 
+          id="switch-bahasa" 
+          checked={isEnglish}
+          onChange={(e) => {
+            const nextLang = e.target.checked ? 'EN' : 'ID';
+            setLang(nextLang);
+            
+            // Ambil elemen combo box bawaan Google Translate dan ubah nilainya
+            const combo = document.querySelector('.goog-te-combo') as HTMLSelectElement | null;
+            if (combo) {
+              combo.value = e.target.checked ? 'en' : 'id';
+              combo.dispatchEvent(new Event('change'));
+            }
+          }}
+          className="sr-only peer" 
+        />
+        <div className="w-9 h-5 bg-green-deep/90 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-sand after:rounded-full after:h-4 after:w-4 after:transition-all border border-green-soft/40 peer-checked:bg-green-soft"></div>
+      </label>
+      
+      <span className={`text-[10px] md:text-xs font-black font-sans tracking-wide transition-all duration-300 ${isEnglish ? 'text-sand scale-105' : 'text-cream/40'}`}>EN</span>
     </div>
   );
 }
@@ -125,10 +120,20 @@ export default function App() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isRouteLoading, setIsRouteLoading] = useState(false);
   const [activeSection, setActiveSection] = useState<string>('hero');
+  const [selectedVillaId, setSelectedVillaId] = useState<string>("");
 
   // Global Language State
   const [lang, setLang] = useState<LanguageType>(() => {
-    return (safeStorage.getItem("peno_lang") as LanguageType) || "EN";
+    // Check google translate cookie to determine active language
+    try {
+      const match = document.cookie.match(/googtrans=([^;]+)/);
+      if (match) {
+        const val = decodeURIComponent(match[1]);
+        if (val.endsWith('/en')) return 'EN';
+        if (val.endsWith('/id')) return 'ID';
+      }
+    } catch (e) {}
+    return (safeStorage.getItem("peno_lang") as LanguageType) || "ID";
   });
 
   // Dual language notice tooltip (visible for 5 seconds)
@@ -146,9 +151,31 @@ export default function App() {
     safeStorage.setItem("peno_lang", newLang);
   };
 
+  // Sync state dengan Google Translate Combo Box ketika termuat
+  useEffect(() => {
+    let attempts = 0;
+    const interval = setInterval(() => {
+      const combo = document.querySelector('.goog-te-combo') as HTMLSelectElement | null;
+      if (combo) {
+        const targetVal = lang === 'EN' ? 'en' : 'id';
+        if (combo.value !== targetVal) {
+          combo.value = targetVal;
+          combo.dispatchEvent(new Event('change'));
+        }
+        clearInterval(interval);
+      }
+      attempts++;
+      if (attempts > 30) {
+        clearInterval(interval);
+      }
+    }, 500);
+
+    return () => clearInterval(interval);
+  }, [lang]);
+
   // Global Currency State
   const [currency, setCurrency] = useState<CurrencyType>(() => {
-    return (safeStorage.getItem("peno_currency") as CurrencyType) || "EUR";
+    return (safeStorage.getItem("peno_currency") as CurrencyType) || "IDR";
   });
 
   const handleSetCurrency = (newCurrency: CurrencyType) => {
@@ -348,12 +375,16 @@ export default function App() {
 
   // Submit Booking handler from engine page
   const handleSubmitBooking = (bookingData: Omit<Booking, 'id' | 'created_at' | 'status' | 'total_eur'>) => {
+    const villas = homepageData.villas || [];
+    const selectedVilla = villas.find(v => v.id === bookingData.villa_id);
+    const pricePerNight = selectedVilla ? selectedVilla.pricePerPax : (settings.pricePerNight || 140);
+
     const newBooking: Booking = {
       ...bookingData,
       id: "PNO-" + Date.now().toString().slice(-8),
       created_at: new Date().toISOString(),
       status: 'pending',
-      total_eur: bookingData.nights * (settings.pricePerNight || 140)
+      total_eur: bookingData.nights * pricePerNight
     };
 
     // 1. Add to bookings
@@ -672,6 +703,7 @@ export default function App() {
             onNavigate={navigateToPage}
             currency={currency}
             lang={lang}
+            setSelectedVillaId={setSelectedVillaId}
           />
         )}
 
@@ -686,6 +718,8 @@ export default function App() {
             onChangeCurrency={handleSetCurrency}
             lang={lang}
             homepageData={homepageData}
+            selectedVillaId={selectedVillaId}
+            setSelectedVillaId={setSelectedVillaId}
           />
         )}
 

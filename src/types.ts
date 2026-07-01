@@ -11,6 +11,7 @@ export interface Booking {
   guest_wa: string;
   guest_count: number;
   notes?: string;
+  villa_id?: string;
 }
 
 export interface CMSStat {
@@ -50,6 +51,17 @@ export interface CMSHighlightItem {
   imageUrl?: string;
 }
 
+export interface VillaRoom {
+  id: string;
+  title: string;
+  description: string;
+  capacity: number; // pax / capacity
+  includeBreakfast: boolean;
+  imageUrl: string;
+  pricePerPax: number; // price per night/pax in EUR
+  room_code?: string;
+}
+
 export interface CMSHomepage {
   hero: {
     headline: string;
@@ -73,6 +85,7 @@ export interface CMSHomepage {
     facilities: string[];
     activities: string[];
   };
+  villas?: VillaRoom[];
 }
 
 export interface GalleryItem {

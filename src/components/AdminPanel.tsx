@@ -4,7 +4,7 @@ import {
   LayoutDashboard, CalendarRange, Lock, Bell, FileEdit, Image as ImageIcon, 
   Settings as SettingsIcon, LogOut, Search, ChevronLeft, ChevronRight, Eye, 
   Check, X, Trash2, ShieldAlert, Download, Printer, Plus, Edit2, Info, EyeOff, Save, RefreshCw,
-  MessageSquare, Upload, Layers, MapPin, Star, Menu
+  MessageSquare, Upload, Layers, MapPin, Star, Menu, Home
 } from 'lucide-react';
 import { Booking, CMSHomepage, GalleryItem, AdminNotification, CMSTourPackage, CMSHighlightItem } from '../types';
 import { createClient } from '@supabase/supabase-js';
@@ -111,6 +111,48 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
   const [tourIsActive, setTourIsActive] = useState(true);
   const [activeTourTab, setActiveTourTab] = useState<'upload' | 'url'>('upload');
 
+  // Villa/Room CMS edit states
+  const [showVillaModal, setShowVillaModal] = useState(false);
+  const [editingVilla, setEditingVilla] = useState<any>(null);
+  const [villaTitle, setVillaTitle] = useState("");
+  const [villaDescription, setVillaDescription] = useState("");
+  const [villaCapacity, setVillaCapacity] = useState(2);
+  const [villaIncludeBreakfast, setVillaIncludeBreakfast] = useState(true);
+  const [villaImageUrl, setVillaImageUrl] = useState("");
+  const [villaPricePerPax, setVillaPricePerPax] = useState(140);
+  const [villaRoomCode, setVillaRoomCode] = useState("");
+  const [activeVillaTab, setActiveVillaTab] = useState<'upload' | 'url'>('upload');
+
+  // Room code and Time filters states
+  const [filterRoomCode, setFilterRoomCode] = useState("all");
+  const [filterTimeRange, setFilterTimeRange] = useState("all");
+
+  // Settings sub-tab state
+  const [settingsSubTab, setSettingsSubTab] = useState<'general' | 'cms'>('general');
+
+  // Confirmation Modal state
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [confirmModalConfig, setConfirmModalConfig] = useState<{
+    title: string;
+    message: string;
+    onConfirm: () => void;
+    confirmText?: string;
+    cancelText?: string;
+    isDanger?: boolean;
+  } | null>(null);
+
+  const requestConfirmation = (config: {
+    title: string;
+    message: string;
+    onConfirm: () => void;
+    confirmText?: string;
+    cancelText?: string;
+    isDanger?: boolean;
+  }) => {
+    setConfirmModalConfig(config);
+    setShowConfirmModal(true);
+  };
+
   // Highlights CMS edit states
   const [showHighlightModal, setShowHighlightModal] = useState(false);
   const [editingHighlight, setEditingHighlight] = useState<CMSHighlightItem | null>(null);
@@ -146,6 +188,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
   // Admin View Large Calendar
   const [calYear, setCalYear] = useState(2026);
   const [calMonth, setCalMonth] = useState(5); // June
+  const [selectedCalendarVillaId, setSelectedCalendarVillaId] = useState("");
+  const [offlineSelectedVillaId, setOfflineSelectedVillaId] = useState("");
 
   // Toast / Status state
   const [toastMessage, setToastMessage] = useState("");
@@ -307,11 +351,19 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
   };
 
   const handleDeleteBooking = (bookingId: string) => {
-    if (!window.confirm("Apakah Anda yakin ingin menghapus pemesanan ini secara permanen dari basis data? Tindakan ini tidak dapat dibatalkan.")) return;
-    const updated = bookings.filter(b => b.id !== bookingId);
-    onUpdateBookings(updated);
-    showAdminToast(`Pemesanan ${bookingId} telah dihapus!`, 'danger');
-    setSelectedBookingDetail(null);
+    requestConfirmation({
+      title: "Hapus Pemesanan Secara Permanen",
+      message: `Apakah Anda yakin ingin menghapus pemesanan ${bookingId} secara permanen dari basis data? Tindakan ini tidak dapat dibatalkan.`,
+      isDanger: true,
+      confirmText: "Ya, Hapus",
+      cancelText: "Batal",
+      onConfirm: () => {
+        const updated = bookings.filter(b => b.id !== bookingId);
+        onUpdateBookings(updated);
+        showAdminToast(`Pemesanan ${bookingId} telah dihapus!`, 'danger');
+        setSelectedBookingDetail(null);
+      }
+    });
   };
 
   const calculateNights = (inStr: string, outStr: string): number => {
@@ -337,9 +389,12 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
       return;
     }
 
-    // Check overlaps with existing active bookings
+    // Check overlaps with existing active bookings for this specific villa
+    const selectedVillaIdForOffline = offlineSelectedVillaId || (homepageData.villas?.[0]?.id || "");
     const hasOverlap = bookings.some(b => {
       if (b.status !== 'paid') return false;
+      const bVillaId = b.villa_id || (homepageData.villas?.[0]?.id || "");
+      if (bVillaId !== selectedVillaIdForOffline) return false;
       const bStart = new Date(b.check_in);
       const bEnd = new Date(b.check_out);
       bStart.setHours(0,0,0,0);
@@ -348,7 +403,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
     });
 
     if (hasOverlap) {
-      showAdminToast("Tanggal tersebut sudah terisi oleh pemesanan lain!", "danger");
+      showAdminToast("Tanggal tersebut sudah terisi oleh pemesanan lain di Villa/Kamar ini!", "danger");
       return;
     }
 
@@ -367,7 +422,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
       guest_email: offlineGuestEmail || "offline@penohomestay.com",
       guest_wa: offlineGuestWa,
       guest_count: offlineGuestCount,
-      notes: offlineNotes || "Offline Booking"
+      notes: offlineNotes || "Offline Booking",
+      villa_id: selectedVillaIdForOffline
     };
 
     const updatedBookings = [newBooking, ...bookings];
@@ -652,17 +708,32 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
   };
 
   const handleDeleteGalleryItem = (id: number) => {
-    if (!window.confirm("Apakah Anda yakin ingin menghapus foto galeri ini?")) return;
-    const updated = galleryData.filter(g => g.id !== id);
-    onUpdateGallery(updated);
-    showAdminToast("Foto galeri berhasil dihapus!", "success");
+    requestConfirmation({
+      title: "Hapus Foto Galeri",
+      message: "Apakah Anda yakin ingin menghapus foto galeri ini?",
+      isDanger: true,
+      confirmText: "Ya, Hapus",
+      cancelText: "Batal",
+      onConfirm: () => {
+        const updated = galleryData.filter(g => g.id !== id);
+        onUpdateGallery(updated);
+        showAdminToast("Foto galeri berhasil dihapus!", "success");
+      }
+    });
   };
 
   const handleResetGallery = () => {
-    if (window.confirm("Apakah Anda yakin ingin mereset semua galeri ke gambar bawaan? Ini berguna jika memori penuh karena pernah mengunggah foto berukuran sangat besar.")) {
-      onUpdateGallery(DEFAULT_GALLERY);
-      showAdminToast("Galeri berhasil direset ke gambar bawaan!", "success");
-    }
+    requestConfirmation({
+      title: "Reset Galeri ke Bawaan",
+      message: "Apakah Anda yakin ingin mereset semua galeri ke gambar bawaan? Ini berguna jika memori penuh karena pernah mengunggah foto berukuran sangat besar.",
+      isDanger: true,
+      confirmText: "Ya, Reset",
+      cancelText: "Batal",
+      onConfirm: () => {
+        onUpdateGallery(DEFAULT_GALLERY);
+        showAdminToast("Galeri berhasil direset ke gambar bawaan!", "success");
+      }
+    });
   };
 
   // ==========================================
@@ -772,11 +843,132 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
   };
 
   const handleDeleteTour = (id: number) => {
-    if (!window.confirm("Apakah Anda yakin ingin menghapus paket wisata ini?")) return;
-    const existingTours = homepageData.tours || [];
-    const updatedTours = existingTours.filter(t => t.id !== id);
-    onUpdateHomepage({ ...homepageData, tours: updatedTours });
-    showAdminToast("Paket wisata berhasil dihapus!", "success");
+    requestConfirmation({
+      title: "Hapus Paket Wisata",
+      message: "Apakah Anda yakin ingin menghapus paket wisata ini? Tamu tidak akan dapat lagi melihat paket ini di beranda.",
+      isDanger: true,
+      confirmText: "Ya, Hapus",
+      cancelText: "Batal",
+      onConfirm: () => {
+        const existingTours = homepageData.tours || [];
+        const updatedTours = existingTours.filter(t => t.id !== id);
+        onUpdateHomepage({ ...homepageData, tours: updatedTours });
+        showAdminToast("Paket wisata berhasil dihapus!", "success");
+      }
+    });
+  };
+
+  // 🌟 VILLA/ROOM CMS HANDLERS
+  // ==========================================
+  const handleOpenAddVilla = () => {
+    setEditingVilla(null);
+    setVillaTitle("");
+    setVillaDescription("");
+    setVillaCapacity(2);
+    setVillaIncludeBreakfast(true);
+    setVillaImageUrl("");
+    setVillaPricePerPax(140);
+    setVillaRoomCode("");
+    setSelectedImageFile(null);
+    setUploadError("");
+    setCloudUploadSuccess(null);
+    setIsUploadingCloud(false);
+    setActiveVillaTab('upload');
+    setShowVillaModal(true);
+  };
+
+  const handleOpenEditVilla = (villa: any) => {
+    setEditingVilla(villa);
+    setVillaTitle(villa.title);
+    setVillaDescription(villa.description);
+    setVillaCapacity(villa.capacity);
+    setVillaIncludeBreakfast(villa.includeBreakfast);
+    setVillaImageUrl(villa.imageUrl);
+    setVillaPricePerPax(villa.pricePerPax);
+    setVillaRoomCode(villa.room_code || "");
+    setSelectedImageFile(null);
+    setUploadError("");
+    setCloudUploadSuccess(null);
+    setIsUploadingCloud(false);
+    setActiveVillaTab(villa.imageUrl ? 'url' : 'upload');
+    setShowVillaModal(true);
+  };
+
+  const handleSaveVilla = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!villaTitle.trim()) {
+      showAdminToast("Judul Villa/Kamar tidak boleh kosong!", "danger");
+      return;
+    }
+
+    setSaveStatus('saving');
+    let finalUrl = villaImageUrl;
+
+    if (selectedImageFile && activeVillaTab === 'upload') {
+      const uploadedUrl = await handleUploadToSupabase();
+      if (uploadedUrl) {
+        finalUrl = uploadedUrl;
+      }
+    }
+
+    const existingVillas = homepageData.villas || [];
+
+    if (editingVilla) {
+      // Edit existing villa
+      const updatedVillas = existingVillas.map(v => {
+        if (v.id === editingVilla.id) {
+          return {
+            ...v,
+            title: villaTitle,
+            description: villaDescription,
+            capacity: Number(villaCapacity),
+            includeBreakfast: villaIncludeBreakfast,
+            imageUrl: finalUrl,
+            pricePerPax: Number(villaPricePerPax),
+            room_code: villaRoomCode
+          };
+        }
+        return v;
+      });
+      onUpdateHomepage({ ...homepageData, villas: updatedVillas });
+      showAdminToast("Villa/Kamar berhasil diperbarui!", "success");
+    } else {
+      // Add new villa
+      const newVilla = {
+        id: `v-${Date.now()}`,
+        title: villaTitle,
+        description: villaDescription,
+        capacity: Number(villaCapacity),
+        includeBreakfast: villaIncludeBreakfast,
+        imageUrl: finalUrl,
+        pricePerPax: Number(villaPricePerPax),
+        room_code: villaRoomCode
+      };
+      onUpdateHomepage({ ...homepageData, villas: [...existingVillas, newVilla] });
+      showAdminToast("Villa/Kamar berhasil ditambahkan!", "success");
+    }
+
+    setSaveStatus('saved');
+    setTimeout(() => {
+      setSaveStatus('idle');
+      setShowVillaModal(false);
+    }, 1500);
+  };
+
+  const handleDeleteVilla = (id: string) => {
+    requestConfirmation({
+      title: "Hapus Villa / Kamar",
+      message: "Apakah Anda yakin ingin menghapus Villa/Kamar ini? Tindakan ini akan menghilangkan data ketersediaan kamar di beranda.",
+      isDanger: true,
+      confirmText: "Ya, Hapus",
+      cancelText: "Batal",
+      onConfirm: () => {
+        const existingVillas = homepageData.villas || [];
+        const updatedVillas = existingVillas.filter(v => v.id !== id);
+        onUpdateHomepage({ ...homepageData, villas: updatedVillas });
+        showAdminToast("Villa/Kamar berhasil dihapus!", "success");
+      }
+    });
   };
 
   // 🌟 HIGHLIGHTS CMS HANDLERS
@@ -874,18 +1066,26 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
   };
 
   const handleDeleteHighlight = (id: string) => {
-    if (!window.confirm("Apakah Anda yakin ingin menghapus highlight ini?")) return;
-    const currentAbout = homepageData.about || { title: "", body: "", highlights: [] };
-    const existingHighlights = currentAbout.highlightItems || [];
-    const updatedHighlights = existingHighlights.filter(h => h.id !== id);
-    onUpdateHomepage({
-      ...homepageData,
-      about: {
-        ...currentAbout,
-        highlightItems: updatedHighlights
+    requestConfirmation({
+      title: "Hapus Highlight",
+      message: "Apakah Anda yakin ingin menghapus highlight ini?",
+      isDanger: true,
+      confirmText: "Ya, Hapus",
+      cancelText: "Batal",
+      onConfirm: () => {
+        const currentAbout = homepageData.about || { title: "", body: "", highlights: [] };
+        const existingHighlights = currentAbout.highlightItems || [];
+        const updatedHighlights = existingHighlights.filter(h => h.id !== id);
+        onUpdateHomepage({
+          ...homepageData,
+          about: {
+            ...currentAbout,
+            highlightItems: updatedHighlights
+          }
+        });
+        showAdminToast("Highlight berhasil dihapus!", "success");
       }
     });
-    showAdminToast("Highlight berhasil dihapus!", "success");
   };
 
   // Reorder gallery helper by ID and view filter
@@ -984,6 +1184,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
             setTourImageUrl(compressedBase64);
           } else if (showHighlightModal) {
             setHighlightImageUrl(compressedBase64);
+          } else if (showVillaModal) {
+            setVillaImageUrl(compressedBase64);
           } else {
             setGalleryUrl(compressedBase64);
           }
@@ -994,6 +1196,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
             setTourImageUrl(rawBase64);
           } else if (showHighlightModal) {
             setHighlightImageUrl(rawBase64);
+          } else if (showVillaModal) {
+            setVillaImageUrl(rawBase64);
           } else {
             setGalleryUrl(rawBase64);
           }
@@ -1084,6 +1288,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
         setTourImageUrl(publicUrl);
       } else if (showHighlightModal) {
         setHighlightImageUrl(publicUrl);
+      } else if (showVillaModal) {
+        setVillaImageUrl(publicUrl);
       } else {
         setGalleryUrl(publicUrl);
       }
@@ -1157,6 +1363,45 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
       result = result.filter(b => b.status === bookingStatusFilter);
     }
 
+    // Filter by Room Code
+    if (filterRoomCode !== 'all') {
+      const villas = homepageData.villas || [];
+      result = result.filter(b => {
+        const v = villas.find((vl: any) => vl.id === b.villa_id);
+        const rCodeFromVilla = v ? (v.room_code || "") : "";
+        const rCodeFromBooking = (b as any).ROOM || "";
+        return rCodeFromVilla === filterRoomCode || rCodeFromBooking === filterRoomCode;
+      });
+    }
+
+    // Filter by Time Range
+    if (filterTimeRange !== 'all') {
+      if (filterTimeRange === 'week') {
+        const today = new Date();
+        today.setHours(0,0,0,0);
+        const day = today.getDay();
+        const diff = today.getDate() - day + (day === 0 ? -6 : 1);
+        const startOfWeek = new Date(today);
+        startOfWeek.setDate(diff);
+        startOfWeek.setHours(0,0,0,0);
+        
+        const endOfWeek = new Date(startOfWeek);
+        endOfWeek.setDate(startOfWeek.getDate() + 6);
+        endOfWeek.setHours(23,59,59,999);
+
+        result = result.filter(b => {
+          const checkInDate = new Date(b.check_in);
+          return checkInDate >= startOfWeek && checkInDate <= endOfWeek;
+        });
+      } else if (filterTimeRange.startsWith('month:')) {
+        const targetMonth = parseInt(filterTimeRange.split(':')[1], 10);
+        result = result.filter(b => {
+          const checkInDate = new Date(b.check_in);
+          return checkInDate.getMonth() === targetMonth;
+        });
+      }
+    }
+
     // Sort options
     result.sort((a, b) => {
       if (bookingSort === 'newest') {
@@ -1170,7 +1415,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
     });
 
     return result;
-  }, [bookings, bookingSearch, bookingStatusFilter, bookingSort]);
+  }, [bookings, bookingSearch, bookingStatusFilter, bookingSort, filterRoomCode, filterTimeRange, homepageData]);
 
   // Calculations for Admin Dashboard counters
   const totalBookingsCount = bookings.length;
@@ -1193,6 +1438,9 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
       dayCells.push(<div key={`empty-${i}`} className="aspect-square w-full bg-gray-50/20 border border-gray-100/40 rounded-lg" />);
     }
 
+    const villasList = homepageData.villas || [];
+    const currentCalendarVillaId = selectedCalendarVillaId || (villasList[0]?.id || "");
+
     // Monthly cells
     for (let d = 1; d <= daysInMonth; d++) {
       const date = new Date(calYear, calMonth, d);
@@ -1200,6 +1448,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
       
       const paidBooking = bookings.find(b => {
         if (b.status !== 'paid') return false;
+        const bVillaId = b.villa_id || (villasList[0]?.id || "");
+        if (bVillaId !== currentCalendarVillaId) return false;
         let start = new Date(b.check_in);
         let end = new Date(b.check_out);
         start.setHours(0,0,0,0);
@@ -1212,6 +1462,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
       
       const pendingBooking = bookings.find(b => {
         if (b.status !== 'pending') return false;
+        const bVillaId = b.villa_id || (villasList[0]?.id || "");
+        if (bVillaId !== currentCalendarVillaId) return false;
         let start = new Date(b.check_in);
         let end = new Date(b.check_out);
         start.setHours(0,0,0,0);
@@ -1222,7 +1474,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
 
       const activeBooking = paidBooking || pendingBooking;
 
-      const isBlocked = blockedDates.includes(key);
+      const isBlocked = blockedDates.includes(key) || blockedDates.includes(`${currentCalendarVillaId}:${key}`);
 
       let statusType: 'available' | 'paid' | 'pending' | 'blocked' = 'available';
       let label = "";
@@ -1250,11 +1502,11 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
               setSelectedBookingDetail(activeBooking);
             } else {
               if (isBlocked) {
-                const updated = blockedDates.filter(k => k !== key);
+                const updated = blockedDates.filter(k => k !== key && k !== `${currentCalendarVillaId}:${key}`);
                 onUpdateBlockedDates(updated);
                 showAdminToast(`Tanggal ${d} ${MONTHS_ID[calMonth]} ${calYear} diatur kembali sebagai TERSEDIA!`, "success");
               } else {
-                const updated = [...blockedDates, key];
+                const updated = [...blockedDates, `${currentCalendarVillaId}:${key}`];
                 onUpdateBlockedDates(updated);
                 showAdminToast(`Tanggal ${d} ${MONTHS_ID[calMonth]} ${calYear} diatur sebagai BOOKED!`, "success");
               }
@@ -1591,6 +1843,19 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
 
             <button
               onClick={() => {
+                setActiveTab('villas');
+                setSidebarOpen(false);
+              }}
+              className={`flex items-center space-x-3 px-4 py-3 rounded-xl font-sans text-sm font-medium transition-all text-left w-full cursor-pointer ${
+                activeTab === 'villas' ? 'bg-green-soft text-cream border-l-4 border-sand shadow-md' : 'text-cream/80 hover:bg-cream/10 hover:text-cream'
+              }`}
+            >
+              <Home className="w-4 h-4" />
+              <span>Manajemen Villa / Kamar</span>
+            </button>
+
+            <button
+              onClick={() => {
                 setActiveTab('header');
                 setSidebarOpen(false);
               }}
@@ -1615,18 +1880,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
               <span>Manajemen Galeri</span>
             </button>
 
-            <button
-              onClick={() => {
-                setActiveTab('cms');
-                setSidebarOpen(false);
-              }}
-              className={`flex items-center space-x-3 px-4 py-3 rounded-xl font-sans text-sm font-medium transition-all text-left w-full cursor-pointer ${
-                activeTab === 'cms' ? 'bg-green-soft text-cream border-l-4 border-sand shadow-md' : 'text-cream/80 hover:bg-cream/10 hover:text-cream'
-              }`}
-            >
-              <FileEdit className="w-4 h-4" />
-              <span>CMS Edit Home</span>
-            </button>
+
 
             <button
               onClick={() => {
@@ -1669,11 +1923,11 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
               <Menu className="w-6 h-6" />
             </button>
             <h1 className="text-xl font-serif font-bold text-green-deep capitalize">
-              {activeTab === 'cms' ? 'CMS Pengelola Konten' : 
-               activeTab === 'block' ? 'Manajemen Not Available (Tutup Tanggal)' : 
+              {activeTab === 'block' ? 'Manajemen Not Available (Tutup Tanggal)' : 
                activeTab === 'bookings' ? 'Daftar Pemesanan Tamu' : 
                activeTab === 'calendar' ? 'Kalender Ketersediaan' :
                activeTab === 'tours' ? 'Manajemen Paket Wisata' :
+               activeTab === 'villas' ? 'Manajemen Villa / Kamar' :
                activeTab === 'notifications' ? 'Notifikasi Realtime' :
                activeTab === 'header' ? 'Manajemen Slideshow Header' : 
                activeTab === 'settings' ? 'Pengaturan Homestay' :
@@ -1850,6 +2104,47 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                     <option value="cancelled">Dibatalkan</option>
                   </select>
 
+                  {/* Filter Room Code */}
+                  <select
+                    value={filterRoomCode}
+                    onChange={(e) => setFilterRoomCode(e.target.value)}
+                    className="px-4 py-2 bg-gray-50 border border-gray-200 focus:border-green-soft rounded-xl text-sm outline-none font-sans"
+                  >
+                    <option value="all">Semua Kamar (All Room)</option>
+                    <option value="1">Kamar 1</option>
+                    <option value="2">Kamar 2</option>
+                    <option value="3">Kamar 3</option>
+                    {Array.from(new Set(
+                      (homepageData.villas || [])
+                        .map((v: any) => v.room_code)
+                        .filter((code: string | undefined): code is string => !!code && code !== "1" && code !== "2" && code !== "3")
+                    )).map(code => (
+                      <option key={code} value={code}>Kamar {code}</option>
+                    ))}
+                  </select>
+
+                  {/* Filter Waktu */}
+                  <select
+                    value={filterTimeRange}
+                    onChange={(e) => setFilterTimeRange(e.target.value)}
+                    className="px-4 py-2 bg-gray-50 border border-gray-200 focus:border-green-soft rounded-xl text-sm outline-none font-sans"
+                  >
+                    <option value="all">Semua Waktu (All Time)</option>
+                    <option value="week">Minggu Ini (Week)</option>
+                    <option value="month:0">Januari</option>
+                    <option value="month:1">Februari</option>
+                    <option value="month:2">Maret</option>
+                    <option value="month:3">April</option>
+                    <option value="month:4">Mei</option>
+                    <option value="month:5">Juni</option>
+                    <option value="month:6">Juli</option>
+                    <option value="month:7">Agustus</option>
+                    <option value="month:8">September</option>
+                    <option value="month:9">Oktober</option>
+                    <option value="month:10">November</option>
+                    <option value="month:11">Desember</option>
+                  </select>
+
                   <select
                     value={bookingSort}
                     onChange={(e) => setBookingSort(e.target.value)}
@@ -1992,11 +2287,24 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
           {activeTab === 'calendar' && (
             <div className="space-y-6">
               <div className="bg-white rounded-3xl border border-gray-100 p-6 flex flex-col md:flex-row items-center justify-between gap-4 shadow-sm">
-                <div className="space-y-1 text-center md:text-left">
+                <div className="space-y-2 text-center md:text-left">
                   <h3 className="font-serif font-bold text-lg text-green-deep">Peta Ketersediaan & Hunian</h3>
                   <p className="font-sans text-xs text-gray-500 leading-relaxed">
                     Kelola ketersediaan kamar homestay. Klik sel tanggal kosong untuk menutup/membuka tanggal secara instan, atau klik pesanan berwarna merah/kuning untuk melihat detail tamu lengkap.
                   </p>
+                  
+                  <div className="inline-flex items-center space-x-2 bg-cream/40 border border-sand/45 px-3 py-1.5 rounded-xl text-xs mt-2">
+                    <span className="font-mono text-gray-400 font-bold uppercase tracking-wider text-[10px]">Pilih Villa/Kamar:</span>
+                    <select
+                      value={selectedCalendarVillaId || (homepageData.villas?.[0]?.id || "")}
+                      onChange={(e) => setSelectedCalendarVillaId(e.target.value)}
+                      className="bg-transparent border-none outline-none font-serif font-bold text-green-deep text-xs cursor-pointer focus:ring-0"
+                    >
+                      {(homepageData.villas || []).map((v: any) => (
+                        <option key={v.id} value={v.id}>{v.title}</option>
+                      ))}
+                    </select>
+                  </div>
                 </div>
                 <div className="flex flex-wrap gap-3 justify-center items-center text-xs shrink-0 border-t md:border-t-0 border-gray-100 pt-3 md:pt-0 w-full md:w-auto">
                   <div className="flex items-center space-x-2 bg-emerald-50 px-2.5 py-1.5 rounded-xl border border-emerald-100 shadow-xs">
@@ -2076,9 +2384,139 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
             </div>
           )}
 
+
+
+          {/* TAB: VILLAS / KAMAR MANAGEMENT VIEW */}
+          {activeTab === 'villas' && (
+            <div className="max-w-5xl mx-auto bg-white rounded-3xl border border-gray-100 p-6 shadow-sm space-y-6">
+              <div className="flex flex-col sm:flex-row justify-between sm:items-center border-b border-sand/15 pb-4 gap-4">
+                <div>
+                  <h3 className="font-serif text-lg font-bold text-green-deep">Daftar Villa & Kamar</h3>
+                  <p className="font-sans text-xs text-text-mid font-light mt-1">Kelola data kamar/villas, kapasitas, sarapan, harga, dan gambar yang akan muncul sebagai pilihan di panel pemesanan pengunjung.</p>
+                </div>
+                <button
+                  onClick={handleOpenAddVilla}
+                  className="flex items-center space-x-2 bg-green-deep hover:bg-green-soft text-cream text-xs font-bold px-4 py-2.5 rounded-xl shadow-md transition-all self-start cursor-pointer hover:scale-102"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span>Tambah Villa / Kamar</span>
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {(homepageData.villas || []).map((villa: any) => (
+                  <div
+                    key={villa.id}
+                    className="border border-gray-100 rounded-2xl overflow-hidden hover:shadow-md transition-all flex flex-col bg-cream/5"
+                  >
+                    {/* Villa Image */}
+                    <div className="h-48 relative bg-gray-100 flex-shrink-0">
+                      {villa.imageUrl ? (
+                        <img
+                          src={villa.imageUrl}
+                          alt={villa.title}
+                          className="w-full h-full object-cover"
+                          referrerPolicy="no-referrer"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex flex-col items-center justify-center bg-sand/15 text-green-soft/70">
+                          <Home className="w-10 h-10 stroke-1" />
+                          <span className="text-[10px] font-sans mt-2">Belum ada foto</span>
+                        </div>
+                      )}
+                      
+                      {/* Price Badge */}
+                      <div className="absolute top-3 right-3 bg-green-deep text-cream text-xs font-bold px-3 py-1.5 rounded-xl shadow-md">
+                        {convertAndFormatPrice(villa.pricePerPax, 'IDR')} / malam
+                      </div>
+
+                      {/* Capacity / Breakfast Badge */}
+                      <div className="absolute bottom-3 left-3 flex gap-1.5">
+                        <span className="bg-white/90 backdrop-blur-xs text-text-dark text-[10px] font-bold px-2 py-1 rounded-lg shadow-xs flex items-center gap-1">
+                          👤 {villa.capacity} Pax
+                        </span>
+                        {villa.includeBreakfast ? (
+                          <span className="bg-emerald-500 text-white text-[10px] font-bold px-2 py-1 rounded-lg shadow-xs">
+                            🍳 Incl. Breakfast
+                          </span>
+                        ) : (
+                          <span className="bg-gray-400 text-white text-[10px] font-bold px-2 py-1 rounded-lg shadow-xs">
+                            ❌ No Breakfast
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Villa Info */}
+                    <div className="p-5 flex-grow flex flex-col justify-between space-y-4">
+                      <div className="space-y-2">
+                        <h4 className="font-serif text-base font-bold text-green-deep leading-snug">{villa.title}</h4>
+                        <p className="font-sans text-xs text-text-mid font-light leading-relaxed line-clamp-3">
+                          {villa.description || "Tidak ada deskripsi."}
+                        </p>
+                      </div>
+
+                      <div className="flex justify-end gap-2 pt-2 border-t border-sand/10">
+                        <button
+                          onClick={() => handleOpenEditVilla(villa)}
+                          className="flex items-center space-x-1 px-3 py-2 bg-cream hover:bg-sand/30 text-green-deep text-xs font-semibold rounded-lg transition-all cursor-pointer"
+                        >
+                          <Edit2 className="w-3.5 h-3.5" />
+                          <span>Ubah</span>
+                        </button>
+                        <button
+                          onClick={() => handleDeleteVilla(villa.id)}
+                          className="flex items-center space-x-1 px-3 py-2 bg-rose-50 hover:bg-rose-100 text-rose-600 text-xs font-semibold rounded-lg transition-all cursor-pointer"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                          <span>Hapus</span>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+
+                {(homepageData.villas || []).length === 0 && (
+                  <div className="md:col-span-2 text-center p-12 bg-gray-50/50 rounded-2xl border border-dashed border-gray-200">
+                    <Home className="w-12 h-12 mx-auto text-gray-300 stroke-1" />
+                    <p className="font-sans text-sm text-gray-400 mt-3 font-light">Belum ada data Villa/Kamar yang terdaftar.</p>
+                    <button
+                      onClick={handleOpenAddVilla}
+                      className="mt-4 inline-flex items-center space-x-1.5 bg-green-deep text-cream px-4 py-2 rounded-xl text-xs font-bold"
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                      <span>Buat Villa/Kamar Pertama</span>
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+
+
           {/* TAB 6: CMS MANAGEMENT VIEW */}
-          {activeTab === 'cms' && (
-            <div className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden flex flex-col md:flex-row min-h-[500px]">
+          {activeTab === 'settings' && settingsSubTab === 'cms' && (
+            <div className="space-y-6 max-w-5xl mx-auto">
+              {/* Horizontal Tab Selector for Settings */}
+              <div className="flex border-b border-sand/15 gap-6 no-print bg-white p-4 rounded-2xl border border-gray-100 shadow-sm">
+                <button
+                  type="button"
+                  onClick={() => setSettingsSubTab('general')}
+                  className="pb-2 text-sm font-serif font-bold transition-all border-b-2 cursor-pointer border-transparent text-gray-400 hover:text-green-deep"
+                >
+                  Pengaturan Umum & Kredensial
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSettingsSubTab('cms')}
+                  className="pb-2 text-sm font-serif font-bold transition-all border-b-2 cursor-pointer border-green-soft text-green-deep"
+                >
+                  CMS Edit Konten Beranda
+                </button>
+              </div>
+
+              <div className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden flex flex-col md:flex-row min-h-[500px]">
               
               {/* Left Sub-tabs Sidebar */}
               <div className="w-full md:w-48 border-r border-gray-100 p-4 bg-gray-50/50 flex-shrink-0 flex flex-col space-y-1">
@@ -2514,12 +2952,12 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                         />
                       </div>
                       <div className="space-y-1">
-                        <label className="text-xs font-semibold text-text-dark">Harga Dasar (€ / EUR)</label>
+                        <label className="text-xs font-semibold text-text-dark">Harga Dasar Per Malam (K IDR)</label>
                         <input
                           type="number"
                           value={cmsInfo.price_from}
                           onChange={(e) => setCmsInfo({ ...cmsInfo, price_from: Number(e.target.value) })}
-                          className="w-full bg-gray-50 border border-gray-200 focus:border-green-soft px-3 py-2 rounded-xl text-sm"
+                          className="w-full bg-gray-50 border border-gray-200 focus:border-green-soft px-3 py-2 rounded-xl text-sm font-mono"
                         />
                       </div>
                     </div>
@@ -2574,9 +3012,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
 
               </div>
             </div>
+          </div>
           )}
-
-          {/* TAB 4: COMPREHENSIVE TOURS MANAGEMENT VIEW */}
           {activeTab === 'tours' && (
             <div className="bg-white rounded-3xl border border-gray-100 p-6 md:p-8 shadow-sm space-y-6">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-gray-150 pb-5">
@@ -2901,11 +3338,30 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
           )}
 
           {/* TAB 8: SYSTEM SETTINGS VIEW */}
-          {activeTab === 'settings' && (
-            <div className="max-w-4xl mx-auto bg-white rounded-3xl border border-gray-100 p-8 shadow-sm">
-              <h3 className="font-serif text-xl font-bold text-green-deep border-b border-gray-100 pb-4 mb-6">
-                Pengaturan Umum Homestay & Kredensial Admin
-              </h3>
+          {activeTab === 'settings' && settingsSubTab === 'general' && (
+            <div className="space-y-6 max-w-4xl mx-auto">
+              {/* Horizontal Tab Selector for Settings */}
+              <div className="flex border-b border-sand/15 gap-6 no-print bg-white p-4 rounded-2xl border border-gray-100 shadow-sm">
+                <button
+                  type="button"
+                  onClick={() => setSettingsSubTab('general')}
+                  className="pb-2 text-sm font-serif font-bold transition-all border-b-2 cursor-pointer border-green-soft text-green-deep"
+                >
+                  Pengaturan Umum & Kredensial
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSettingsSubTab('cms')}
+                  className="pb-2 text-sm font-serif font-bold transition-all border-b-2 cursor-pointer border-transparent text-gray-400 hover:text-green-deep"
+                >
+                  CMS Edit Konten Beranda
+                </button>
+              </div>
+
+              <div className="bg-white rounded-3xl border border-gray-100 p-8 shadow-sm">
+                <h3 className="font-serif text-xl font-bold text-green-deep border-b border-gray-100 pb-4 mb-6">
+                  Pengaturan Umum Homestay & Kredensial Admin
+                </h3>
 
               <form onSubmit={handleSaveSettings} className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -2980,13 +3436,13 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
 
                   {/* Pricing / Times */}
                   <div className="space-y-1.5">
-                    <label className="text-xs font-semibold text-text-dark">Harga Dasar Per Malam (EUR)</label>
+                    <label className="text-xs font-semibold text-text-dark">Harga Dasar Per Malam (K IDR)</label>
                     <input
                       type="number"
                       required
                       value={setPrice}
                       onChange={(e) => setSetPrice(Number(e.target.value))}
-                      className="w-full bg-gray-50 border border-gray-200 focus:border-green-soft px-4 py-2.5 rounded-xl text-sm"
+                      className="w-full bg-gray-50 border border-gray-200 focus:border-green-soft px-4 py-2.5 rounded-xl text-sm font-mono"
                     />
                   </div>
 
@@ -3092,6 +3548,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                 </button>
               </form>
             </div>
+          </div>
           )}
 
         </main>
@@ -3442,6 +3899,19 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
               </div>
 
               <form onSubmit={handleSaveOfflineBooking} className="space-y-4">
+                <div className="space-y-1">
+                  <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Villa / Kamar Yang Dipesan <span className="text-rose-500">*</span></label>
+                  <select
+                    value={offlineSelectedVillaId || (homepageData.villas?.[0]?.id || "")}
+                    onChange={(e) => setOfflineSelectedVillaId(e.target.value)}
+                    className="w-full bg-cream/15 border border-sand/40 hover:border-sand focus:border-green-soft px-3.5 py-2.5 rounded-xl font-sans text-sm text-text-dark outline-none focus:ring-1 focus:ring-green-soft transition-all"
+                  >
+                    {(homepageData.villas || []).map((v: any) => (
+                      <option key={v.id} value={v.id}>{v.title}</option>
+                    ))}
+                  </select>
+                </div>
+
                 <div className="space-y-1">
                   <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Nama Tamu <span className="text-rose-500">*</span></label>
                   <input
@@ -4089,6 +4559,315 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                   </button>
                 </div>
               </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* 5.5. VILLA ADD/EDIT MODAL */}
+      <AnimatePresence>
+        {showVillaModal && (
+          <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="bg-white rounded-3xl p-6 md:p-7 max-w-3xl w-full shadow-2xl relative space-y-4 max-h-[90vh] overflow-y-auto"
+            >
+              <button
+                type="button"
+                onClick={() => setShowVillaModal(false)}
+                className="absolute top-4 right-4 p-2 bg-cream/40 hover:bg-cream hover:text-rose-500 rounded-full cursor-pointer flex items-center justify-center"
+              >
+                <X className="w-5 h-5" />
+              </button>
+
+              <div className="border-b border-gray-100 pb-2">
+                <h3 className="font-serif text-xl md:text-2xl font-bold text-green-deep">
+                  {editingVilla ? "Ubah Villa / Kamar" : "Tambah Villa / Kamar"}
+                </h3>
+              </div>
+
+              <form onSubmit={handleSaveVilla} className="space-y-4 font-sans text-left">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  
+                  {/* Left Column: Form Details */}
+                  <div className="space-y-3">
+                    <div className="space-y-0.5">
+                      <label className="text-[11px] font-bold text-text-dark">Nama / Judul Villa / Kamar</label>
+                      <input
+                        type="text"
+                        required
+                        placeholder="Contoh: Villa Arabica Deluxe View Kebun Kopi"
+                        value={villaTitle}
+                        onChange={(e) => setVillaTitle(e.target.value)}
+                        className="w-full bg-gray-50 border border-gray-200 focus:border-green-soft px-3 py-2.5 rounded-xl text-xs"
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                      <div className="space-y-0.5">
+                        <label className="text-[11px] font-bold text-text-dark">Kapasitas (Pax / Orang)</label>
+                        <input
+                          type="number"
+                          required
+                          min={1}
+                          max={100}
+                          value={villaCapacity}
+                          onChange={(e) => setVillaCapacity(Number(e.target.value))}
+                          className="w-full bg-gray-50 border border-gray-200 focus:border-green-soft px-3 py-2.5 rounded-xl text-xs font-mono"
+                        />
+                      </div>
+                      <div className="space-y-0.5">
+                        <label className="text-[11px] font-bold text-text-dark">Fasilitas Sarapan (Breakfast)</label>
+                        <select
+                          value={villaIncludeBreakfast ? "yes" : "no"}
+                          onChange={(e) => setVillaIncludeBreakfast(e.target.value === "yes")}
+                          className="w-full bg-gray-50 border border-gray-200 focus:border-green-soft px-3 py-2.5 rounded-xl text-xs"
+                        >
+                          <option value="yes">Termasuk Sarapan (Yes)</option>
+                          <option value="no">Tanpa Sarapan (No)</option>
+                        </select>
+                      </div>
+                      <div className="space-y-0.5">
+                        <label className="text-[11px] font-bold text-text-dark">Kode Kamar (ROOM Code)</label>
+                        <input
+                          type="text"
+                          placeholder="Contoh: 3"
+                          value={villaRoomCode}
+                          onChange={(e) => setVillaRoomCode(e.target.value)}
+                          className="w-full bg-gray-50 border border-gray-200 focus:border-green-soft px-3 py-2.5 rounded-xl text-xs font-mono font-bold text-green-deep"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="space-y-0.5">
+                      <label className="text-[11px] font-bold text-text-dark">Harga Sewa Per Malam (K IDR)</label>
+                      <div className="relative">
+                        <span className="absolute left-3 top-2.5 text-xs font-mono font-bold text-green-soft">Rp</span>
+                        <input
+                          type="number"
+                          required
+                          min={1}
+                          placeholder="Contoh: 150"
+                          value={villaPricePerPax}
+                          onChange={(e) => setVillaPricePerPax(Number(e.target.value))}
+                          className="w-full bg-gray-50 border border-gray-200 focus:border-green-soft pl-9 pr-3 py-2.5 rounded-xl text-xs font-mono font-bold text-green-deep"
+                        />
+                      </div>
+                      <p className="text-[9px] text-gray-400 mt-0.5">Harga sewa per malam dalam ribuan Rupiah (Contoh: tulis 150 untuk Rp 150.000 atau 150K).</p>
+                    </div>
+
+                    <div className="space-y-0.5">
+                      <label className="text-[11px] font-bold text-text-dark">Deskripsi Villa / Kamar</label>
+                      <textarea
+                        rows={4}
+                        placeholder="Berikan gambaran lengkap tipe villa/kamar, ranjang, pemandangan kebun kopi, atau amenitas eksklusif lainnya..."
+                        value={villaDescription}
+                        onChange={(e) => setVillaDescription(e.target.value)}
+                        className="w-full bg-gray-50 border border-gray-200 focus:border-green-soft p-3 rounded-xl text-xs leading-relaxed"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Right Column: Image Selection */}
+                  <div className="space-y-3 flex flex-col justify-between">
+                    <div>
+                      <label className="text-[11px] font-bold text-text-dark block mb-1">Gambar Media Villa</label>
+                      
+                      {/* Image Preview Area */}
+                      <div className="h-36 rounded-2xl border border-dashed border-gray-200 bg-gray-50 overflow-hidden relative flex items-center justify-center mb-3">
+                        {villaImageUrl ? (
+                          <div className="w-full h-full relative group">
+                            <img
+                              src={villaImageUrl}
+                              alt="Pratinjau Villa"
+                              className="w-full h-full object-cover"
+                              referrerPolicy="no-referrer"
+                            />
+                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                              <button
+                                type="button"
+                                onClick={() => setVillaImageUrl("")}
+                                className="px-3 py-1.5 bg-rose-500 text-white text-[10px] font-bold rounded-lg shadow cursor-pointer"
+                              >
+                                Hapus Media
+                              </button>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="text-center p-4">
+                            <ImageIcon className="w-8 h-8 text-gray-300 mx-auto stroke-1" />
+                            <p className="text-[10px] text-gray-400 font-light mt-1.5">Belum ada pratinjau gambar</p>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Tab Buttons for URL vs Upload */}
+                      <div className="flex border-b border-gray-100 pb-2 mb-3 gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setActiveVillaTab('upload')}
+                          className={`px-3 py-1.5 rounded-lg text-[10px] font-bold transition-all cursor-pointer ${
+                            activeVillaTab === 'upload' ? 'bg-green-soft text-cream' : 'bg-gray-50 text-gray-500 hover:bg-gray-100'
+                          }`}
+                        >
+                          Unggah Berkas
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setActiveVillaTab('url')}
+                          className={`px-3 py-1.5 rounded-lg text-[10px] font-bold transition-all cursor-pointer ${
+                            activeVillaTab === 'url' ? 'bg-green-soft text-cream' : 'bg-gray-50 text-gray-500 hover:bg-gray-100'
+                          }`}
+                        >
+                          Tautan Gambar / URL
+                        </button>
+                      </div>
+
+                      {/* Tab Content */}
+                      {activeVillaTab === 'upload' ? (
+                        <div className="space-y-2">
+                          <div
+                            onDragEnter={handleDrag}
+                            onDragOver={handleDrag}
+                            onDragLeave={handleDrag}
+                            onDrop={handleDrop}
+                            onClick={() => fileInputRef.current?.click()}
+                            className={`p-5 rounded-xl border border-dashed text-center transition-all cursor-pointer flex flex-col items-center justify-center ${
+                              dragActive 
+                                ? 'border-green-soft bg-green-50/10' 
+                                : 'border-gray-200 bg-gray-50 hover:bg-gray-100/70'
+                            }`}
+                          >
+                            <Upload className="w-6 h-6 text-green-soft mb-1.5 stroke-1" />
+                            <p className="text-[10px] font-bold text-gray-500">
+                              {dragActive ? 'Lepaskan gambar di sini' : 'Klik atau seret gambar ke sini'}
+                            </p>
+                            <p className="text-[8px] text-gray-400 font-light mt-0.5">Mendukung JPEG, PNG, WEBP, GIF</p>
+                            <input
+                              ref={fileInputRef}
+                              type="file"
+                              accept="image/*"
+                              onChange={handleFileSelectChange}
+                              className="hidden"
+                            />
+                          </div>
+
+                          {uploadError && (
+                            <p className="text-[9px] text-rose-500 bg-rose-50/60 border border-rose-100 p-2 rounded-xl leading-relaxed">
+                              {uploadError}
+                            </p>
+                          )}
+                        </div>
+                      ) : (
+                        <div className="space-y-1.5 text-left">
+                          <label className="text-xs font-semibold text-text-dark">Tautan Gambar (HTTP Link)</label>
+                          <input
+                            type="text"
+                            placeholder="https://images.unsplash.com/photo-1540555700478-4be289fbecef"
+                            value={villaImageUrl}
+                            onChange={(e) => setVillaImageUrl(e.target.value)}
+                            className="w-full bg-gray-50 border border-gray-200 focus:border-green-soft px-3 py-2.5 rounded-xl text-xs font-mono"
+                          />
+                          <p className="text-[9px] text-gray-400 leading-relaxed mt-1 font-light">
+                            Gunakan URL eksternal atau salin link dari internet untuk memuat media secara praktis.
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                </div>
+
+                {/* Bottom Bar: Action buttons */}
+                <div className="pt-3 border-t border-gray-100 flex justify-end space-x-2">
+                  <button
+                    type="button"
+                    onClick={() => setShowVillaModal(false)}
+                    className="px-4 py-2 border border-gray-200 hover:bg-gray-50 text-gray-500 rounded-xl font-semibold text-xs transition-colors cursor-pointer"
+                  >
+                    Batal
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={saveStatus !== 'idle'}
+                    className="px-5 py-2 bg-green-deep hover:bg-green-mid disabled:bg-gray-400 text-cream font-semibold rounded-xl transition-all shadow text-xs flex items-center space-x-1.5 cursor-pointer"
+                  >
+                    {saveStatus === 'saving' ? (
+                      <>
+                        <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                        <span>Menyimpan...</span>
+                      </>
+                    ) : saveStatus === 'saved' ? (
+                      <>
+                        <Check className="w-3.5 h-3.5" />
+                        <span>Tersimpan</span>
+                      </>
+                    ) : (
+                      <>
+                        <Save className="w-3.5 h-3.5" />
+                        <span>Simpan Perubahan</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+              </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Elegant Confirmation Popup (Yakin / Tidak) */}
+      <AnimatePresence>
+        {showConfirmModal && confirmModalConfig && (
+          <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[100] flex items-center justify-center p-4 no-print animate-fade-in">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="bg-white rounded-3xl p-6 md:p-7 max-w-sm w-full shadow-2xl relative space-y-4 text-center border border-gray-150"
+            >
+              <div className={`mx-auto w-12 h-12 rounded-full flex items-center justify-center ${confirmModalConfig.isDanger ? 'bg-rose-50 text-rose-500' : 'bg-emerald-50 text-emerald-500'}`}>
+                <ShieldAlert className="w-6 h-6" />
+              </div>
+
+              <div className="space-y-1.5">
+                <h3 className="font-serif text-base font-bold text-green-deep">
+                  {confirmModalConfig.title}
+                </h3>
+                <p className="text-xs text-gray-500 leading-relaxed">
+                  {confirmModalConfig.message}
+                </p>
+              </div>
+
+              <div className="flex justify-center space-x-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowConfirmModal(false);
+                    setConfirmModalConfig(null);
+                  }}
+                  className="px-4 py-2 border border-gray-200 hover:bg-gray-50 text-gray-500 rounded-xl font-semibold text-xs transition-colors cursor-pointer"
+                >
+                  {confirmModalConfig.cancelText || "Batal"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    confirmModalConfig.onConfirm();
+                    setShowConfirmModal(false);
+                    setConfirmModalConfig(null);
+                  }}
+                  className={`px-4 py-2 text-white font-semibold rounded-xl text-xs transition-all shadow cursor-pointer ${
+                    confirmModalConfig.isDanger 
+                      ? 'bg-rose-500 hover:bg-rose-600' 
+                      : 'bg-green-deep hover:bg-green-mid'
+                  }`}
+                >
+                  {confirmModalConfig.confirmText || "Ya"}
+                </button>
+              </div>
             </motion.div>
           </div>
         )}

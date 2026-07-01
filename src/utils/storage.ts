@@ -15,7 +15,7 @@ export const DEFAULT_HOMEPAGE: CMSHomepage = {
   stats: [
     { value: "4.9", label: "Rating Google", icon: "star" },
     { value: "90+", label: "Ulasan Positif", icon: "chat" },
-    { value: "€140", label: "Mulai /malam", icon: "euro" },
+    { value: "140K", label: "Mulai /malam", icon: "home" },
     { value: "10+", label: "Tahun Pengalaman", icon: "calendar" }
   ],
   about: {
@@ -85,7 +85,27 @@ export const DEFAULT_HOMEPAGE: CMSHomepage = {
     price_from: 140,
     facilities: ["Kamar luas & bersih", "Sarapan tersedia", "Kopi gratis dari kebun", "Parkir gratis", "WiFi"],
     activities: ["Trekking Kawah Ijen", "Tur kebun kopi", "Bersepeda", "Menikmati sungai", "Fotografi alam"]
-  }
+  },
+  villas: [
+    {
+      id: "v-1",
+      title: "Villa Robusta Kebun Kopi",
+      description: "Villa kayu premium semi-terbuka dengan pemandangan langsung ke barisan pohon kopi Robusta yang asri. Dilengkapi dengan ranjang king-size, teras santai pribadi, kamar mandi semi-outdoor dengan air hangat, dan ketenangan alam pedesaan Gombengsari.",
+      capacity: 2,
+      includeBreakfast: true,
+      imageUrl: "https://images.unsplash.com/photo-1587061949409-02df41d5e562?auto=format&fit=crop&w=600&h=400&q=80",
+      pricePerPax: 140
+    },
+    {
+      id: "v-2",
+      title: "Family Suite Liberika",
+      description: "Villa keluarga berkapasitas besar dengan ruang tengah yang lapang dan desain interior bernuansa etnik bambu yang elegan. Pintu kaca geser memberikan akses pemandangan hijau kebun kopi dan kebun durian. Sangat cocok untuk trip keluarga hangat Anda.",
+      capacity: 4,
+      includeBreakfast: true,
+      imageUrl: "https://images.unsplash.com/photo-1566665797739-1674de7a421a?auto=format&fit=crop&w=600&h=400&q=80",
+      pricePerPax: 180
+    }
+  ]
 };
 
 export const DEFAULT_GALLERY: GalleryItem[] = [];
@@ -168,6 +188,9 @@ export function getHomepage(): CMSHomepage {
     if (!parsed.about.highlightItems) {
       parsed.about.highlightItems = DEFAULT_HOMEPAGE.about.highlightItems;
     }
+    if (!parsed.villas || parsed.villas.length === 0) {
+      parsed.villas = DEFAULT_HOMEPAGE.villas;
+    }
     return parsed;
   } catch (e) {
     return DEFAULT_HOMEPAGE;
@@ -228,20 +251,29 @@ export function saveBookings(data: Booking[]) {
       }
       
       if (data.length > 0) {
-        const formatted = data.map(b => ({
-          id: b.id,
-          created_at: b.created_at,
-          status: b.status,
-          check_in: b.check_in,
-          check_out: b.check_out,
-          nights: Number(b.nights),
-          total_eur: Number(b.total_eur),
-          guest_name: b.guest_name,
-          guest_email: b.guest_email,
-          guest_wa: b.guest_wa,
-          guest_count: Number(b.guest_count),
-          notes: b.notes || null
-        }));
+        // Resolve homepageData to fetch room_codes
+        const homepageRaw = safeStorage.getItem("peno_homepage");
+        const villas = homepageRaw ? (JSON.parse(homepageRaw)?.villas || []) : [];
+
+        const formatted = data.map(b => {
+          const associatedVilla = villas.find((v: any) => v.id === b.villa_id);
+          const roomCode = associatedVilla ? (associatedVilla.room_code || "") : "";
+          return {
+            id: b.id,
+            created_at: b.created_at,
+            status: b.status,
+            check_in: b.check_in,
+            check_out: b.check_out,
+            nights: Number(b.nights),
+            total_eur: Number(b.total_eur),
+            guest_name: b.guest_name,
+            guest_email: b.guest_email,
+            guest_wa: b.guest_wa,
+            guest_count: Number(b.guest_count),
+            notes: b.notes || null,
+            ROOM: roomCode || null // Map to uppercase 'ROOM' column in Supabase
+          };
+        });
         
         const { error: upsertError } = await supabase.from('peno_bookings').upsert(formatted);
         if (upsertError) {
@@ -353,21 +385,19 @@ export function listenToBroadcast(handlers: Record<string, (data: any) => void>)
 
 export type CurrencyType = 'IDR' | 'USD' | 'EUR';
 
-export function convertAndFormatPrice(eurAmount: number, currency: CurrencyType): string {
-  if (currency === 'USD') {
-    const usdAmount = Math.round(eurAmount * 1.08);
+export function convertAndFormatPrice(amount: number, currency: CurrencyType): string {
+  if (currency === 'IDR') {
+    // Treat base amount as thousands of Rupiah (e.g., 150 means 150K)
+    const kAmount = Math.round(amount);
+    const formattedK = new Intl.NumberFormat('id-ID').format(kAmount);
+    return `${formattedK}K`;
+  } else if (currency === 'USD') {
+    // 1 USD is roughly 16.000 IDR, so we divide amount (thousands) by 16
+    const usdAmount = Math.max(1, Math.round((amount * 1000) / 16200));
     return `$${usdAmount}`;
-  } else if (currency === 'IDR') {
-    const idrAmount = Math.round(eurAmount * 17500);
-    // Standard format for Indonesian Rupiah
-    const formatted = new Intl.NumberFormat('id-ID', {
-      style: 'currency',
-      currency: 'IDR',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0
-    }).format(idrAmount);
-    return formatted.replace('Rp', 'Rp ').replace(',00', '');
   } else {
+    // 1 EUR is roughly 17.500 IDR, so we divide amount (thousands) by 17.5
+    const eurAmount = Math.max(1, Math.round((amount * 1000) / 17500));
     return `€${eurAmount}`;
   }
 }

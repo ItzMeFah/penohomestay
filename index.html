@@ -3,11 +3,60 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>My Google AI Studio App</title>
+    <title>Peno Homestay Banyuwangi</title>
+    
+    <!-- Google Translate CSS Customization -->
+    <style>
+      /* Sembunyikan widget dropdown bawaan Google Translate */
+      #google_translate_element {
+        display: none !important;
+      }
+      /* Sembunyikan top-banner / popup dari Google Translate */
+      .goog-te-banner-frame {
+        display: none !important;
+      }
+      .goog-te-banner-frame.skiptranslate {
+        display: none !important;
+      }
+      .goog-te-balloon-frame {
+        display: none !important;
+      }
+      /* Pastikan margin atas body tetap 0 dan tidak tergeser oleh banner */
+      body {
+        top: 0 !important;
+        position: static !important;
+      }
+      /* Sembunyikan highlight teks dan tooltip bawaan */
+      .goog-tooltip {
+        display: none !important;
+      }
+      .goog-tooltip:hover {
+        display: none !important;
+      }
+      .goog-text-highlight {
+        background-color: transparent !important;
+        box-shadow: none !important;
+      }
+    </style>
   </head>
   <body>
+    <!-- Google Translate Div Element (Hidden by CSS) -->
+    <div id="google_translate_element"></div>
+
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
+
+    <!-- Google Translate Initialization Script -->
+    <script type="text/javascript">
+      function googleTranslateElementInit() {
+        new google.translate.TranslateElement({
+          pageLanguage: 'id',
+          includedLanguages: 'id,en',
+          autoDisplay: false
+        }, 'google_translate_element');
+      }
+    </script>
+    <script type="text/javascript" src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
   </body>
 </html>
 

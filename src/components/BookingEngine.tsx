@@ -41,6 +41,8 @@ interface BookingEngineProps {
   onChangeCurrency: (c: CurrencyType) => void;
   lang: LanguageType;
   homepageData: CMSHomepage;
+  selectedVillaId?: string;
+  setSelectedVillaId?: (id: string) => void;
 }
 
 export const BookingEngine: React.FC<BookingEngineProps> = ({
@@ -52,7 +54,9 @@ export const BookingEngine: React.FC<BookingEngineProps> = ({
   currency,
   onChangeCurrency,
   lang,
-  homepageData
+  homepageData,
+  selectedVillaId,
+  setSelectedVillaId
 }) => {
   const t = translations[lang];
   const [viewYear, setViewYear] = useState(2026);
@@ -60,6 +64,17 @@ export const BookingEngine: React.FC<BookingEngineProps> = ({
   const [selectStart, setSelectStart] = useState<Date | null>(null);
   const [selectEnd, setSelectEnd] = useState<Date | null>(null);
   const [hoveredDate, setHoveredDate] = useState<Date | null>(null);
+  const [internalSelectedVillaId, setInternalSelectedVillaId] = useState<string>("");
+
+  const activeVillaId = selectedVillaId !== undefined ? selectedVillaId : internalSelectedVillaId;
+  const setActiveVillaId = setSelectedVillaId || setInternalSelectedVillaId;
+
+  useEffect(() => {
+    const villasList = homepageData.villas || [];
+    if (villasList.length > 0 && !activeVillaId) {
+      setActiveVillaId(villasList[0].id);
+    }
+  }, [homepageData.villas, activeVillaId]);
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
   const [successBooking, setSuccessBooking] = useState<Booking | null>(null);
   const [activeInfoTab, setActiveInfoTab] = useState<'amenities' | 'itinerary'>('itinerary');
@@ -87,7 +102,8 @@ export const BookingEngine: React.FC<BookingEngineProps> = ({
     }
   }, [selectStart, selectEnd]);
 
-  const pricePerNight = settings.pricePerNight || 140;
+  const selectedVilla = (homepageData.villas || []).find((v: any) => v.id === activeVillaId) || (homepageData.villas?.[0]);
+  const pricePerNight = selectedVilla ? selectedVilla.pricePerPax : (settings.pricePerNight || 140);
 
   // Build unavailable dates set
   const unavailableDates = React.useMemo(() => {
@@ -95,8 +111,11 @@ export const BookingEngine: React.FC<BookingEngineProps> = ({
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    // 1. Process active bookings (PAID, or PENDING that are not expired)
+    // 1. Process active bookings (PAID, or PENDING that are not expired) for the selected villa/room
     bookings.forEach(b => {
+      const bVillaId = b.villa_id || (homepageData.villas?.[0]?.id || "");
+      if (bVillaId !== activeVillaId) return;
+
       let isExpiredPending = false;
       if (b.status === 'pending') {
         const checkInDate = new Date(b.check_in);
@@ -117,10 +136,20 @@ export const BookingEngine: React.FC<BookingEngineProps> = ({
     });
 
     // 2. Process admin manually booked dates
-    blockedDates.forEach(key => set.add(key));
+    blockedDates.forEach(key => {
+      if (key.includes(':')) {
+        const [vId, dateStr] = key.split(':');
+        if (vId === activeVillaId) {
+          set.add(dateStr);
+        }
+      } else {
+        // Global block, blocks all villas
+        set.add(key);
+      }
+    });
 
     return set;
-  }, [bookings, blockedDates]);
+  }, [bookings, blockedDates, activeVillaId, homepageData.villas]);
 
   // Calendar logic helpers
   const handleMonthPrev = () => {
@@ -381,6 +410,7 @@ export const BookingEngine: React.FC<BookingEngineProps> = ({
   const confirmSubmit = () => {
     if (!selectStart || !selectEnd) return;
 
+    const villaPrefix = selectedVilla ? `[Villa/Kamar: ${selectedVilla.title}] ` : "";
     const newBooking = onSubmitBooking({
       check_in: selectStart.toISOString(),
       check_out: selectEnd.toISOString(),
@@ -389,7 +419,8 @@ export const BookingEngine: React.FC<BookingEngineProps> = ({
       guest_email: guestEmail,
       guest_wa: guestWa,
       guest_count: guestCount,
-      notes: guestNotes
+      notes: `${villaPrefix}${guestNotes}`.trim(),
+      villa_id: activeVillaId
     });
 
     setSuccessBooking(newBooking);
@@ -497,6 +528,13 @@ export const BookingEngine: React.FC<BookingEngineProps> = ({
 
                 <span className="text-text-mid">{lang === 'ID' ? 'Jumlah Tamu' : 'Guests Count'}</span>
                 <span className="text-right font-semibold text-green-deep">{successBooking.guest_count} {lang === 'ID' ? 'orang' : 'guests'}</span>
+
+                {selectedVilla && (
+                  <>
+                    <span className="text-text-mid">{lang === 'ID' ? 'Villa / Kamar' : 'Villa / Room'}</span>
+                    <span className="text-right font-semibold text-green-soft font-serif">{selectedVilla.title}</span>
+                  </>
+                )}
 
                 <div className="col-span-2 border-t border-sand/30 my-2" />
 
@@ -833,6 +871,97 @@ export const BookingEngine: React.FC<BookingEngineProps> = ({
               </div>
             </div>
 
+            {/* 2.5 STEP 1: PILIHAN VILLA / KAMAR */}
+            <div className="space-y-4">
+              <div className="flex items-center space-x-2 text-green-deep border-b border-sand/20 pb-2">
+                <Home className="w-5 h-5 text-green-soft" />
+                <h4 className="font-serif font-bold text-lg md:text-xl">
+                  {lang === 'ID' ? 'Pilih Tipe Villa / Kamar' : 'Select Villa / Room Type'}
+                </h4>
+              </div>
+              <p className="font-sans text-xs text-text-mid font-light leading-relaxed">
+                {lang === 'ID' 
+                  ? 'Silakan pilih villa/kamar terlebih dahulu untuk melihat ketersediaan tanggal kalender di bawah ini.' 
+                  : 'Please select a villa/room first to view calendar date availability below.'}
+              </p>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
+                {(homepageData.villas || []).map((villa: any) => {
+                  const isSelected = activeVillaId === villa.id;
+                  return (
+                    <div
+                      key={villa.id}
+                      onClick={() => setActiveVillaId(villa.id)}
+                      className={`rounded-2xl border-2 overflow-hidden transition-all duration-300 cursor-pointer flex flex-col md:flex-row bg-white relative hover:shadow-md ${
+                        isSelected 
+                          ? 'border-green-deep ring-4 ring-green-soft/15 bg-green-deep/[0.01]' 
+                          : 'border-gray-150 hover:border-sand/60'
+                      }`}
+                    >
+                      {/* Selection Indicator badge */}
+                      {isSelected && (
+                        <div className="absolute top-3 right-3 bg-green-deep text-cream text-[10px] font-bold px-2.5 py-1 rounded-full shadow-sm z-10 flex items-center gap-1">
+                          <span>Selected</span>
+                          <span className="w-2 h-2 rounded-full bg-cream animate-ping" />
+                        </div>
+                      )}
+
+                      {/* Image Section */}
+                      <div className="w-full md:w-44 h-40 relative shrink-0 bg-gray-50">
+                        {villa.imageUrl ? (
+                          <img
+                            src={villa.imageUrl}
+                            alt={villa.title}
+                            className="w-full h-full object-cover"
+                            referrerPolicy="no-referrer"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex flex-col items-center justify-center text-green-soft/50">
+                            <Home className="w-8 h-8 stroke-1" />
+                            <span className="text-[9px] mt-1">No Image</span>
+                          </div>
+                        )}
+                        
+                        <div className="absolute bottom-2 left-2 flex gap-1">
+                          <span className="bg-white/95 text-[9px] font-bold text-text-dark px-1.5 py-0.5 rounded shadow-xs">
+                            👤 {villa.capacity} Pax
+                          </span>
+                          {villa.includeBreakfast && (
+                            <span className="bg-emerald-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded shadow-xs">
+                              🍳 Breakfast
+                            </span>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Text info section */}
+                      <div className="p-4 flex-grow flex flex-col justify-between">
+                        <div className="space-y-1">
+                          <h5 className="font-serif font-bold text-sm text-green-deep leading-snug">{villa.title}</h5>
+                          <p className="font-sans text-[11px] text-text-mid font-light leading-relaxed line-clamp-2">
+                            {villa.description || "Tidak ada deskripsi tambahan."}
+                          </p>
+                        </div>
+                        <div className="pt-2 border-t border-gray-50 flex justify-between items-center mt-3">
+                          <span className="font-sans text-[10px] text-gray-400 font-light">Rate per malam</span>
+                          <span className="font-serif font-bold text-sm text-green-soft">
+                            {convertAndFormatPrice(villa.pricePerPax, currency)}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+                {(homepageData.villas || []).length === 0 && (
+                  <div className="col-span-1 md:col-span-2 bg-cream/30 border border-dashed border-sand/40 p-8 rounded-2xl text-center text-text-mid">
+                    <Home className="w-8 h-8 text-green-soft/60 mx-auto stroke-1 mb-2" />
+                    <p className="font-serif font-semibold text-sm text-green-deep">Peno Homestay Standard Room</p>
+                    <p className="text-xs font-light mt-1 text-gray-400">Hubungi pengelola untuk detail villa custom.</p>
+                  </div>
+                )}
+              </div>
+            </div>
+
             {/* 3. CALENDAR AREA (Spacious 3-Column horizontal grid) */}
             <div className="space-y-6">
               
@@ -1033,6 +1162,16 @@ export const BookingEngine: React.FC<BookingEngineProps> = ({
 
                   <form onSubmit={handleBookingSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
                     
+                    {/* DETAILS GUEST */}
+                    <div className="col-span-1 md:col-span-2 border-t border-sand/10 pt-4 mt-2">
+                      <h4 className="font-serif font-bold text-lg text-green-deep mb-1">
+                        {lang === 'ID' ? 'Data Diri & Rincian Kontak' : 'Guest Details & Contact'}
+                      </h4>
+                      <p className="text-xs font-light text-text-mid">
+                        {lang === 'ID' ? 'Lengkapi detail pemesanan di bawah ini.' : 'Please enter your contact details below.'}
+                      </p>
+                    </div>
+
                     {/* Left fields */}
                     <div className="space-y-6">
                       <div className="space-y-2">
