@@ -7,13 +7,7 @@ import {
   MessageSquare, Upload, Layers, MapPin, Star, Menu, Home
 } from 'lucide-react';
 import { Booking, CMSHomepage, GalleryItem, AdminNotification, CMSTourPackage, CMSHighlightItem } from '../types';
-import { createClient } from '@supabase/supabase-js';
-import { DEFAULT_GALLERY, convertAndFormatPrice } from '../utils/storage';
-
-// Setup Supabase Client matching credentials in SupabasePlaybook
-const SUPABASE_URL = (import.meta as any).env?.VITE_SUPABASE_URL || "https://eszvodingaehsnahsvmb.supabase.co";
-const ACTUAL_KEY = (import.meta as any).env?.VITE_SUPABASE_ANON_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVzenZvZGluZ2FlaHNuYWhzdm1iIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI2NDc3NDQsImV4cCI6MjA5ODIyMzc0NH0.UpoFJqht-1pybKBeadMctnIgI3PmiPMsqWU9uJnfy1Q";
-const supabase = createClient(SUPABASE_URL, ACTUAL_KEY);
+import { DEFAULT_GALLERY, convertAndFormatPrice, supabase, getSupabaseCredentials } from '../utils/storage';
 
 interface AdminPanelProps {
   bookings: Booking[];
@@ -185,6 +179,17 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
   const [setHeroOverlayOpacity, setSetHeroOverlayOpacity] = useState(settings.heroOverlayOpacity ?? 28);
   const [showAdminPass, setShowAdminPass] = useState(false);
 
+  // Dynamic Supabase configuration states (avoids hardcoding to prevent leaks in built JS source)
+  const [dbUrl, setDbUrl] = useState(() => {
+    const creds = getSupabaseCredentials();
+    return creds.url;
+  });
+  const [dbKey, setDbKey] = useState(() => {
+    const creds = getSupabaseCredentials();
+    return creds.key;
+  });
+  const [showDbKey, setShowDbKey] = useState(false);
+
   // Admin View Large Calendar
   const [calYear, setCalYear] = useState(2026);
   const [calMonth, setCalMonth] = useState(5); // June
@@ -208,6 +213,10 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
   useEffect(() => {
     let isMounted = true;
     const checkSupabaseConn = async () => {
+      if (!dbUrl || !dbKey) {
+        if (isMounted) setSupabaseStatus('error');
+        return;
+      }
       try {
         // Simple light query to check if Supabase is reachable and peno_cms table is accessible
         const { error } = await supabase.from('peno_cms').select('id').limit(1);
@@ -226,6 +235,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
       }
     };
 
+    setSupabaseStatus('checking');
     checkSupabaseConn();
     // Also re-verify periodically every 20 seconds
     const interval = setInterval(checkSupabaseConn, 20000);
@@ -234,7 +244,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
       isMounted = false;
       clearInterval(interval);
     };
-  }, []);
+  }, [dbUrl, dbKey]);
 
   // Authenticate Session on mount
   useEffect(() => {
@@ -1337,6 +1347,10 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
       adminPassword: setAdminPass,
       heroOverlayOpacity: Number(setHeroOverlayOpacity)
     });
+
+    // Save Supabase credentials to localStorage securely (avoids bundling secrets in static files)
+    localStorage.setItem("peno_supabase_url", dbUrl.trim());
+    localStorage.setItem("peno_supabase_anon_key", dbKey.trim());
 
     showAdminToast("Semua pengaturan sistem berhasil disimpan!", "success");
     setSaveStatus('saved');
@@ -3516,6 +3530,60 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                           value={setAdminPass}
                           onChange={(e) => setSetAdminPass(e.target.value)}
                           className="w-full bg-gray-50 border border-gray-200 focus:border-green-soft px-4 py-2.5 rounded-xl text-sm"
+                        />
+                      </div>
+                    </div>
+
+                  </div>
+
+                  {/* SUPABASE INTEGRASI */}
+                  <div className="col-span-1 md:col-span-2 border-t border-gray-100 pt-6 mt-2 space-y-4">
+                    <div className="flex items-center space-x-2">
+                      <h4 className="font-serif text-base font-bold text-green-deep">Integrasi & Kredensial Supabase</h4>
+                      <span className={`px-2 py-0.5 text-[10px] font-bold rounded-full transition-all ${
+                        supabaseStatus === 'connected' 
+                          ? 'bg-green-100 text-green-800' 
+                          : supabaseStatus === 'checking' 
+                            ? 'bg-amber-100 text-amber-800 animate-pulse' 
+                            : 'bg-red-100 text-red-800'
+                      }`}>
+                        {supabaseStatus === 'connected' ? 'Connected' : supabaseStatus === 'checking' ? 'Checking...' : 'Disconnected'}
+                      </span>
+                    </div>
+                    <p className="text-xs text-gray-500 leading-relaxed">
+                      Konfigurasikan URL dan Anon Key Supabase di bawah ini untuk mengaktifkan sinkronisasi database cloud (Booking, CMS, Galeri, dll). 
+                      Kredensial disimpan secara aman di <strong>browser Local Storage Anda</strong> untuk mencegah kebocoran/exposure di file bundel JavaScript produksi (F12 Sources).
+                    </p>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-semibold text-text-dark">Supabase URL</label>
+                        <input
+                          type="url"
+                          placeholder="https://your-project.supabase.co"
+                          value={dbUrl}
+                          onChange={(e) => setDbUrl(e.target.value)}
+                          className="w-full bg-gray-50 border border-gray-200 focus:border-green-soft px-4 py-2.5 rounded-xl text-xs font-mono"
+                        />
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-semibold text-text-dark flex justify-between">
+                          <span>Supabase Anon Key</span>
+                          <button
+                            type="button"
+                            onClick={() => setShowDbKey(!showDbKey)}
+                            className="text-green-soft hover:text-green-deep text-[10px] font-bold"
+                          >
+                            {showDbKey ? "Sembunyikan" : "Tampilkan"}
+                          </button>
+                        </label>
+                        <input
+                          type={showDbKey ? "text" : "password"}
+                          placeholder="eyJhbGciOiJIUzI1NiIsInR5..."
+                          value={dbKey}
+                          onChange={(e) => setDbKey(e.target.value)}
+                          className="w-full bg-gray-50 border border-gray-200 focus:border-green-soft px-4 py-2.5 rounded-xl text-xs font-mono"
                         />
                       </div>
                     </div>

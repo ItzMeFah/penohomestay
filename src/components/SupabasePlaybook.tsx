@@ -7,12 +7,59 @@ import {
 import { createClient } from '@supabase/supabase-js';
 
 // User's actual Supabase credentials for live sandbox testing
-const SUPABASE_URL = (import.meta as any).env?.VITE_SUPABASE_URL || "https://eszvodingaehsnahsvmb.supabase.co";
-const SUPABASE_ANON_KEY = (import.meta as any).env?.VITE_SUPABASE_ANON_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVzenZvZGluZ2FlaHNuYWhzdm1iIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI2NDc3NDQsImV4cCI6MjA5ODIyMzc0NH0.UpoFJqht-1pybKBeadMctnIgI3PmiPMsqWU9uJnfy1Q";
-const ACTUAL_KEY = (import.meta as any).env?.VITE_SUPABASE_ANON_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVzenZvZGluZ2FlaHNuYWhzdm1iIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI2NDc3NDQsImV4cCI6MjA5ODIyMzc0NH0.UpoFJqht-1pybKBeadMctnIgI3PmiPMsqWU9uJnfy1Q";
+const SUPABASE_URL = (import.meta as any).env?.VITE_SUPABASE_URL || localStorage.getItem("peno_supabase_url") || "";
+const ACTUAL_KEY = (import.meta as any).env?.VITE_SUPABASE_ANON_KEY || localStorage.getItem("peno_supabase_anon_key") || "";
 
-// Initialize the live sandbox Supabase client
-const liveSupabaseClient = createClient(SUPABASE_URL, ACTUAL_KEY);
+// Initialize the live sandbox Supabase client via a safe dynamic proxy to avoid crashes when keys are missing
+const liveSupabaseClient = new Proxy({} as any, {
+  get(target, prop) {
+    if (!SUPABASE_URL || !ACTUAL_KEY) {
+      // Safe mock implementation for missing credentials
+      if (prop === 'auth') {
+        return {
+          getSession: () => Promise.resolve({ data: { session: null }, error: null }),
+          onAuthStateChange: () => ({ data: { subscription: { unsubscribe: () => {} } } }),
+          signUp: () => Promise.resolve({ data: { user: null }, error: { message: "Supabase URL/Key is not configured" } }),
+          signInWithPassword: () => Promise.resolve({ data: { session: null }, error: { message: "Supabase URL/Key is not configured" } }),
+          signOut: () => Promise.resolve({ error: null })
+        };
+      }
+      if (prop === 'storage') {
+        return {
+          from: () => ({
+            upload: () => Promise.resolve({ data: null, error: { message: "Supabase URL/Key is not configured" } }),
+            getPublicUrl: () => ({ data: { publicUrl: "" } })
+          })
+        };
+      }
+      return (...args: any[]) => {
+        const dummyQuery: any = {
+          select: () => Promise.resolve({ data: [], error: { message: "Supabase URL/Key is not configured" } }),
+          upsert: () => Promise.resolve({ error: { message: "Supabase URL/Key is not configured" } }),
+          insert: () => Promise.resolve({ error: { message: "Supabase URL/Key is not configured" } }),
+          delete: () => ({ neq: () => Promise.resolve({ error: { message: "Supabase URL/Key is not configured" } }) }),
+          neq: () => dummyQuery,
+          eq: () => dummyQuery,
+          order: () => dummyQuery,
+          limit: () => dummyQuery
+        };
+        if (prop === 'from') return dummyQuery;
+        return undefined;
+      };
+    }
+    try {
+      const client = createClient(SUPABASE_URL, ACTUAL_KEY);
+      const val = Reflect.get(client, prop);
+      if (typeof val === 'function') {
+        return val.bind(client);
+      }
+      return val;
+    } catch (e) {
+      console.error("Failed to create live Supabase client:", e);
+      return undefined;
+    }
+  }
+});
 
 interface LogEntry {
   timestamp: string;

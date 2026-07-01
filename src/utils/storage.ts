@@ -1,10 +1,71 @@
 import { Booking, CMSHomepage, GalleryItem, AdminNotification } from '../types';
 import { createClient } from '@supabase/supabase-js';
 
-const SUPABASE_URL = (import.meta as any).env?.VITE_SUPABASE_URL || "https://eszvodingaehsnahsvmb.supabase.co";
-const SUPABASE_ANON_KEY = (import.meta as any).env?.VITE_SUPABASE_ANON_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVzenZvZGluZ2FlaHNuYWhzdm1iIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI2NDc3NDQsImV4cCI6MjA5ODIyMzc0NH0.UpoFJqht-1pybKBeadMctnIgI3PmiPMsqWU9uJnfy1Q";
+// Retrieve credentials dynamically, checking localStorage first, then env variables.
+// NO hardcoded secrets are stored here to prevent F12 browser source leaks.
+export function getSupabaseCredentials() {
+  const url = localStorage.getItem("peno_supabase_url") || (import.meta as any).env?.VITE_SUPABASE_URL || "";
+  const key = localStorage.getItem("peno_supabase_anon_key") || (import.meta as any).env?.VITE_SUPABASE_ANON_KEY || "";
+  return { url, key };
+}
 
-export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+let supabaseInstance: any = null;
+
+export function getSupabaseClient() {
+  const { url, key } = getSupabaseCredentials();
+  if (!url || !key) return null;
+  
+  if (!supabaseInstance || supabaseInstance.supabaseUrl !== url || supabaseInstance.supabaseKey !== key) {
+    try {
+      supabaseInstance = createClient(url, key);
+    } catch (e) {
+      console.error("Failed to initialize Supabase:", e);
+      return null;
+    }
+  }
+  return supabaseInstance;
+}
+
+// Transparent Proxy that redirects all calls to the active Supabase client instance.
+// If not configured yet, it returns mock operations that avoid crashing the app.
+export const supabase = new Proxy({} as any, {
+  get(target, prop) {
+    const client = getSupabaseClient();
+    if (!client) {
+      // Return a safe mock builder to prevent application load errors when Supabase is not configured yet
+      return (...args: any[]) => {
+        const dummyQuery: any = {
+          select: () => Promise.resolve({ data: [], error: null }),
+          upsert: () => Promise.resolve({ error: null }),
+          insert: () => Promise.resolve({ error: null }),
+          delete: () => ({ neq: () => Promise.resolve({ error: null }), not: () => Promise.resolve({ error: null }) }),
+          not: () => dummyQuery,
+          neq: () => dummyQuery,
+          eq: () => dummyQuery,
+          order: () => dummyQuery,
+          limit: () => dummyQuery
+        };
+        
+        if (prop === 'from') {
+          return dummyQuery;
+        }
+        if (prop === 'channel') {
+          return { on: () => ({ subscribe: () => {} }) };
+        }
+        if (prop === 'removeChannel') {
+          return () => {};
+        }
+        
+        return undefined;
+      };
+    }
+    const val = Reflect.get(client, prop);
+    if (typeof val === 'function') {
+      return val.bind(client);
+    }
+    return val;
+  }
+});
 
 export const DEFAULT_HOMEPAGE: CMSHomepage = {
   hero: {
