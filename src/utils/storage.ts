@@ -1,12 +1,20 @@
 import { Booking, CMSHomepage, GalleryItem, AdminNotification } from '../types';
 import { createClient } from '@supabase/supabase-js';
 
-// Retrieve credentials dynamically, checking localStorage first, then env variables.
-// NO hardcoded secrets are stored here to prevent F12 browser source leaks.
+// Retrieve credentials dynamically from environment variables (.env) or localStorage
+// Secrets are read securely from environment variables without hardcoded keys in source
 export function getSupabaseCredentials() {
-  const url = localStorage.getItem("peno_supabase_url") || (import.meta as any).env?.VITE_SUPABASE_URL || "";
-  const key = localStorage.getItem("peno_supabase_anon_key") || (import.meta as any).env?.VITE_SUPABASE_ANON_KEY || "";
-  return { url, key };
+  const envUrl = (import.meta as any).env?.VITE_SUPABASE_URL || "";
+  const envKey = (import.meta as any).env?.VITE_SUPABASE_ANON_KEY || "";
+  const localUrl = typeof localStorage !== 'undefined' ? localStorage.getItem("peno_supabase_url") : null;
+  const localKey = typeof localStorage !== 'undefined' ? localStorage.getItem("peno_supabase_anon_key") : null;
+
+  let rawUrl = (envUrl || localUrl || "").trim();
+  // Strip trailing /rest/v1/ or /rest/v1 or trailing slashes
+  rawUrl = rawUrl.replace(/\/rest\/v1\/?$/, '').replace(/\/+$/, '');
+
+  const key = (envKey || localKey || "").trim();
+  return { url: rawUrl, key };
 }
 
 let supabaseInstance: any = null;
@@ -150,6 +158,15 @@ export const DEFAULT_HOMEPAGE: CMSHomepage = {
   villas: [
     {
       id: "v-1",
+      title: "Villa Arabica Deluxe View Kebun",
+      description: "Villa bernuansa privat dengan pemandangan lanskap kebun kopi Arabica khas pegunungan. Dilengkapi king bed, teras santai privat, meja roaster kopi mini, serta sarapan nikmat masakan rumahan.",
+      capacity: 2,
+      includeBreakfast: true,
+      imageUrl: "https://images.unsplash.com/photo-1590490360182-c33d57733427?auto=format&fit=crop&w=600&h=400&q=80",
+      pricePerPax: 150
+    },
+    {
+      id: "v-2",
       title: "Villa Robusta Kebun Kopi",
       description: "Villa kayu premium semi-terbuka dengan pemandangan langsung ke barisan pohon kopi Robusta yang asri. Dilengkapi dengan ranjang king-size, teras santai pribadi, kamar mandi semi-outdoor dengan air hangat, dan ketenangan alam pedesaan Gombengsari.",
       capacity: 2,
@@ -158,7 +175,7 @@ export const DEFAULT_HOMEPAGE: CMSHomepage = {
       pricePerPax: 140
     },
     {
-      id: "v-2",
+      id: "v-3",
       title: "Family Suite Liberika",
       description: "Villa keluarga berkapasitas besar dengan ruang tengah yang lapang dan desain interior bernuansa etnik bambu yang elegan. Pintu kaca geser memberikan akses pemandangan hijau kebun kopi dan kebun durian. Sangat cocok untuk trip keluarga hangat Anda.",
       capacity: 4,
@@ -444,23 +461,13 @@ export function listenToBroadcast(handlers: Record<string, (data: any) => void>)
   }
 }
 
-export type CurrencyType = 'IDR' | 'USD' | 'EUR';
+export type CurrencyType = 'IDR';
 
-export function convertAndFormatPrice(amount: number, currency: CurrencyType): string {
-  if (currency === 'IDR') {
-    // Treat base amount as thousands of Rupiah (e.g., 150 means 150K)
-    const kAmount = Math.round(amount);
-    const formattedK = new Intl.NumberFormat('id-ID').format(kAmount);
-    return `${formattedK}K`;
-  } else if (currency === 'USD') {
-    // 1 USD is roughly 16.000 IDR, so we divide amount (thousands) by 16
-    const usdAmount = Math.max(1, Math.round((amount * 1000) / 16200));
-    return `$${usdAmount}`;
-  } else {
-    // 1 EUR is roughly 17.500 IDR, so we divide amount (thousands) by 17.5
-    const eurAmount = Math.max(1, Math.round((amount * 1000) / 17500));
-    return `€${eurAmount}`;
-  }
+export function convertAndFormatPrice(amount: number, currency: CurrencyType = 'IDR'): string {
+  // Treat base amount as thousands of Rupiah (e.g., 150 means 150K)
+  const kAmount = Math.round(amount);
+  const formattedK = new Intl.NumberFormat('id-ID').format(kAmount);
+  return `${formattedK}K`;
 }
 
 // Initial pull from Supabase to local storage
@@ -569,9 +576,6 @@ export function subscribeToSupabaseRealtime(onUpdate: (type: string, data: any) 
           } else if (row.id === 'settings') {
             safeStorage.setItem("peno_settings", JSON.stringify(row.data));
             onUpdate('settings', row.data);
-          } else if (row.id === 'notifications') {
-            safeStorage.setItem("peno_notifications", JSON.stringify(row.data));
-            onUpdate('notifications', row.data);
           }
         }
       }

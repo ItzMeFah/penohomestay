@@ -8,17 +8,7 @@ export default defineConfig(() => {
     plugins: [react(), tailwindcss()],
     resolve: {
       alias: {
-        '@': path.resolve(__dirname, '.'),
-      },
-    },
-    build: {
-      rollupOptions: {
-        input: {
-          main: path.resolve(__dirname, 'index.html'),
-          home: path.resolve(__dirname, 'home/index.html'),
-          book: path.resolve(__dirname, 'home/book/index.html'),
-          admin: path.resolve(__dirname, 'admin/index.html'),
-        },
+        '@': path.resolve(__dirname, './src'),
       },
     },
     server: {
