@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Home, Calendar, ChevronDown, ChevronUp, Check, Users, Coffee, ArrowDown } from 'lucide-react';
-import { CMSHomepage } from '../../types';
-import { LanguageType } from '../../utils/lang';
-import { CurrencyType, convertAndFormatPrice } from '../../utils/storage';
+import { CMSHomepage } from '@/src/types';
+import { LanguageType } from '@/src/utils/lang';
+import { CurrencyType, convertAndFormatPrice } from '@/src/utils/storage';
 import { BookingCalendar } from './BookingCalendar';
 
 interface BookingVillaSelectorProps {
@@ -45,13 +45,12 @@ export const BookingVillaSelector: React.FC<BookingVillaSelectorProps> = ({
   unavailableDates,
   onScrollToForm
 }) => {
-  const villas = homepageData.villas || [];
-  const [expandedVillaId, setExpandedVillaId] = useState<string | null>(activeVillaId || (villas[0]?.id || ""));
+  const villas = homepageData?.villas || [];
+  const [expandedVillaId, setExpandedVillaId] = useState<string | null>(activeVillaId || (villas[0]?.id || ''));
 
   const handleVillaClick = (villaId: string) => {
     setActiveVillaId(villaId);
     if (expandedVillaId === villaId) {
-      // Toggle collapse/expand
       setExpandedVillaId(expandedVillaId === villaId ? null : villaId);
     } else {
       setExpandedVillaId(villaId);
@@ -75,7 +74,7 @@ export const BookingVillaSelector: React.FC<BookingVillaSelectorProps> = ({
         </p>
       </div>
       
-      {/* 3 Room Type Cards */}
+      {/* Room Type Cards */}
       <div className="space-y-6">
         {villas.map((villa, idx) => {
           const isSelected = activeVillaId === villa.id;
@@ -100,7 +99,7 @@ export const BookingVillaSelector: React.FC<BookingVillaSelectorProps> = ({
                   {villa.imageUrl ? (
                     <img
                       src={villa.imageUrl}
-                      alt={villa.title}
+                      alt={`Foto Kamar ${villa.title} Peno Homestay Banyuwangi`}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                       referrerPolicy="no-referrer"
                     />
@@ -112,11 +111,11 @@ export const BookingVillaSelector: React.FC<BookingVillaSelectorProps> = ({
                   )}
 
                   {/* Badges on image */}
-                  <div className="absolute top-3 left-3 bg-green-deep/90 backdrop-blur-xs text-cream text-[10px] font-bold px-2.5 py-1 rounded-lg shadow-sm">
+                  <div className="absolute top-3 left-3 bg-green-deep/90 backdrop-blur-xs text-cream text-[10px] font-bold px-2.5 py-1 rounded-lg shadow-sm z-10">
                     Tipe #{idx + 1}
                   </div>
 
-                  <div className="absolute bottom-3 left-3 flex gap-1.5 flex-wrap">
+                  <div className="absolute bottom-3 left-3 flex gap-1.5 flex-wrap z-10">
                     <span className="bg-white/95 text-[10px] font-bold text-text-dark px-2 py-0.5 rounded-lg shadow-xs flex items-center gap-1">
                       <Users className="w-3 h-3 text-green-soft" />
                       {villa.capacity} Pax
@@ -146,7 +145,7 @@ export const BookingVillaSelector: React.FC<BookingVillaSelectorProps> = ({
                     </div>
 
                     <p className="font-sans text-xs text-text-mid font-light leading-relaxed line-clamp-3">
-                      {villa.description || "Villa nyaman bernuansa alam kebun kopi Gombengsari."}
+                      {villa.description || 'Villa nyaman bernuansa alam kebun kopi Gombengsari.'}
                     </p>
                   </div>
 
@@ -258,4 +257,3 @@ export const BookingVillaSelector: React.FC<BookingVillaSelectorProps> = ({
     </div>
   );
 };
-

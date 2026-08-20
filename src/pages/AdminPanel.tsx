@@ -46,7 +46,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
   const [loginError, setLoginError] = useState("");
 
   // Navigation / Sidebar tabs
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'bookings' | 'calendar' | 'tours' | 'block' | 'notifications' | 'cms' | 'header' | 'gallery' | 'settings'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'bookings' | 'calendar' | 'tours' | 'villas' | 'block' | 'notifications' | 'cms' | 'header' | 'gallery' | 'settings'>('dashboard');
 
   // Booking Filtering / Sorting states
   const [bookingSearch, setBookingSearch] = useState("");
@@ -1449,7 +1449,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
     const firstDayIndex = new Date(calYear, calMonth, 1).getDay();
     const startOffset = firstDayIndex === 0 ? 6 : firstDayIndex - 1;
 
-    const dayCells = [];
+    const dayCells: React.ReactNode[] = [];
 
     // Spacing
     for (let i = 0; i < startOffset; i++) {

@@ -1,6 +1,6 @@
 {
-  "name": "Remix: Remix:  Peno Homestayy",
-  "description": "Website pemasaran untuk Peno Homestay di Banyuwangi, dikelilingi kebun kopi dan keindahan alam.",
+  "name": "Peno Homestay Banyuwangi",
+  "description": "Website reservasi dan informasi resmi Peno Homestay Banyuwangi di tengah kebun kopi Gombengsari dekat Kawah Ijen.",
   "requestFramePermissions": [],
   "majorCapabilities": [
     "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"

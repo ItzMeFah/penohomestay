@@ -8,8 +8,8 @@ interface AdminGalleryProps {
   handleResetGallery: () => void;
   handleOpenAddGallery: () => void;
   handleOpenEditGallery: (item: GalleryItem) => void;
-  handleDeleteGalleryItem: (id: string) => void;
-  handleMoveGalleryItem: (id: string, direction: 'up' | 'down', isHeaderOnly: boolean) => void;
+  handleDeleteGalleryItem: (id: number | string) => void;
+  handleMoveGalleryItem: (id: number | string, direction: 'up' | 'down', isHeaderOnly: boolean) => void;
 }
 
 export const AdminGallery: React.FC<AdminGalleryProps> = ({

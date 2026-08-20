@@ -2,27 +2,38 @@ import React from 'react';
 import { motion } from 'motion/react';
 import { ArrowRight, Home } from 'lucide-react';
 import { CoffeeBean } from '../CoffeeDecoration';
-import { CMSHomepage } from '../../types';
-import { CurrencyType, convertAndFormatPrice } from '../../utils/storage';
-import { LanguageType } from '../../utils/lang';
+import { CMSHomepage } from '@/src/types';
+import { CurrencyType, convertAndFormatPrice } from '@/src/utils/storage';
+import { LanguageType } from '@/src/utils/lang';
 
 interface LandingAkomodasiProps {
   homepageData: CMSHomepage;
-  currency: CurrencyType;
-  lang: LanguageType;
+  currency?: CurrencyType;
+  lang?: LanguageType;
   setSelectedVillaId?: (id: string) => void;
-  onNavigate: (page: 'home' | 'booking' | 'supabase' | 'admin', sectionId?: string) => void;
+  onNavigate?: (page: 'home' | 'booking' | 'supabase' | 'admin', sectionId?: string) => void;
 }
 
 export const LandingAkomodasi: React.FC<LandingAkomodasiProps> = ({
   homepageData,
-  currency,
-  lang,
+  currency = 'IDR',
+  lang = 'ID',
   setSelectedVillaId,
   onNavigate
 }) => {
-  const villas = homepageData.villas || [];
+  const villas = homepageData?.villas || [];
   if (villas.length === 0) return null;
+
+  const handleBookRoom = (villaId: string) => {
+    if (setSelectedVillaId) {
+      setSelectedVillaId(villaId);
+    }
+    if (onNavigate) {
+      onNavigate('booking');
+    } else {
+      window.location.href = '/home/book';
+    }
+  };
 
   return (
     <section id="villa-showcase" className="py-24 px-6 md:px-12 bg-cream/10 border-t border-sand/20 relative overflow-hidden">
@@ -59,9 +70,9 @@ export const LandingAkomodasi: React.FC<LandingAkomodasiProps> = ({
                 {villa.imageUrl ? (
                   <img 
                     src={villa.imageUrl} 
-                    alt={villa.title} 
+                    alt={`Kamar ${villa.title} Peno Homestay Banyuwangi dengan pemandangan kebun kopi`} 
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
                     referrerPolicy="no-referrer"
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out" 
                   />
                 ) : (
                   <div className="w-full h-full bg-green-deep/5 flex items-center justify-center">
@@ -69,12 +80,12 @@ export const LandingAkomodasi: React.FC<LandingAkomodasiProps> = ({
                   </div>
                 )}
                 
-                <div className="absolute top-4 right-4 bg-white/95 backdrop-blur-sm px-3 py-1 rounded-full text-[10px] font-bold text-green-deep flex items-center gap-1.5 shadow-sm">
+                <div className="absolute top-4 right-4 bg-white/95 backdrop-blur-sm px-3 py-1 rounded-full text-[10px] font-bold text-green-deep flex items-center gap-1.5 shadow-sm z-10">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
                   <span>{lang === 'ID' ? 'Tersedia' : 'Available'}</span>
                 </div>
 
-                <div className="absolute bottom-4 left-4 flex gap-1.5">
+                <div className="absolute bottom-4 left-4 flex gap-1.5 z-10">
                   <span className="bg-green-deep text-cream text-[10px] font-bold px-2.5 py-1 rounded-lg shadow-sm">
                     👤 Maks {villa.capacity} Pax
                   </span>
@@ -105,12 +116,7 @@ export const LandingAkomodasi: React.FC<LandingAkomodasiProps> = ({
                   </div>
                   
                   <button 
-                    onClick={() => {
-                      if (setSelectedVillaId) {
-                        setSelectedVillaId(villa.id);
-                      }
-                      onNavigate('booking');
-                    }}
+                    onClick={() => handleBookRoom(villa.id)}
                     className="inline-flex items-center space-x-1 bg-green-deep hover:bg-green-soft text-cream px-4 py-2.5 rounded-xl font-sans font-bold text-xs transition-all shadow cursor-pointer active:scale-95"
                   >
                     <span>{lang === 'ID' ? 'Pesan Kamar' : 'Book Room'}</span>

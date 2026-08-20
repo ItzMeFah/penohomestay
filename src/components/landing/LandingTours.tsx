@@ -1,15 +1,15 @@
 import React from 'react';
 import { motion } from 'motion/react';
 import { MapPin, Phone } from 'lucide-react';
-import { CMSHomepage } from '../../types';
-import { LanguageType } from '../../utils/lang';
+import { CMSHomepage } from '@/src/types';
+import { LanguageType } from '@/src/utils/lang';
 
 interface LandingToursProps {
   homepageData: CMSHomepage;
-  lang: LanguageType;
+  lang?: LanguageType;
 }
 
-export const LandingTours: React.FC<LandingToursProps> = ({ homepageData, lang }) => {
+export const LandingTours: React.FC<LandingToursProps> = ({ homepageData, lang = 'ID' }) => {
   if (!homepageData.tours || homepageData.tours.length === 0) return null;
 
   return (
@@ -44,9 +44,9 @@ export const LandingTours: React.FC<LandingToursProps> = ({ homepageData, lang }
                   {tour.imageUrl ? (
                     <img 
                       src={tour.imageUrl} 
-                      alt={tour.name} 
+                      alt={`Foto Paket Wisata ${tour.name} Peno Homestay Banyuwangi`} 
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
                       referrerPolicy="no-referrer"
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out" 
                     />
                   ) : (
                     <div className="w-full h-full bg-green-deep/5 flex items-center justify-center">
@@ -56,12 +56,12 @@ export const LandingTours: React.FC<LandingToursProps> = ({ homepageData, lang }
                   <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/10 to-transparent opacity-60 group-hover:opacity-75 transition-opacity duration-500" />
                   
                   {tour.price && (
-                    <div className="absolute bottom-3 left-4 bg-white/95 backdrop-blur-sm px-3 py-1 rounded-xl shadow-sm text-[11px] font-bold text-green-deep tracking-wide">
+                    <div className="absolute bottom-3 left-4 bg-white/95 backdrop-blur-sm px-3 py-1 rounded-xl shadow-sm text-[11px] font-bold text-green-deep tracking-wide z-10">
                       {tour.price}
                     </div>
                   )}
                   
-                  <div className="absolute top-3 right-4 bg-green-deep/80 backdrop-blur-sm px-2.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider text-cream">
+                  <div className="absolute top-3 right-4 bg-green-deep/80 backdrop-blur-sm px-2.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider text-cream z-10">
                     {lang === 'ID' ? 'Tur' : 'Tour'}
                   </div>
                 </div>
@@ -97,7 +97,7 @@ export const LandingTours: React.FC<LandingToursProps> = ({ homepageData, lang }
 
                   <div className="pt-4 border-t border-sand/20">
                     <a 
-                      href={`https://wa.me/${tour.contactPhone.replace(/\D/g,'')}?text=Halo%20Peno%20Homestay,%20saya%20tertarik%20dengan%20paket%20wisata%20${encodeURIComponent(tour.name)}.`}
+                      href={`https://wa.me/${tour.contactPhone?.replace(/\D/g,'') || '6281233800631'}?text=Halo%20Peno%20Homestay,%20saya%20tertarik%20dengan%20paket%20wisata%20${encodeURIComponent(tour.name)}.`}
                       target="_blank"
                       rel="noreferrer"
                       className="w-full flex items-center justify-center space-x-2 bg-green-deep hover:bg-green-soft text-cream hover:text-white py-2.5 px-4 rounded-xl transition-all duration-300 font-semibold text-xs shadow-md hover:shadow-lg active:scale-[0.98]"

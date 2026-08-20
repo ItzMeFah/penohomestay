@@ -2,10 +2,11 @@ import React from 'react';
 
 interface GalleryIllustrationProps {
   type: 'coffee' | 'room' | 'river' | 'breakfast' | 'tour' | 'ijen';
-  title: string;
+  title?: string;
+  color?: string;
 }
 
-export const GalleryIllustration: React.FC<GalleryIllustrationProps> = ({ type, title }) => {
+export const GalleryIllustration: React.FC<GalleryIllustrationProps> = ({ type, title = '', color }) => {
   switch (type) {
     case 'coffee':
       return (

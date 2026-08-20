@@ -1,16 +1,16 @@
 import React from 'react';
 import { motion } from 'motion/react';
 import { Trees, Heart, Mountain, Star } from 'lucide-react';
-import { CMSHomepage } from '../../types';
-import { LanguageType, translations } from '../../utils/lang';
+import { CMSHomepage } from '@/src/types';
+import { LanguageType, translations } from '@/src/utils/lang';
 
 interface LandingAboutProps {
   homepageData: CMSHomepage;
-  lang: LanguageType;
+  lang?: LanguageType;
 }
 
-export const LandingAbout: React.FC<LandingAboutProps> = ({ homepageData, lang }) => {
-  const t = translations[lang];
+export const LandingAbout: React.FC<LandingAboutProps> = ({ homepageData, lang = 'ID' }) => {
+  const t = translations[lang] || translations.ID;
 
   return (
     <section id="tentang" className="py-24 px-6 md:px-12 max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-16 items-center">
@@ -84,9 +84,9 @@ export const LandingAbout: React.FC<LandingAboutProps> = ({ homepageData, lang }
               >
                 <img 
                   src={imgUrl} 
-                  alt={item.title} 
+                  alt={`Aktivitas ${item.title} di Perkebunan Peno Homestay Banyuwangi`} 
+                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                   referrerPolicy="no-referrer"
-                  className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent transition-opacity duration-300 group-hover:from-black/95" />
                 
@@ -129,9 +129,9 @@ export const LandingAbout: React.FC<LandingAboutProps> = ({ homepageData, lang }
           <div className="absolute -top-16 left-1/2 transform -translate-x-1/2 w-32 h-32 md:w-36 md:h-36 rounded-full border-4 border-cream shadow-2xl overflow-hidden z-20 bg-cream-dark">
             <img 
               src="https://njgsafkwldootsupwjsb.supabase.co/storage/v1/object/public/avatars/pak%20peno.png" 
-              alt="Pak Peno" 
-              referrerPolicy="no-referrer"
+              alt="Foto Pak Peno - Tuan Rumah & Petani Kopi Peno Homestay Gombengsari Banyuwangi" 
               className="w-full h-full object-cover object-top hover:scale-110 transition-transform duration-500"
+              referrerPolicy="no-referrer"
             />
           </div>
 

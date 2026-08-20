@@ -67,6 +67,7 @@ export interface CMSHomepage {
     headline: string;
     subheadline: string;
     badge: string;
+    slideshowImages?: string[];
   };
   stats: CMSStat[];
   about: {
@@ -86,6 +87,7 @@ export interface CMSHomepage {
     activities: string[];
   };
   villas?: VillaRoom[];
+  gallery?: GalleryItem[];
 }
 
 export interface GalleryItem {
