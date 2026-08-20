@@ -226,11 +226,12 @@ export const BookingEngine: React.FC<BookingEngineProps> = ({
           <div className="space-y-12">
             {/* Header / Guidelines Block */}
             <div className="space-y-6">
-              <div className="bg-green-deep rounded-3xl p-8 md:p-12 text-center md:text-left relative overflow-hidden shadow-md">
+              <div className="bg-green-deep rounded-3xl p-8 md:p-10 text-center md:text-left relative overflow-hidden shadow-md">
                 <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.06),transparent)] pointer-events-none" />
-                <div className="relative z-10 max-w-2xl space-y-3.5">
-                  <span className="text-sand font-mono text-xs uppercase tracking-widest font-semibold block">Peno Homestay Gombengsari</span>
-                  <h1 className="font-serif text-3xl md:text-4xl font-bold tracking-tight text-cream">{lang === 'ID' ? 'Pesan Kamar Anda' : 'Book Your Stay'}</h1>
+                <div className="relative z-10 max-w-2xl space-y-2">
+                  <h1 className="font-serif text-3xl md:text-4xl font-bold tracking-tight text-cream">
+                    {lang === 'ID' ? 'Pemesanan Kamar' : 'Room Reservation'}
+                  </h1>
                   <p className="font-sans text-xs md:text-sm text-cream/80 font-light leading-relaxed">
                     {t.bookEngineDesc}
                   </p>

@@ -39,14 +39,14 @@ export const BookingSummaryCard: React.FC<BookingSummaryCardProps> = ({
         <div className="bg-white rounded-3xl border border-gray-200 p-6 md:p-8 shadow-sm space-y-6">
           <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 border-b border-gray-100 pb-5">
             <div className="space-y-1">
-              <span className="text-[10px] font-mono uppercase tracking-widest text-green-soft font-bold">Peno Homestay Rate (K IDR)</span>
+              <span className="text-xs text-text-mid font-medium">{lang === 'ID' ? 'Tarif Kamar' : 'Room Rate'}</span>
               <div className="flex items-baseline space-x-2">
                 <span className="font-serif text-3xl font-bold text-green-deep">{convertAndFormatPrice(pricePerNight, 'IDR')}</span>
                 <span className="font-sans text-sm text-text-mid font-light">/ {lang === 'ID' ? 'malam' : 'night'}</span>
               </div>
             </div>
             <div className="flex items-center space-x-2 bg-green-50 px-3 py-1.5 rounded-xl border border-green-100">
-              <span className="text-xs font-mono font-bold text-green-deep">Mata Uang: IDR (Rupiah)</span>
+              <span className="text-xs font-sans font-semibold text-green-deep">IDR (Rupiah)</span>
             </div>
           </div>
 

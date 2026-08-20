@@ -37,16 +37,16 @@ export const LandingKeunggulan: React.FC<LandingKeunggulanProps> = ({ homepageDa
   return (
     <section id="keunggulan" className="bg-white/50 backdrop-blur-sm border-y border-sand/30 py-24 px-6 md:px-12">
       <div className="max-w-6xl mx-auto space-y-16">
-        <div className="text-center space-y-4 max-w-2xl mx-auto">
-          <span className="text-green-soft font-mono text-xs uppercase tracking-widest font-semibold block">
-            {lang === 'ID' ? 'Kenapa Memilih Kami' : t.expLabel}
+        <div className="text-center space-y-3 max-w-2xl mx-auto">
+          <span className="text-green-soft text-xs uppercase tracking-wider font-semibold block">
+            {lang === 'ID' ? 'Keunggulan Kami' : t.expLabel}
           </span>
           <h2 className="font-serif text-3xl md:text-4xl font-bold text-green-deep tracking-tight">
-            {lang === 'ID' ? 'Keunggulan Menginap di Peno' : t.expTitle}
+            {lang === 'ID' ? 'Fasilitas & Keunggulan' : t.expTitle}
           </h2>
-          <p className="font-sans text-sm md:text-base text-text-mid font-light">
+          <p className="font-sans text-xs md:text-sm text-text-mid font-light leading-relaxed">
             {lang === 'ID' 
-              ? 'Rasakan pengalaman menginap otentik dengan beragam fasilitas dan kenyamanan khas keluarga di tengah sejuknya kebun kopi Banyuwangi.' 
+              ? 'Pengalaman menginap bernuansa alam dengan fasilitas lengkap dan keramahan khas keluarga pedesaan.' 
               : t.expDesc}
           </p>
         </div>

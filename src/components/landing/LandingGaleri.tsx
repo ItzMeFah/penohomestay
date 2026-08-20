@@ -45,16 +45,16 @@ export const LandingGaleri: React.FC<LandingGaleriProps> = ({ galleryData, lang 
   return (
     <section id="galeri" className="py-24 px-6 md:px-12 max-w-7xl mx-auto space-y-12">
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-        <div className="space-y-4 max-w-lg">
-          <span className="text-green-soft font-mono text-xs uppercase tracking-widest font-semibold block">
-            {lang === 'ID' ? 'Sudut Keindahan' : t.galLabel}
+        <div className="space-y-3 max-w-lg">
+          <span className="text-green-soft text-xs uppercase tracking-wider font-semibold block">
+            {lang === 'ID' ? 'Dokumentasi' : t.galLabel}
           </span>
           <h2 className="font-serif text-3xl md:text-4xl font-bold text-green-deep tracking-tight">
-            {lang === 'ID' ? 'Galeri Foto Peno' : t.galTitle}
+            {lang === 'ID' ? 'Galeri Foto' : t.galTitle}
           </h2>
-          <p className="font-sans text-sm md:text-base text-text-mid font-light">
+          <p className="font-sans text-xs md:text-sm text-text-mid font-light leading-relaxed">
             {lang === 'ID' 
-              ? 'Tengok sekilas keindahan alam, sudut homestay yang damai, serta hangatnya aktivitas keluarga kami.' 
+              ? 'Suasana kebun kopi, kenyamanan kamar, dan aktivitas di Peno Homestay.' 
               : t.galDesc}
           </p>
         </div>
@@ -144,7 +144,7 @@ export const LandingGaleri: React.FC<LandingGaleriProps> = ({ galleryData, lang 
                     
                     {/* Hover Overlay */}
                     <div className="absolute inset-0 bg-green-deep/75 backdrop-blur-[2px] opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-6">
-                      <span className="text-sand/70 font-mono text-xs uppercase tracking-widest mb-1">{getGalleryCategoryLabel(item.category)}</span>
+                      <span className="text-sand/80 text-xs uppercase tracking-wider mb-1 font-medium">{getGalleryCategoryLabel(item.category)}</span>
                       <h4 className="text-cream font-serif text-lg font-bold flex items-center justify-between">
                         <span>{getGalleryLabel(item.label)}</span>
                         <ArrowRight className="w-4 h-4 text-sand" />

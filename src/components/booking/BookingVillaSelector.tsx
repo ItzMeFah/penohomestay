@@ -61,17 +61,17 @@ export const BookingVillaSelector: React.FC<BookingVillaSelectorProps> = ({
   return (
     <div className="space-y-6">
       {/* Header Info */}
-      <div className="space-y-2">
+      <div className="space-y-1.5">
         <div className="flex items-center space-x-2 text-green-deep border-b border-sand/20 pb-2">
           <Home className="w-5 h-5 text-green-soft" />
           <h4 className="font-serif font-bold text-lg md:text-xl">
-            {lang === 'ID' ? 'Pilih Tipe Villa / Kamar & Kalender Tanggal' : 'Select Villa / Room Type & Date Calendar'}
+            {lang === 'ID' ? 'Pilih Kamar & Tanggal' : 'Select Room & Stay Dates'}
           </h4>
         </div>
         <p className="font-sans text-xs text-text-mid font-light leading-relaxed">
           {lang === 'ID' 
-            ? 'Pilih salah satu dari 3 tipe kamar di bawah. Klik kamar untuk slide down kalender ketersediaan (Booked / Available) khusus kamar tersebut.' 
-            : 'Select one of the room types below. Click a room card to slide down the availability calendar (Booked / Available) for that specific room.'}
+            ? 'Pilih tipe kamar untuk melihat kalender ketersediaan dan menentukan tanggal menginap.' 
+            : 'Select a room type to view real-time availability calendar and pick dates.'}
         </p>
       </div>
       
@@ -196,9 +196,9 @@ export const BookingVillaSelector: React.FC<BookingVillaSelectorProps> = ({
                   >
                     {/* Slide Down Drag Indicator Bar */}
                     <div className="flex flex-col items-center justify-center space-y-1.5 pb-2">
-                      <div className="w-12 h-1.5 bg-gray-300/80 rounded-full animate-pulse" />
-                      <div className="flex items-center gap-1.5 text-xs font-mono font-bold text-green-deep">
-                        <ArrowDown className="w-3.5 h-3.5 text-green-soft animate-bounce" />
+                      <div className="w-12 h-1.5 bg-gray-300/80 rounded-full" />
+                      <div className="flex items-center gap-1.5 text-xs font-sans font-bold text-green-deep">
+                        <ArrowDown className="w-3.5 h-3.5 text-green-soft" />
                         <span>{lang === 'ID' ? `Kalender Ketersediaan: ${villa.title}` : `Availability Calendar: ${villa.title}`}</span>
                       </div>
                     </div>

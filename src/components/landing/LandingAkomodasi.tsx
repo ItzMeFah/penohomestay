@@ -31,17 +31,17 @@ export const LandingAkomodasi: React.FC<LandingAkomodasiProps> = ({
       <CoffeeBean className="bottom-20 right-[8%] w-10 h-10 text-coffee/10" delay={2} duration={8} yOffset={30} rotateSpeed={-150} />
 
       <div className="max-w-6xl mx-auto space-y-16 relative z-10">
-        <div className="text-center space-y-4 max-w-2xl mx-auto">
-          <span className="text-green-soft font-mono text-xs uppercase tracking-widest font-semibold block">
-            {lang === 'ID' ? 'Pilihan Akomodasi Eksklusif' : 'Exclusive Accommodation Choices'}
+        <div className="text-center space-y-3 max-w-2xl mx-auto">
+          <span className="text-green-soft text-xs uppercase tracking-wider font-semibold block">
+            {lang === 'ID' ? 'Pilihan Kamar' : 'Room Types'}
           </span>
           <h2 className="font-serif text-3xl md:text-4xl font-bold text-green-deep tracking-tight">
-            {lang === 'ID' ? 'Menginap Nyaman dengan View Alam' : 'Comfortable Stays with Nature Views'}
+            {lang === 'ID' ? 'Akomodasi Peno Homestay' : 'Accommodations'}
           </h2>
-          <p className="font-sans text-sm md:text-base text-text-mid font-light leading-relaxed">
+          <p className="font-sans text-xs md:text-sm text-text-mid font-light leading-relaxed">
             {lang === 'ID' 
-              ? 'Kami menyediakan berbagai pilihan villa dan kamar premium dengan fasilitas lengkap, kenyamanan ekstra, serta pemandangan asri perkebunan kopi.' 
-              : 'We offer a collection of premium villas and rooms equipped with modern comforts, extra amenities, and direct views of the beautiful coffee farm.'}
+              ? 'Pilihan kamar nyaman dengan suasana asri di tengah perkebunan kopi Gombengsari.' 
+              : 'Comfortable rooms surrounded by the natural serenity of Gombengsari coffee plantation.'}
           </p>
         </div>
 

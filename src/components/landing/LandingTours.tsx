@@ -15,17 +15,17 @@ export const LandingTours: React.FC<LandingToursProps> = ({ homepageData, lang }
   return (
     <section className="bg-cream py-24 px-6 md:px-12 overflow-hidden border-b border-sand/30">
       <div className="max-w-6xl mx-auto space-y-12">
-        <div className="text-center space-y-4 max-w-2xl mx-auto">
-          <span className="text-green-soft font-mono text-xs uppercase tracking-widest font-semibold block">
-            {lang === 'ID' ? 'Paket Pengalaman' : 'Experience Packages'}
+        <div className="text-center space-y-3 max-w-2xl mx-auto">
+          <span className="text-green-soft text-xs uppercase tracking-wider font-semibold block">
+            {lang === 'ID' ? 'Paket Wisata' : 'Tour Packages'}
           </span>
           <h2 className="font-serif text-3xl md:text-4xl font-bold text-green-deep tracking-tight">
-            {lang === 'ID' ? 'Jelajahi Alam Banyuwangi' : 'Explore Banyuwangi Nature'}
+            {lang === 'ID' ? 'Jelajahi Alam Banyuwangi' : 'Explore Banyuwangi'}
           </h2>
-          <p className="font-sans text-sm md:text-base text-text-mid font-light leading-relaxed">
+          <p className="font-sans text-xs md:text-sm text-text-mid font-light leading-relaxed">
             {lang === 'ID' 
-              ? 'Kami menawarkan berbagai paket wisata menarik untuk melengkapi liburan Anda. Nikmati keindahan alam dan budaya lokal bersama pemandu berpengalaman kami.' 
-              : 'We offer various exciting tour packages to complete your holiday. Enjoy the beauty of nature and local culture with our experienced guides.'}
+              ? 'Pilihan paket wisata dan pemandu lokal untuk melengkapi pengalaman menginap Anda.' 
+              : 'Curated tour packages and local guides to enhance your stay experience.'}
           </p>
         </div>
 
@@ -78,8 +78,8 @@ export const LandingTours: React.FC<LandingToursProps> = ({ homepageData, lang }
 
                   {tour.inclusions && tour.inclusions.length > 0 && (
                     <div className="space-y-1.5">
-                      <h4 className="font-mono text-[9px] font-bold text-green-soft uppercase tracking-wider">
-                        {lang === 'ID' ? 'Fasilitas:' : 'Inclusions:'}
+                      <h4 className="font-sans text-[10px] font-semibold text-green-soft uppercase tracking-wider">
+                        {lang === 'ID' ? 'Fasilitas Termasuk:' : 'Inclusions:'}
                       </h4>
                       <div className="flex flex-wrap gap-1">
                         {tour.inclusions.map((inc, i) => (

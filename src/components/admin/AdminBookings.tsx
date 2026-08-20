@@ -176,23 +176,20 @@ export const AdminBookings: React.FC<AdminBookingsProps> = ({
         <p>Dicetak pada: {new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</p>
       </div>
 
-      {/* Core Bookings Table */}
-      <div className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse text-xs md:text-sm">
+      {/* Core Bookings Table & Mobile Cards (100% Fit, No Side Scrolling) */}
+      <div className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden w-full">
+        {/* Desktop & Tablet Table View (md+) */}
+        <div className="hidden md:block w-full">
+          <table className="w-full text-left border-collapse text-xs lg:text-sm table-auto">
             <thead>
-              <tr className="bg-gray-50/50 border-b border-gray-100 text-gray-400 font-bold uppercase tracking-wider">
-                <th className="p-4">No</th>
-                <th className="p-4">ID Pemesanan</th>
-                <th className="p-4">Nama Tamu</th>
-                <th className="p-4">Kamar</th>
-                <th className="p-4">Check-In</th>
-                <th className="p-4">Check-Out</th>
-                <th className="p-4 text-center">Malam</th>
-                <th className="p-4 text-center">Tamu</th>
-                <th className="p-4">Total Tarif</th>
-                <th className="p-4">Status</th>
-                <th className="p-4 text-right no-print">Aksi</th>
+              <tr className="bg-gray-50/75 border-b border-gray-100 text-gray-400 font-bold uppercase tracking-wider text-[11px]">
+                <th className="py-3.5 px-4 w-12 text-center">No</th>
+                <th className="py-3.5 px-4">Tamu & ID</th>
+                <th className="py-3.5 px-4">Kamar</th>
+                <th className="py-3.5 px-4">Jadwal Menginap</th>
+                <th className="py-3.5 px-4">Total Tarif</th>
+                <th className="py-3.5 px-4">Status</th>
+                <th className="py-3.5 px-4 text-right no-print">Aksi</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
@@ -202,29 +199,34 @@ export const AdminBookings: React.FC<AdminBookingsProps> = ({
 
                 return (
                   <tr key={b.id} className="hover:bg-cream/15 transition-colors">
-                    <td className="p-4 font-semibold text-gray-400">{idx + 1}</td>
-                    <td className="p-4 font-mono font-bold text-green-deep">{b.id}</td>
-                    <td className="p-4">
-                      <div>
-                        <div className="font-semibold text-text-dark">{b.guest_name}</div>
-                        <div className="text-[10px] text-gray-400">{b.guest_email}</div>
+                    <td className="py-3 px-4 font-semibold text-gray-400 text-center">{idx + 1}</td>
+                    <td className="py-3 px-4">
+                      <div className="font-semibold text-text-dark">{b.guest_name}</div>
+                      <div className="flex items-center gap-1.5 mt-0.5">
+                        <span className="font-mono text-[10px] bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded font-medium">{b.id}</span>
+                        {b.guest_count && (
+                          <span className="text-[10px] text-gray-500 font-medium">· {b.guest_count} Tamu</span>
+                        )}
                       </div>
+                      <div className="text-[10px] text-gray-400 truncate max-w-[180px]">{b.guest_email}</div>
                     </td>
-                    <td className="p-4 font-medium text-text-dark">
-                      <span className="px-2.5 py-1 bg-green-soft/5 text-green-deep border border-green-soft/10 text-[11px] font-bold rounded-lg uppercase tracking-wide">
+                    <td className="py-3 px-4 font-medium text-text-dark">
+                      <span className="px-2.5 py-1 bg-green-soft/10 text-green-deep border border-green-soft/20 text-[11px] font-bold rounded-lg uppercase tracking-wide inline-block">
                         {roomName}
                       </span>
                     </td>
-                    <td className="p-4">
-                      {new Date(b.check_in).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}
+                    <td className="py-3 px-4 whitespace-nowrap">
+                      <div className="font-medium text-gray-800">
+                        {new Date(b.check_in).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })} - {new Date(b.check_out).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}
+                      </div>
+                      <div className="text-[11px] text-gray-400 mt-0.5 font-sans font-normal">
+                        Durasi: <span className="font-semibold text-gray-600">{b.nights} Malam</span>
+                      </div>
                     </td>
-                    <td className="p-4">
-                      {new Date(b.check_out).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}
+                    <td className="py-3 px-4 font-serif font-bold text-green-deep whitespace-nowrap">
+                      {convertAndFormatPrice(b.total_eur, 'IDR')}
                     </td>
-                    <td className="p-4 text-center font-medium">{b.nights}</td>
-                    <td className="p-4 text-center text-gray-500">{b.guest_count}</td>
-                    <td className="p-4 font-serif font-bold text-green-deep">{convertAndFormatPrice(b.total_eur, 'IDR')}</td>
-                    <td className="p-4">
+                    <td className="py-3 px-4">
                       <select
                         value={b.status}
                         onChange={(e) => handleUpdateBookingStatus(b.id, e.target.value as any)}
@@ -233,7 +235,7 @@ export const AdminBookings: React.FC<AdminBookingsProps> = ({
                             ? 'bg-emerald-500 text-white border-emerald-600'
                             : b.status === 'cancelled'
                               ? 'bg-rose-500 text-white border-rose-600'
-                              : 'bg-amber-100 text-amber-950 border-amber-300 text-amber-900'
+                              : 'bg-amber-100 text-amber-950 border-amber-300'
                         }`}
                       >
                         <option value="pending" className="bg-white text-gray-700">Pending</option>
@@ -241,18 +243,18 @@ export const AdminBookings: React.FC<AdminBookingsProps> = ({
                         <option value="cancelled" className="bg-white text-gray-700">Cancelled</option>
                       </select>
                     </td>
-                    <td className="p-4 text-right space-x-2 no-print">
+                    <td className="py-3 px-4 text-right space-x-1.5 no-print whitespace-nowrap">
                       <button
                         onClick={() => setSelectedBookingDetail(b)}
-                        className="p-1.5 bg-cream hover:bg-sand/30 text-green-deep rounded-lg cursor-pointer"
-                        title="Detail"
+                        className="p-2 bg-cream hover:bg-sand/30 text-green-deep rounded-xl transition-colors cursor-pointer inline-flex items-center justify-center"
+                        title="Lihat Detail"
                       >
                         <Eye className="w-4 h-4" />
                       </button>
                       <button
                         onClick={() => handleDeleteBooking(b.id)}
-                        className="p-1.5 bg-red-50 hover:bg-red-100 text-red-600 rounded-lg cursor-pointer"
-                        title="Hapus"
+                        className="p-2 bg-red-50 hover:bg-red-100 text-red-600 rounded-xl transition-colors cursor-pointer inline-flex items-center justify-center"
+                        title="Hapus Pemesanan"
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>
@@ -262,13 +264,97 @@ export const AdminBookings: React.FC<AdminBookingsProps> = ({
               })}
               {processedBookings.length === 0 && (
                 <tr>
-                  <td colSpan={11} className="p-12 text-center text-gray-400 font-sans font-light">
+                  <td colSpan={7} className="p-12 text-center text-gray-400 font-sans font-light">
                     Tidak ditemukan data pemesanan tamu yang cocok.
                   </td>
                 </tr>
               )}
             </tbody>
           </table>
+        </div>
+
+        {/* Mobile Cards List View (<md) */}
+        <div className="md:hidden divide-y divide-gray-100 w-full">
+          {processedBookings.map((b, idx) => {
+            const matchingVilla = (homepageData.villas || []).find((v: any) => v.id === b.villa_id) || homepageData.villas?.[0];
+            const roomName = matchingVilla ? matchingVilla.title : "Kamar Utama";
+
+            return (
+              <div key={b.id} className="p-4 space-y-3 hover:bg-gray-50/50 transition-colors">
+                <div className="flex items-start justify-between gap-2">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="font-semibold text-xs text-gray-400">#{idx + 1}</span>
+                      <span className="font-mono text-[10px] bg-gray-100 text-gray-700 px-1.5 py-0.5 rounded font-medium">{b.id}</span>
+                      <span className="px-2 py-0.5 bg-green-soft/10 text-green-deep text-[10px] font-bold rounded-md uppercase">
+                        {roomName}
+                      </span>
+                    </div>
+                    <h4 className="font-serif font-bold text-sm text-green-deep mt-1">{b.guest_name}</h4>
+                    <p className="text-xs text-gray-400">{b.guest_email}</p>
+                  </div>
+
+                  <div className="text-right">
+                    <div className="font-serif font-bold text-sm text-green-deep">{convertAndFormatPrice(b.total_eur, 'IDR')}</div>
+                    <div className="text-[10px] text-gray-400">{b.nights} Malam · {b.guest_count} Tamu</div>
+                  </div>
+                </div>
+
+                <div className="bg-gray-50 rounded-xl p-2.5 flex items-center justify-between text-xs text-gray-600">
+                  <div>
+                    <span className="text-[10px] text-gray-400 uppercase font-semibold block">Check-In</span>
+                    <span className="font-medium text-gray-800">{new Date(b.check_in).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })}</span>
+                  </div>
+                  <span className="text-gray-300 font-bold">➔</span>
+                  <div>
+                    <span className="text-[10px] text-gray-400 uppercase font-semibold block">Check-Out</span>
+                    <span className="font-medium text-gray-800">{new Date(b.check_out).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between gap-2 pt-1">
+                  <select
+                    value={b.status}
+                    onChange={(e) => handleUpdateBookingStatus(b.id, e.target.value as any)}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-bold border outline-none cursor-pointer uppercase tracking-wider ${
+                      b.status === 'paid'
+                        ? 'bg-emerald-500 text-white border-emerald-600'
+                        : b.status === 'cancelled'
+                          ? 'bg-rose-500 text-white border-rose-600'
+                          : 'bg-amber-100 text-amber-950 border-amber-300'
+                    }`}
+                  >
+                    <option value="pending" className="bg-white text-gray-700">Pending</option>
+                    <option value="paid" className="bg-white text-gray-700">Paid</option>
+                    <option value="cancelled" className="bg-white text-gray-700">Cancelled</option>
+                  </select>
+
+                  <div className="flex items-center space-x-2">
+                    <button
+                      onClick={() => setSelectedBookingDetail(b)}
+                      className="px-3 py-1.5 bg-cream hover:bg-sand/30 text-green-deep rounded-xl text-xs font-semibold flex items-center space-x-1 transition-colors"
+                    >
+                      <Eye className="w-3.5 h-3.5" />
+                      <span>Detail</span>
+                    </button>
+                    <button
+                      onClick={() => handleDeleteBooking(b.id)}
+                      className="p-1.5 bg-red-50 hover:bg-red-100 text-red-600 rounded-xl transition-colors"
+                      title="Hapus"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+
+          {processedBookings.length === 0 && (
+            <div className="p-8 text-center text-gray-400 text-xs">
+              Tidak ditemukan data pemesanan tamu yang cocok.
+            </div>
+          )}
         </div>
       </div>
     </div>

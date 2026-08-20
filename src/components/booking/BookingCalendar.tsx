@@ -273,19 +273,19 @@ export const BookingCalendar: React.FC<BookingCalendarProps> = ({
   return (
     <div className="space-y-6">
       {/* Legend Bar at the Top */}
-      <div className="bg-white border border-gray-200 rounded-2xl p-4 flex flex-wrap items-center justify-between gap-4 shadow-xs">
-        <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-xs font-sans text-gray-500 font-medium">
+      <div className="bg-white border border-gray-200 rounded-2xl p-3.5 flex flex-wrap items-center justify-between gap-4 shadow-xs">
+        <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-xs font-sans text-gray-600">
           <div className="flex items-center space-x-2">
-            <div className="w-5 h-4 bg-emerald-500 border border-emerald-600 rounded" />
-            <span className="font-bold text-emerald-600">{lang === 'ID' ? 'TERSEDIA (HIJAU)' : 'AVAILABLE (GREEN)'}</span>
+            <div className="w-3.5 h-3.5 bg-emerald-500 rounded" />
+            <span className="font-medium text-emerald-700">{lang === 'ID' ? 'Tersedia' : 'Available'}</span>
           </div>
           <div className="flex items-center space-x-2">
-            <div className="w-5 h-4 bg-rose-500 border border-rose-600 rounded" />
-            <span className="font-bold text-rose-600">{lang === 'ID' ? 'BOOKED (MERAH)' : 'BOOKED (RED)'}</span>
+            <div className="w-3.5 h-3.5 bg-rose-500 rounded" />
+            <span className="font-medium text-rose-700">{lang === 'ID' ? 'Terisi (Booked)' : 'Booked'}</span>
           </div>
           <div className="flex items-center space-x-2">
-            <div className="w-5 h-4 bg-green-deep rounded" />
-            <span className="font-semibold text-green-deep">{lang === 'ID' ? 'Pilihan Anda' : 'Your Selection'}</span>
+            <div className="w-3.5 h-3.5 bg-green-deep rounded" />
+            <span className="font-medium text-green-deep">{lang === 'ID' ? 'Pilihan Anda' : 'Selected'}</span>
           </div>
         </div>
 
@@ -293,13 +293,10 @@ export const BookingCalendar: React.FC<BookingCalendarProps> = ({
           <button
             type="button"
             onClick={handleResetToCurrentMonth}
-            className="px-3 py-1.5 bg-green-deep/10 hover:bg-green-deep/20 text-green-deep font-sans font-bold text-xs rounded-xl transition-all cursor-pointer shadow-xs active:scale-95"
+            className="px-3 py-1.5 bg-green-deep/10 hover:bg-green-deep/20 text-green-deep font-sans font-semibold text-xs rounded-xl transition-all cursor-pointer shadow-xs active:scale-95"
           >
-            {lang === 'ID' ? 'Ke Bulan Ini' : 'Current Month'}
+            {lang === 'ID' ? 'Bulan Ini' : 'Today'}
           </button>
-          <div className="text-[11px] font-mono text-gray-400 uppercase tracking-wider select-none hidden md:block">
-            {lang === 'ID' ? 'Pilih tanggal menginap pada kalender' : 'Click check-in & check-out dates'}
-          </div>
         </div>
       </div>
 
