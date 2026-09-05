@@ -68,12 +68,6 @@ export const BookingCalendar: React.FC<BookingCalendarProps> = ({
     });
   };
 
-  const handleResetToCurrentMonth = () => {
-    const today = new Date();
-    setViewYear(today.getFullYear());
-    setViewMonth(today.getMonth());
-  };
-
   const getMonthYearOffset = (year: number, month: number, offset: number) => {
     let targetMonth = month + offset;
     let targetYear = year;
@@ -90,9 +84,7 @@ export const BookingCalendar: React.FC<BookingCalendarProps> = ({
   const isPastDate = (date: Date) => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    const target = new Date(date);
-    target.setHours(0, 0, 0, 0);
-    return target < today;
+    return date < today;
   };
 
   const handleDateClick = (date: Date, key: string) => {
@@ -104,26 +96,16 @@ export const BookingCalendar: React.FC<BookingCalendarProps> = ({
       setSelectEnd(null);
       setHoveredDate(null);
     } else {
-      const targetTime = date.getTime();
-      const startTime = selectStart.getTime();
-
-      if (targetTime === startTime) {
-        setSelectStart(null);
-        setSelectEnd(null);
-        setHoveredDate(null);
-        return;
-      }
-
-      if (targetTime < startTime) {
+      // Second click: select end date
+      if (date < selectStart) {
+        setSelectEnd(selectStart);
         setSelectStart(date);
-        setSelectEnd(null);
-        setHoveredDate(null);
       } else {
         let temp = new Date(selectStart);
         let hasBlocked = false;
-        while (temp <= date) {
+        while (temp < date) {
           const tempKey = `${temp.getFullYear()}-${temp.getMonth() + 1}-${temp.getDate()}`;
-          if (temp.getTime() !== startTime && temp.getTime() !== targetTime && unavailableDates.has(tempKey)) {
+          if (unavailableDates.has(tempKey)) {
             hasBlocked = true;
             break;
           }
@@ -133,7 +115,6 @@ export const BookingCalendar: React.FC<BookingCalendarProps> = ({
         if (hasBlocked) {
           setSelectStart(date);
           setSelectEnd(null);
-          setHoveredDate(null);
         } else {
           setSelectEnd(date);
         }
@@ -273,30 +254,24 @@ export const BookingCalendar: React.FC<BookingCalendarProps> = ({
   return (
     <div className="space-y-6">
       {/* Legend Bar at the Top */}
-      <div className="bg-white border border-gray-200 rounded-2xl p-3.5 flex flex-wrap items-center justify-between gap-4 shadow-xs">
-        <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-xs font-sans text-gray-600">
+      <div className="bg-white border border-gray-200 rounded-2xl p-4 flex flex-wrap items-center justify-between gap-4 shadow-xs">
+        <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-xs font-sans text-gray-500 font-medium">
           <div className="flex items-center space-x-2">
-            <div className="w-3.5 h-3.5 bg-emerald-500 rounded" />
-            <span className="font-medium text-emerald-700">{lang === 'ID' ? 'Tersedia' : 'Available'}</span>
+            <div className="w-5 h-4 bg-emerald-500 border border-emerald-600 rounded" />
+            <span className="font-bold text-emerald-600">{lang === 'ID' ? 'TERSEDIA (HIJAU)' : 'AVAILABLE (GREEN)'}</span>
           </div>
           <div className="flex items-center space-x-2">
-            <div className="w-3.5 h-3.5 bg-rose-500 rounded" />
-            <span className="font-medium text-rose-700">{lang === 'ID' ? 'Terisi (Booked)' : 'Booked'}</span>
+            <div className="w-5 h-4 bg-rose-500 border border-rose-600 rounded" />
+            <span className="font-bold text-rose-600">{lang === 'ID' ? 'BOOKED (MERAH)' : 'BOOKED (RED)'}</span>
           </div>
           <div className="flex items-center space-x-2">
-            <div className="w-3.5 h-3.5 bg-green-deep rounded" />
-            <span className="font-medium text-green-deep">{lang === 'ID' ? 'Pilihan Anda' : 'Selected'}</span>
+            <div className="w-5 h-4 bg-green-deep rounded" />
+            <span className="font-semibold text-green-deep">{lang === 'ID' ? 'Pilihan Anda' : 'Your Selection'}</span>
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
-          <button
-            type="button"
-            onClick={handleResetToCurrentMonth}
-            className="px-3 py-1.5 bg-green-deep/10 hover:bg-green-deep/20 text-green-deep font-sans font-semibold text-xs rounded-xl transition-all cursor-pointer shadow-xs active:scale-95"
-          >
-            {lang === 'ID' ? 'Bulan Ini' : 'Today'}
-          </button>
+        <div className="text-[11px] font-mono text-gray-400 uppercase tracking-wider select-none hidden md:block">
+          {lang === 'ID' ? 'Pilih tanggal menginap pada kalender' : 'Click check-in & check-out dates'}
         </div>
       </div>
 

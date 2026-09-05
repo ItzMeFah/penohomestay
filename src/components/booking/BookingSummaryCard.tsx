@@ -39,14 +39,32 @@ export const BookingSummaryCard: React.FC<BookingSummaryCardProps> = ({
         <div className="bg-white rounded-3xl border border-gray-200 p-6 md:p-8 shadow-sm space-y-6">
           <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 border-b border-gray-100 pb-5">
             <div className="space-y-1">
-              <span className="text-xs text-text-mid font-medium">{lang === 'ID' ? 'Tarif Kamar' : 'Room Rate'}</span>
+              <span className="text-[10px] font-mono uppercase tracking-widest text-green-soft font-bold">Peno Homestay Rate</span>
               <div className="flex items-baseline space-x-2">
-                <span className="font-serif text-3xl font-bold text-green-deep">{convertAndFormatPrice(pricePerNight, 'IDR')}</span>
+                <span className="font-serif text-3xl font-bold text-green-deep">{convertAndFormatPrice(pricePerNight, currency)}</span>
                 <span className="font-sans text-sm text-text-mid font-light">/ {lang === 'ID' ? 'malam' : 'night'}</span>
               </div>
             </div>
-            <div className="flex items-center space-x-2 bg-green-50 px-3 py-1.5 rounded-xl border border-green-100">
-              <span className="text-xs font-sans font-semibold text-green-deep">IDR (Rupiah)</span>
+
+            {/* Currency Selector */}
+            <div className="flex flex-col sm:items-end space-y-1.5">
+              <span className="text-[10px] font-sans font-bold text-gray-400 uppercase tracking-wider">{lang === 'ID' ? 'Pilih Mata Uang' : 'Choose Currency'}</span>
+              <div className="flex bg-gray-50 p-1 rounded-xl border border-gray-200">
+                {(['IDR', 'USD', 'EUR'] as CurrencyType[]).map((c) => (
+                  <button
+                    key={c}
+                    type="button"
+                    onClick={() => onChangeCurrency(c)}
+                    className={`px-3 py-1 text-xs font-bold rounded-lg transition-all cursor-pointer ${
+                      currency === c
+                        ? 'bg-green-deep text-cream shadow-xs'
+                        : 'text-text-mid hover:text-green-deep hover:bg-green-deep/5'
+                    }`}
+                  >
+                    {c}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
 

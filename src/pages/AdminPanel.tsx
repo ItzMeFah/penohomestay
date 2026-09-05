@@ -46,7 +46,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
   const [loginError, setLoginError] = useState("");
 
   // Navigation / Sidebar tabs
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'bookings' | 'calendar' | 'tours' | 'villas' | 'block' | 'notifications' | 'cms' | 'header' | 'gallery' | 'settings'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'bookings' | 'calendar' | 'tours' | 'block' | 'notifications' | 'cms' | 'header' | 'gallery' | 'settings'>('dashboard');
 
   // Booking Filtering / Sorting states
   const [bookingSearch, setBookingSearch] = useState("");
@@ -121,8 +121,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
   const [filterRoomCode, setFilterRoomCode] = useState("all");
   const [filterTimeRange, setFilterTimeRange] = useState("all");
 
-  // Settings sub-tab state (Villa, Header, Galeri, Umum, CMS, Tours)
-  const [settingsSubTab, setSettingsSubTab] = useState<'villas' | 'header' | 'gallery' | 'general' | 'cms' | 'tours'>('villas');
+  // Settings sub-tab state
+  const [settingsSubTab, setSettingsSubTab] = useState<'general' | 'cms'>('general');
 
   // Confirmation Modal state
   const [showConfirmModal, setShowConfirmModal] = useState(false);
@@ -191,8 +191,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
   const [showDbKey, setShowDbKey] = useState(false);
 
   // Admin View Large Calendar
-  const [calYear, setCalYear] = useState(() => new Date().getFullYear());
-  const [calMonth, setCalMonth] = useState(() => new Date().getMonth());
+  const [calYear, setCalYear] = useState(2026);
+  const [calMonth, setCalMonth] = useState(5); // June
   const [selectedCalendarVillaId, setSelectedCalendarVillaId] = useState("");
   const [offlineSelectedVillaId, setOfflineSelectedVillaId] = useState("");
 
@@ -1449,7 +1449,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
     const firstDayIndex = new Date(calYear, calMonth, 1).getDay();
     const startOffset = firstDayIndex === 0 ? 6 : firstDayIndex - 1;
 
-    const dayCells: React.ReactNode[] = [];
+    const dayCells = [];
 
     // Spacing
     for (let i = 0; i < startOffset; i++) {
@@ -1731,170 +1731,250 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
         )}
       </AnimatePresence>
 
-      {/* TOPBAR + CONTENT PANEL */}
-      <div className="flex-grow flex flex-col min-w-0">
-        {/* Topbar sticky header */}
-        <header className="bg-white border-b border-gray-100 sticky top-0 z-20 px-4 sm:px-8 py-3.5 flex justify-between items-center shadow-xs">
-          <div className="flex items-center space-x-3">
-            <div className="w-9 h-9 rounded-xl bg-green-deep flex items-center justify-center text-cream font-serif font-bold text-sm shadow-xs select-none">
-              P
-            </div>
+      {/* 1. SIDEBAR BACKDROP OVERLAY */}
+      <AnimatePresence>
+        {sidebarOpen && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/40 backdrop-blur-xs z-30 transition-opacity"
+            onClick={() => setSidebarOpen(false)}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* 2. SIDEBAR PANEL (DRAWER 1/3 SCREEN) */}
+      <aside className={`fixed inset-y-0 left-0 bg-green-deep text-cream flex-shrink-0 flex flex-col justify-between p-6 shadow-2xl z-40 transition-transform duration-300 ease-in-out w-72 sm:w-80 md:w-1/3 max-w-[420px] ${
+        sidebarOpen ? 'translate-x-0' : '-translate-x-full'
+      }`}>
+        <div className="space-y-6 overflow-y-auto max-h-[85vh] pr-1">
+          {/* Logo / Header with Close Button */}
+          <div className="border-b border-green-soft/20 pb-4 flex items-center justify-between">
             <div>
-              <h1 className="text-base sm:text-lg font-serif font-bold text-green-deep leading-tight">
-                {activeTab === 'dashboard' ? 'Dashboard Utama' : 
-                 activeTab === 'bookings' ? 'Daftar Pemesanan' : 
-                 activeTab === 'calendar' ? 'Kalender Ketersediaan' :
-                 activeTab === 'notifications' ? 'Notifikasi Sistem' :
-                 activeTab === 'villas' ? 'Manajemen Villa / Kamar' :
-                 activeTab === 'header' ? 'Manajemen Slideshow Header' :
-                 activeTab === 'gallery' ? 'Manajemen Galeri Homestay' :
-                 activeTab === 'tours' ? 'Manajemen Paket Wisata' :
-                 activeTab === 'settings' ? (
-                   settingsSubTab === 'villas' ? 'Pengaturan Villa & Kamar' :
-                   settingsSubTab === 'header' ? 'Pengaturan Slideshow Header' :
-                   settingsSubTab === 'gallery' ? 'Pengaturan Galeri Homestay' :
-                   settingsSubTab === 'tours' ? 'Pengaturan Paket Wisata' :
-                   settingsSubTab === 'cms' ? 'CMS Konten Beranda' : 'Pengaturan Umum & Database'
-                 ) : 'Peno Admin'}
-              </h1>
-              <p className="font-mono text-[10px] text-gray-400">Peno Homestay Control Center</p>
+              <h2 className="font-serif text-2xl font-bold tracking-tight text-cream">Peno Admin</h2>
+              <p className="font-mono text-[10px] text-sand/65 uppercase tracking-widest">Homestay Control Center</p>
             </div>
+            <button
+              onClick={() => setSidebarOpen(false)}
+              className="p-1.5 text-cream/70 hover:text-cream hover:bg-white/10 rounded-lg transition-colors cursor-pointer"
+            >
+              <X className="w-5 h-5" />
+            </button>
           </div>
 
-          <div className="flex items-center space-x-2 sm:space-x-3">
-            {/* Supabase status badge */}
-            <div className="hidden sm:flex items-center space-x-2 px-2.5 py-1 bg-gray-50 border border-gray-100 rounded-xl text-xs font-sans text-gray-600">
-              <span className="relative flex h-2 w-2">
-                {supabaseStatus === 'connected' && (
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                )}
-                <span className={`relative inline-flex rounded-full h-2 w-2 ${
-                  supabaseStatus === 'connected' 
-                    ? 'bg-emerald-500' 
-                    : supabaseStatus === 'checking' 
-                      ? 'bg-amber-500 animate-pulse' 
-                      : 'bg-rose-500'
-                }`}></span>
-              </span>
-              <span className="font-mono text-[10px] font-semibold text-gray-500">
-                {supabaseStatus === 'connected' ? 'Supabase Connected' : 'Supabase Offline'}
-              </span>
-            </div>
+          <div className="bg-black/15 px-2.5 py-1.5 rounded-lg border border-white/5 flex items-center space-x-2">
+            <span className="relative flex h-2 w-2">
+              {supabaseStatus === 'connected' && (
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+              )}
+              <span className={`relative inline-flex rounded-full h-2 w-2 ${
+                supabaseStatus === 'connected' 
+                  ? 'bg-emerald-500' 
+                  : supabaseStatus === 'checking' 
+                    ? 'bg-amber-500 animate-pulse' 
+                    : 'bg-rose-500'
+              }`}></span>
+            </span>
+            <span className="font-mono text-[9px] font-bold uppercase tracking-wider text-sand/90">
+              Supabase: {
+                supabaseStatus === 'connected' 
+                  ? 'Aktif / Connected' 
+                  : supabaseStatus === 'checking' 
+                    ? 'Checking...' 
+                    : 'Inactive / Error'
+              }
+            </span>
+          </div>
 
-            {/* Notifications Button */}
+          {/* Nav links */}
+          <nav className="flex flex-col space-y-1">
             <button
-              onClick={() => setActiveTab('notifications')}
-              className={`relative p-2.5 rounded-xl transition-all cursor-pointer border ${
-                activeTab === 'notifications'
-                  ? 'bg-green-deep text-cream border-green-deep shadow-xs'
-                  : 'text-gray-600 hover:text-green-deep hover:bg-gray-100 border-gray-200 bg-white'
+              onClick={() => {
+                setActiveTab('dashboard');
+                setSidebarOpen(false);
+              }}
+              className={`flex items-center space-x-3 px-4 py-3 rounded-xl font-sans text-sm font-medium transition-all text-left w-full cursor-pointer ${
+                activeTab === 'dashboard' ? 'bg-green-soft text-cream border-l-4 border-sand shadow-md' : 'text-cream/80 hover:bg-cream/10 hover:text-cream'
               }`}
-              title="Notifikasi Sistem"
+            >
+              <LayoutDashboard className="w-4 h-4" />
+              <span>Dashboard</span>
+            </button>
+
+            <button
+              onClick={() => {
+                setActiveTab('bookings');
+                setSidebarOpen(false);
+              }}
+              className={`flex items-center space-x-3 px-4 py-3 rounded-xl font-sans text-sm font-medium transition-all text-left w-full cursor-pointer ${
+                activeTab === 'bookings' ? 'bg-green-soft text-cream border-l-4 border-sand shadow-md' : 'text-cream/80 hover:bg-cream/10 hover:text-cream'
+              }`}
+            >
+              <CalendarRange className="w-4 h-4" />
+              <span>Manajemen Pemesanan</span>
+            </button>
+
+            <button
+              onClick={() => {
+                setActiveTab('calendar');
+                setSidebarOpen(false);
+              }}
+              className={`flex items-center space-x-3 px-4 py-3 rounded-xl font-sans text-sm font-medium transition-all text-left w-full cursor-pointer ${
+                activeTab === 'calendar' ? 'bg-green-soft text-cream border-l-4 border-sand shadow-md' : 'text-cream/80 hover:bg-cream/10 hover:text-cream'
+              }`}
+            >
+              <CalendarRange className="w-4 h-4" />
+              <span>Kalender Ketersediaan</span>
+            </button>
+
+            <button
+              onClick={() => {
+                setActiveTab('tours');
+                setSidebarOpen(false);
+              }}
+              className={`flex items-center space-x-3 px-4 py-3 rounded-xl font-sans text-sm font-medium transition-all text-left w-full cursor-pointer ${
+                activeTab === 'tours' ? 'bg-green-soft text-cream border-l-4 border-sand shadow-md' : 'text-cream/80 hover:bg-cream/10 hover:text-cream'
+              }`}
+            >
+              <MapPin className="w-4 h-4" />
+              <span>Paket Wisata</span>
+            </button>
+
+            <button
+              onClick={() => {
+                setActiveTab('notifications');
+                setSidebarOpen(false);
+              }}
+              className={`flex items-center space-x-3 px-4 py-3 rounded-xl font-sans text-sm font-medium transition-all text-left w-full cursor-pointer ${
+                activeTab === 'notifications' ? 'bg-green-soft text-cream border-l-4 border-sand shadow-md' : 'text-cream/80 hover:bg-cream/10 hover:text-cream'
+              }`}
             >
               <Bell className="w-4 h-4" />
+              <span>Notifikasi Realtime</span>
               {notifications.filter(n => !n.read).length > 0 && (
-                <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-rose-500 rounded-full" />
+                <span className="ml-auto w-5 h-5 flex items-center justify-center bg-rose-500 text-white rounded-full text-[10px] font-bold animate-pulse">
+                  {notifications.filter(n => !n.read).length}
+                </span>
               )}
             </button>
 
-            {/* IKON SETTING SEBELAH KANAN NOTIF (FUNGSI PENGATURAN: MANAJEMEN VILLA, HEADER, GALERI) */}
+            <button
+              onClick={() => {
+                setActiveTab('villas');
+                setSidebarOpen(false);
+              }}
+              className={`flex items-center space-x-3 px-4 py-3 rounded-xl font-sans text-sm font-medium transition-all text-left w-full cursor-pointer ${
+                activeTab === 'villas' ? 'bg-green-soft text-cream border-l-4 border-sand shadow-md' : 'text-cream/80 hover:bg-cream/10 hover:text-cream'
+              }`}
+            >
+              <Home className="w-4 h-4" />
+              <span>Manajemen Villa / Kamar</span>
+            </button>
+
+            <button
+              onClick={() => {
+                setActiveTab('header');
+                setSidebarOpen(false);
+              }}
+              className={`flex items-center space-x-3 px-4 py-3 rounded-xl font-sans text-sm font-medium transition-all text-left w-full cursor-pointer ${
+                activeTab === 'header' ? 'bg-green-soft text-cream border-l-4 border-sand shadow-md' : 'text-cream/80 hover:bg-cream/10 hover:text-cream'
+              }`}
+            >
+              <Layers className="w-4 h-4" />
+              <span>Manajemen Header</span>
+            </button>
+
+            <button
+              onClick={() => {
+                setActiveTab('gallery');
+                setSidebarOpen(false);
+              }}
+              className={`flex items-center space-x-3 px-4 py-3 rounded-xl font-sans text-sm font-medium transition-all text-left w-full cursor-pointer ${
+                activeTab === 'gallery' ? 'bg-green-soft text-cream border-l-4 border-sand shadow-md' : 'text-cream/80 hover:bg-cream/10 hover:text-cream'
+              }`}
+            >
+              <ImageIcon className="w-4 h-4" />
+              <span>Manajemen Galeri</span>
+            </button>
+
+
+
             <button
               onClick={() => {
                 setActiveTab('settings');
+                setSidebarOpen(false);
               }}
-              className={`relative p-2.5 rounded-xl transition-all cursor-pointer border ${
-                activeTab === 'settings'
-                  ? 'bg-green-deep text-cream border-green-deep shadow-xs ring-2 ring-green-deep/20'
-                  : 'text-gray-600 hover:text-green-deep hover:bg-gray-100 border-gray-200 bg-white'
+              className={`flex items-center space-x-3 px-4 py-3 rounded-xl font-sans text-sm font-medium transition-all text-left w-full cursor-pointer ${
+                activeTab === 'settings' ? 'bg-green-soft text-cream border-l-4 border-sand shadow-md' : 'text-cream/80 hover:bg-cream/10 hover:text-cream'
               }`}
-              title="Pengaturan (Manajemen Villa, Header, Galeri)"
             >
               <SettingsIcon className="w-4 h-4" />
+              <span>Pengaturan</span>
+            </button>
+          </nav>
+        </div>
+
+        {/* Logout action */}
+        <button
+          onClick={() => {
+            setSidebarOpen(false);
+            handleLogout();
+          }}
+          className="flex items-center space-x-3 px-4 py-3 rounded-xl font-sans text-sm font-medium text-rose-300 hover:bg-rose-500/10 hover:text-rose-400 mt-8 transition-colors text-left w-full cursor-pointer"
+        >
+          <LogOut className="w-4 h-4" />
+          <span>Keluar Portal</span>
+        </button>
+      </aside>
+
+      {/* 3. TOPBAR + CONTENT PANEL */}
+      <div className="flex-grow flex flex-col min-w-0">
+        {/* Topbar sticky header */}
+        <header className="bg-white border-b border-gray-100 sticky top-0 z-20 px-8 py-4 flex justify-between items-center shadow-sm">
+          <div className="flex items-center space-x-4">
+            <button
+              onClick={() => setSidebarOpen(true)}
+              className="p-2 -ml-2 text-green-deep hover:bg-gray-100 rounded-xl transition-colors cursor-pointer flex items-center justify-center border border-gray-100 hover:border-green-soft/30 shadow-xs"
+              title="Buka Navigasi"
+            >
+              <Menu className="w-6 h-6" />
+            </button>
+            <h1 className="text-xl font-serif font-bold text-green-deep capitalize">
+              {activeTab === 'block' ? 'Manajemen Not Available (Tutup Tanggal)' : 
+               activeTab === 'bookings' ? 'Daftar Pemesanan Tamu' : 
+               activeTab === 'calendar' ? 'Kalender Ketersediaan' :
+               activeTab === 'tours' ? 'Manajemen Paket Wisata' :
+               activeTab === 'villas' ? 'Manajemen Villa / Kamar' :
+               activeTab === 'notifications' ? 'Notifikasi Realtime' :
+               activeTab === 'header' ? 'Manajemen Slideshow Header' : 
+               activeTab === 'settings' ? 'Pengaturan Homestay' :
+               activeTab === 'gallery' ? 'Manajemen Galeri Homestay' : activeTab}
+            </h1>
+          </div>
+
+          <div className="flex items-center space-x-6">
+            {/* Realtime Bells indicator */}
+            <button
+              onClick={() => setActiveTab('notifications')}
+              className="relative p-2 text-gray-500 hover:text-green-deep hover:bg-gray-100 rounded-full transition-colors"
+            >
+              <Bell className="w-5 h-5" />
+              {notifications.filter(n => !n.read).length > 0 && (
+                <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-rose-500 rounded-full animate-ping" />
+              )}
             </button>
 
-            {/* Logout button */}
-            <button
-              onClick={handleLogout}
-              className="p-2.5 text-gray-500 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-all border border-gray-200 bg-white cursor-pointer"
-              title="Keluar Portal Admin"
-            >
-              <LogOut className="w-4 h-4" />
-            </button>
+            {/* Quick stats indicator */}
+            <div className="hidden sm:flex items-center space-x-2 text-xs font-sans text-gray-500">
+              <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
+              <span>Server Live Sync</span>
+            </div>
           </div>
         </header>
 
-        {/* Content body scrollable with bottom padding for bottom tab bar */}
-        <main className="flex-grow p-4 sm:p-8 pb-28 overflow-y-auto max-w-7xl w-full mx-auto space-y-8">
-
-          {/* SUB-TABS SELECTOR FOR SETTINGS (Villa, Header, Galeri, dll) */}
-          {activeTab === 'settings' && (
-            <div className="bg-white rounded-2xl border border-gray-100 p-2 shadow-xs flex flex-wrap items-center gap-1.5 sm:gap-2">
-              <button
-                type="button"
-                onClick={() => setSettingsSubTab('villas')}
-                className={`flex items-center space-x-2 px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                  settingsSubTab === 'villas'
-                    ? 'bg-green-deep text-cream shadow-xs'
-                    : 'text-gray-600 hover:text-green-deep hover:bg-gray-50'
-                }`}
-              >
-                <Home className="w-3.5 h-3.5" />
-                <span>Manajemen Villa</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setSettingsSubTab('header')}
-                className={`flex items-center space-x-2 px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                  settingsSubTab === 'header'
-                    ? 'bg-green-deep text-cream shadow-xs'
-                    : 'text-gray-600 hover:text-green-deep hover:bg-gray-50'
-                }`}
-              >
-                <Layers className="w-3.5 h-3.5" />
-                <span>Header / Slideshow</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setSettingsSubTab('gallery')}
-                className={`flex items-center space-x-2 px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                  settingsSubTab === 'gallery'
-                    ? 'bg-green-deep text-cream shadow-xs'
-                    : 'text-gray-600 hover:text-green-deep hover:bg-gray-50'
-                }`}
-              >
-                <ImageIcon className="w-3.5 h-3.5" />
-                <span>Galeri Homestay</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setSettingsSubTab('general')}
-                className={`flex items-center space-x-2 px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                  settingsSubTab === 'general'
-                    ? 'bg-green-deep text-cream shadow-xs'
-                    : 'text-gray-600 hover:text-green-deep hover:bg-gray-50'
-                }`}
-              >
-                <SettingsIcon className="w-3.5 h-3.5" />
-                <span>Umum & Database</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setSettingsSubTab('tours')}
-                className={`flex items-center space-x-2 px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                  settingsSubTab === 'tours'
-                    ? 'bg-green-deep text-cream shadow-xs'
-                    : 'text-gray-600 hover:text-green-deep hover:bg-gray-50'
-                }`}
-              >
-                <MapPin className="w-3.5 h-3.5" />
-                <span>Paket Wisata</span>
-              </button>
-            </div>
-          )}
+        {/* Content body scrollable */}
+        <main className="flex-grow p-8 overflow-y-auto max-w-7xl w-full mx-auto space-y-8">
           
           {/* TAB 1: DASHBOARD VIEW */}
           {activeTab === 'dashboard' && (
@@ -1949,66 +2029,50 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                     </button>
                   </div>
 
-                  <div className="w-full">
-                    <table className="w-full text-left border-collapse text-xs table-auto">
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left border-collapse text-xs">
                       <thead>
-                        <tr className="border-b border-gray-100 text-gray-400 font-semibold uppercase tracking-wider text-[11px]">
-                          <th className="pb-2.5 pr-2">Tamu / ID</th>
-                          <th className="pb-2.5 px-2 hidden sm:table-cell">Kamar</th>
-                          <th className="pb-2.5 px-2">Check-In</th>
-                          <th className="pb-2.5 px-2">Status</th>
-                          <th className="pb-2.5 pl-2 text-right">Aksi</th>
+                        <tr className="border-b border-gray-100 text-gray-400 font-semibold uppercase tracking-wider">
+                          <th className="pb-3">ID</th>
+                          <th className="pb-3">Tamu</th>
+                          <th className="pb-3">Check-In</th>
+                          <th className="pb-3">Status</th>
+                          <th className="pb-3 text-right">Aksi</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-gray-50">
-                        {bookings.slice(0, 5).map(b => {
-                          const matchingVilla = (homepageData.villas || []).find((v: any) => v.id === b.villa_id) || homepageData.villas?.[0];
-                          const roomName = matchingVilla ? matchingVilla.title : "Kamar Utama";
-
-                          return (
-                            <tr key={b.id} className="hover:bg-cream/25 transition-colors">
-                              <td className="py-2.5 pr-2">
-                                <div className="font-semibold text-text-dark truncate max-w-[130px] sm:max-w-[160px]">{b.guest_name}</div>
-                                <div className="font-mono text-[10px] text-gray-400 font-medium">{b.id}</div>
-                              </td>
-                              <td className="py-2.5 px-2 hidden sm:table-cell">
-                                <span className="px-2 py-0.5 bg-green-soft/10 text-green-deep text-[10px] font-bold rounded-md truncate max-w-[100px] inline-block">
-                                  {roomName}
-                                </span>
-                              </td>
-                              <td className="py-2.5 px-2 text-gray-600 whitespace-nowrap">
-                                <div>{new Date(b.check_in).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })}</div>
-                                <div className="text-[10px] text-gray-400">{b.nights} mlm</div>
-                              </td>
-                              <td className="py-2.5 px-2">
-                                <select
-                                  value={b.status}
-                                  onChange={(e) => handleUpdateBookingStatus(b.id, e.target.value as any)}
-                                  className={`px-2 py-0.5 rounded-full font-bold text-[9px] outline-none border cursor-pointer uppercase tracking-wider ${
-                                    b.status === 'paid'
-                                      ? 'bg-emerald-500 text-white border-emerald-600'
-                                      : b.status === 'cancelled'
-                                        ? 'bg-rose-500 text-white border-rose-600'
-                                        : 'bg-amber-100 text-amber-900 border-amber-300'
-                                  }`}
-                                >
-                                  <option value="pending" className="bg-white text-gray-700">Pending</option>
-                                  <option value="paid" className="bg-white text-gray-700">Paid</option>
-                                  <option value="cancelled" className="bg-white text-gray-700">Cancelled</option>
-                                </select>
-                              </td>
-                              <td className="py-2.5 pl-2 text-right">
-                                <button
-                                  onClick={() => setSelectedBookingDetail(b)}
-                                  className="p-1.5 bg-cream hover:bg-sand/30 text-green-deep rounded-lg transition-colors cursor-pointer"
-                                  title="Lihat Detail"
-                                >
-                                  <Eye className="w-3.5 h-3.5" />
-                                </button>
-                              </td>
-                            </tr>
-                          );
-                        })}
+                        {bookings.slice(0, 5).map(b => (
+                          <tr key={b.id} className="hover:bg-cream/25">
+                            <td className="py-3 font-mono font-bold text-green-deep">{b.id}</td>
+                            <td className="py-3 font-medium">{b.guest_name}</td>
+                            <td className="py-3">{new Date(b.check_in).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })}</td>
+                            <td className="py-3">
+                              <select
+                                value={b.status}
+                                onChange={(e) => handleUpdateBookingStatus(b.id, e.target.value as any)}
+                                className={`px-2 py-0.5 rounded-full font-bold text-[10px] outline-none border cursor-pointer uppercase tracking-wider ${
+                                  b.status === 'paid'
+                                    ? 'bg-emerald-500 text-white border-emerald-600'
+                                    : b.status === 'cancelled'
+                                      ? 'bg-rose-500 text-white border-rose-600'
+                                      : 'bg-amber-100 text-amber-900 border-amber-300'
+                                }`}
+                              >
+                                <option value="pending" className="bg-white text-gray-700">Pending</option>
+                                <option value="paid" className="bg-white text-gray-700">Paid</option>
+                                <option value="cancelled" className="bg-white text-gray-700">Cancelled</option>
+                              </select>
+                            </td>
+                            <td className="py-3 text-right">
+                              <button
+                                onClick={() => setSelectedBookingDetail(b)}
+                                className="p-1 bg-cream hover:bg-sand/30 text-green-deep rounded"
+                              >
+                                <Eye className="w-3.5 h-3.5" />
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
                         {bookings.length === 0 && (
                           <tr>
                             <td colSpan={5} className="py-6 text-center text-gray-400">Belum ada pemesanan terekam.</td>
@@ -2149,20 +2213,23 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                 <p>Dicetak pada: {new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</p>
               </div>
 
-              {/* Core Bookings Table & Mobile Cards (100% Fit, No Side Scrolling) */}
-              <div className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden w-full">
-                {/* Desktop & Tablet Table View (md+) */}
-                <div className="hidden md:block w-full">
-                  <table className="w-full text-left border-collapse text-xs lg:text-sm table-auto">
+              {/* Core Bookings Table */}
+              <div className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left border-collapse text-xs md:text-sm">
                     <thead>
-                      <tr className="bg-gray-50/75 border-b border-gray-100 text-gray-400 font-bold uppercase tracking-wider text-[11px]">
-                        <th className="py-3.5 px-4 w-12 text-center">No</th>
-                        <th className="py-3.5 px-4">Tamu & ID</th>
-                        <th className="py-3.5 px-4">Kamar</th>
-                        <th className="py-3.5 px-4">Jadwal Menginap</th>
-                        <th className="py-3.5 px-4">Total Tarif</th>
-                        <th className="py-3.5 px-4">Status</th>
-                        <th className="py-3.5 px-4 text-right no-print">Aksi</th>
+                      <tr className="bg-gray-50/50 border-b border-gray-100 text-gray-400 font-bold uppercase tracking-wider">
+                        <th className="p-4">No</th>
+                        <th className="p-4">ID Pemesanan</th>
+                        <th className="p-4">Nama Tamu</th>
+                        <th className="p-4">Kamar</th>
+                        <th className="p-4">Check-In</th>
+                        <th className="p-4">Check-Out</th>
+                        <th className="p-4 text-center">Malam</th>
+                        <th className="p-4 text-center">Tamu</th>
+                        <th className="p-4">Total Tarif</th>
+                        <th className="p-4">Status</th>
+                        <th className="p-4 text-right no-print">Aksi</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-100">
@@ -2172,34 +2239,29 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
 
                         return (
                           <tr key={b.id} className="hover:bg-cream/15 transition-colors">
-                            <td className="py-3 px-4 font-semibold text-gray-400 text-center">{idx + 1}</td>
-                            <td className="py-3 px-4">
-                              <div className="font-semibold text-text-dark">{b.guest_name}</div>
-                              <div className="flex items-center gap-1.5 mt-0.5">
-                                <span className="font-mono text-[10px] bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded font-medium">{b.id}</span>
-                                {b.guest_count && (
-                                  <span className="text-[10px] text-gray-500 font-medium">· {b.guest_count} Tamu</span>
-                                )}
+                            <td className="p-4 font-semibold text-gray-400">{idx + 1}</td>
+                            <td className="p-4 font-mono font-bold text-green-deep">{b.id}</td>
+                            <td className="p-4">
+                              <div>
+                                <div className="font-semibold text-text-dark">{b.guest_name}</div>
+                                <div className="text-[10px] text-gray-400">{b.guest_email}</div>
                               </div>
-                              <div className="text-[10px] text-gray-400 truncate max-w-[180px]">{b.guest_email}</div>
                             </td>
-                            <td className="py-3 px-4 font-medium text-text-dark">
-                              <span className="px-2.5 py-1 bg-green-soft/10 text-green-deep border border-green-soft/20 text-[11px] font-bold rounded-lg uppercase tracking-wide inline-block">
+                            <td className="p-4 font-medium text-text-dark">
+                              <span className="px-2.5 py-1 bg-green-soft/5 text-green-deep border border-green-soft/10 text-[11px] font-bold rounded-lg uppercase tracking-wide">
                                 {roomName}
                               </span>
                             </td>
-                            <td className="py-3 px-4 whitespace-nowrap">
-                              <div className="font-medium text-gray-800">
-                                {new Date(b.check_in).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })} - {new Date(b.check_out).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}
-                              </div>
-                              <div className="text-[11px] text-gray-400 mt-0.5 font-sans font-normal">
-                                Durasi: <span className="font-semibold text-gray-600">{b.nights} Malam</span>
-                              </div>
+                            <td className="p-4">
+                              {new Date(b.check_in).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}
                             </td>
-                            <td className="py-3 px-4 font-serif font-bold text-green-deep whitespace-nowrap">
-                              {convertAndFormatPrice(b.total_eur, 'IDR')}
+                            <td className="p-4">
+                              {new Date(b.check_out).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}
                             </td>
-                            <td className="py-3 px-4">
+                            <td className="p-4 text-center font-medium">{b.nights}</td>
+                            <td className="p-4 text-center text-gray-500">{b.guest_count}</td>
+                            <td className="p-4 font-serif font-bold text-green-deep">{convertAndFormatPrice(b.total_eur, 'IDR')}</td>
+                            <td className="p-4">
                               <select
                                 value={b.status}
                                 onChange={(e) => handleUpdateBookingStatus(b.id, e.target.value as any)}
@@ -2208,7 +2270,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                                     ? 'bg-emerald-500 text-white border-emerald-600'
                                     : b.status === 'cancelled'
                                       ? 'bg-rose-500 text-white border-rose-600'
-                                      : 'bg-amber-100 text-amber-950 border-amber-300'
+                                      : 'bg-amber-100 text-amber-950 border-amber-300 text-amber-900'
                                 }`}
                               >
                                 <option value="pending" className="bg-white text-gray-700">Pending</option>
@@ -2216,18 +2278,18 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                                 <option value="cancelled" className="bg-white text-gray-700">Cancelled</option>
                               </select>
                             </td>
-                            <td className="py-3 px-4 text-right space-x-1.5 no-print whitespace-nowrap">
+                            <td className="p-4 text-right space-x-2 no-print">
                               <button
                                 onClick={() => setSelectedBookingDetail(b)}
-                                className="p-2 bg-cream hover:bg-sand/30 text-green-deep rounded-xl transition-colors cursor-pointer inline-flex items-center justify-center"
-                                title="Lihat Detail"
+                                className="p-1.5 bg-cream hover:bg-sand/30 text-green-deep rounded-lg"
+                                title="Detail"
                               >
                                 <Eye className="w-4 h-4" />
                               </button>
                               <button
                                 onClick={() => handleDeleteBooking(b.id)}
-                                className="p-2 bg-red-50 hover:bg-red-100 text-red-600 rounded-xl transition-colors cursor-pointer inline-flex items-center justify-center"
-                                title="Hapus Pemesanan"
+                                className="p-1.5 bg-red-50 hover:bg-red-100 text-red-600 rounded-lg"
+                                title="Hapus"
                               >
                                 <Trash2 className="w-4 h-4" />
                               </button>
@@ -2237,97 +2299,13 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                       })}
                       {processedBookings.length === 0 && (
                         <tr>
-                          <td colSpan={7} className="p-12 text-center text-gray-400 font-sans font-light">
+                          <td colSpan={11} className="p-12 text-center text-gray-400 font-sans font-light">
                             Tidak ditemukan data pemesanan tamu yang cocok.
                           </td>
                         </tr>
                       )}
                     </tbody>
                   </table>
-                </div>
-
-                {/* Mobile Cards List View (<md) */}
-                <div className="md:hidden divide-y divide-gray-100 w-full">
-                  {processedBookings.map((b, idx) => {
-                    const matchingVilla = (homepageData.villas || []).find((v: any) => v.id === b.villa_id) || homepageData.villas?.[0];
-                    const roomName = matchingVilla ? matchingVilla.title : "Kamar Utama";
-
-                    return (
-                      <div key={b.id} className="p-4 space-y-3 hover:bg-gray-50/50 transition-colors">
-                        <div className="flex items-start justify-between gap-2">
-                          <div>
-                            <div className="flex items-center gap-2">
-                              <span className="font-semibold text-xs text-gray-400">#{idx + 1}</span>
-                              <span className="font-mono text-[10px] bg-gray-100 text-gray-700 px-1.5 py-0.5 rounded font-medium">{b.id}</span>
-                              <span className="px-2 py-0.5 bg-green-soft/10 text-green-deep text-[10px] font-bold rounded-md uppercase">
-                                {roomName}
-                              </span>
-                            </div>
-                            <h4 className="font-serif font-bold text-sm text-green-deep mt-1">{b.guest_name}</h4>
-                            <p className="text-xs text-gray-400">{b.guest_email}</p>
-                          </div>
-
-                          <div className="text-right">
-                            <div className="font-serif font-bold text-sm text-green-deep">{convertAndFormatPrice(b.total_eur, 'IDR')}</div>
-                            <div className="text-[10px] text-gray-400">{b.nights} Malam · {b.guest_count} Tamu</div>
-                          </div>
-                        </div>
-
-                        <div className="bg-gray-50 rounded-xl p-2.5 flex items-center justify-between text-xs text-gray-600">
-                          <div>
-                            <span className="text-[10px] text-gray-400 uppercase font-semibold block">Check-In</span>
-                            <span className="font-medium text-gray-800">{new Date(b.check_in).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })}</span>
-                          </div>
-                          <span className="text-gray-300 font-bold">➔</span>
-                          <div>
-                            <span className="text-[10px] text-gray-400 uppercase font-semibold block">Check-Out</span>
-                            <span className="font-medium text-gray-800">{new Date(b.check_out).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
-                          </div>
-                        </div>
-
-                        <div className="flex items-center justify-between gap-2 pt-1">
-                          <select
-                            value={b.status}
-                            onChange={(e) => handleUpdateBookingStatus(b.id, e.target.value as any)}
-                            className={`px-3 py-1.5 rounded-xl text-xs font-bold border outline-none cursor-pointer uppercase tracking-wider ${
-                              b.status === 'paid'
-                                ? 'bg-emerald-500 text-white border-emerald-600'
-                                : b.status === 'cancelled'
-                                  ? 'bg-rose-500 text-white border-rose-600'
-                                  : 'bg-amber-100 text-amber-950 border-amber-300'
-                            }`}
-                          >
-                            <option value="pending" className="bg-white text-gray-700">Pending</option>
-                            <option value="paid" className="bg-white text-gray-700">Paid</option>
-                            <option value="cancelled" className="bg-white text-gray-700">Cancelled</option>
-                          </select>
-
-                          <div className="flex items-center space-x-2">
-                            <button
-                              onClick={() => setSelectedBookingDetail(b)}
-                              className="px-3 py-1.5 bg-cream hover:bg-sand/30 text-green-deep rounded-xl text-xs font-semibold flex items-center space-x-1 transition-colors"
-                            >
-                              <Eye className="w-3.5 h-3.5" />
-                              <span>Detail</span>
-                            </button>
-                            <button
-                              onClick={() => handleDeleteBooking(b.id)}
-                              className="p-1.5 bg-red-50 hover:bg-red-100 text-red-600 rounded-xl transition-colors"
-                              title="Hapus"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
-
-                  {processedBookings.length === 0 && (
-                    <div className="p-8 text-center text-gray-400 text-xs">
-                      Tidak ditemukan data pemesanan tamu yang cocok.
-                    </div>
-                  )}
                 </div>
               </div>
 
@@ -2438,7 +2416,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
 
 
           {/* TAB: VILLAS / KAMAR MANAGEMENT VIEW */}
-          {(activeTab === 'villas' || (activeTab === 'settings' && settingsSubTab === 'villas')) && (
+          {activeTab === 'villas' && (
             <div className="max-w-5xl mx-auto bg-white rounded-3xl border border-gray-100 p-6 shadow-sm space-y-6">
               <div className="flex flex-col sm:flex-row justify-between sm:items-center border-b border-sand/15 pb-4 gap-4">
                 <div>
@@ -3065,7 +3043,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
             </div>
           </div>
           )}
-          {(activeTab === 'tours' || (activeTab === 'settings' && settingsSubTab === 'tours')) && (
+          {activeTab === 'tours' && (
             <div className="bg-white rounded-3xl border border-gray-100 p-6 md:p-8 shadow-sm space-y-6">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-gray-150 pb-5">
                 <div>
@@ -3161,7 +3139,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
           )}
 
           {/* TAB 7: GALLERY MANAGEMENT VIEW */}
-          {(activeTab === 'gallery' || (activeTab === 'settings' && settingsSubTab === 'gallery')) && (
+          {activeTab === 'gallery' && (
             <div className="space-y-6">
               
               <div className="flex justify-between items-center bg-white p-5 rounded-2xl border border-gray-100 shadow-sm">
@@ -3275,7 +3253,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
           )}
 
           {/* TAB 7.5: HEADER MANAGEMENT VIEW */}
-          {(activeTab === 'header' || (activeTab === 'settings' && settingsSubTab === 'header')) && (
+          {activeTab === 'header' && (
             <div className="space-y-6">
               
               <div className="flex justify-between items-center bg-white p-5 rounded-2xl border border-gray-100 shadow-sm">
@@ -3657,61 +3635,6 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
           )}
 
         </main>
-      </div>
-
-      {/* MODERN FLOATING BOTTOM TAB BAR (Kiri: Kalender, Tengah: Pesanan, Kanan Sendiri: Dashboard) */}
-      <div className="fixed bottom-4 inset-x-0 z-40 flex justify-center px-4 pointer-events-none no-print">
-        <nav className="bg-slate-900/95 text-white backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl px-3 py-2 flex items-center justify-around gap-2 pointer-events-auto max-w-md w-full">
-          
-          {/* KIRI: KALENDER KETERSEDIAAN */}
-          <button
-            id="admin-nav-calendar"
-            onClick={() => setActiveTab('calendar')}
-            className={`flex flex-col items-center justify-center flex-1 py-1.5 px-3 rounded-xl transition-all cursor-pointer ${
-              activeTab === 'calendar'
-                ? 'bg-emerald-600 text-white font-bold shadow-md shadow-emerald-950/40 scale-102'
-                : 'text-slate-400 hover:text-white hover:bg-white/5'
-            }`}
-          >
-            <CalendarRange className="w-5 h-5 mb-0.5" />
-            <span className="text-[11px] font-medium tracking-tight">Kalender</span>
-          </button>
-
-          {/* TENGAH: MANAJEMEN PESANAN */}
-          <button
-            id="admin-nav-bookings"
-            onClick={() => setActiveTab('bookings')}
-            className={`flex flex-col items-center justify-center flex-1 py-1.5 px-3 rounded-xl transition-all cursor-pointer relative ${
-              activeTab === 'bookings'
-                ? 'bg-emerald-600 text-white font-bold shadow-md shadow-emerald-950/40 scale-102'
-                : 'text-slate-400 hover:text-white hover:bg-white/5'
-            }`}
-          >
-            <div className="relative">
-              <CalendarRange className="w-5 h-5 mb-0.5" />
-              {bookings.filter(b => b.status === 'pending').length > 0 && (
-                <span className="absolute -top-1 -right-2.5 bg-amber-400 text-slate-950 font-black text-[9px] w-4 h-4 rounded-full flex items-center justify-center shadow-xs animate-pulse">
-                  {bookings.filter(b => b.status === 'pending').length}
-                </span>
-              )}
-            </div>
-            <span className="text-[11px] font-medium tracking-tight">Pesanan</span>
-          </button>
-
-          {/* KANAN SENDIRI: DASHBOARD */}
-          <button
-            id="admin-nav-dashboard"
-            onClick={() => setActiveTab('dashboard')}
-            className={`flex flex-col items-center justify-center flex-1 py-1.5 px-3 rounded-xl transition-all cursor-pointer ${
-              activeTab === 'dashboard'
-                ? 'bg-emerald-600 text-white font-bold shadow-md shadow-emerald-950/40 scale-102'
-                : 'text-slate-400 hover:text-white hover:bg-white/5'
-            }`}
-          >
-            <LayoutDashboard className="w-5 h-5 mb-0.5" />
-            <span className="text-[11px] font-medium tracking-tight">Dashboard</span>
-          </button>
-        </nav>
       </div>
 
       {/* 3. BOOKING DETAIL MODAL */}

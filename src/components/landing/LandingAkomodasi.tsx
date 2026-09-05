@@ -2,38 +2,27 @@ import React from 'react';
 import { motion } from 'motion/react';
 import { ArrowRight, Home } from 'lucide-react';
 import { CoffeeBean } from '../CoffeeDecoration';
-import { CMSHomepage } from '@/src/types';
-import { CurrencyType, convertAndFormatPrice } from '@/src/utils/storage';
-import { LanguageType } from '@/src/utils/lang';
+import { CMSHomepage } from '../../types';
+import { CurrencyType, convertAndFormatPrice } from '../../utils/storage';
+import { LanguageType } from '../../utils/lang';
 
 interface LandingAkomodasiProps {
   homepageData: CMSHomepage;
-  currency?: CurrencyType;
-  lang?: LanguageType;
+  currency: CurrencyType;
+  lang: LanguageType;
   setSelectedVillaId?: (id: string) => void;
-  onNavigate?: (page: 'home' | 'booking' | 'supabase' | 'admin', sectionId?: string) => void;
+  onNavigate: (page: 'home' | 'booking' | 'supabase' | 'admin', sectionId?: string) => void;
 }
 
 export const LandingAkomodasi: React.FC<LandingAkomodasiProps> = ({
   homepageData,
-  currency = 'IDR',
-  lang = 'ID',
+  currency,
+  lang,
   setSelectedVillaId,
   onNavigate
 }) => {
-  const villas = homepageData?.villas || [];
+  const villas = homepageData.villas || [];
   if (villas.length === 0) return null;
-
-  const handleBookRoom = (villaId: string) => {
-    if (setSelectedVillaId) {
-      setSelectedVillaId(villaId);
-    }
-    if (onNavigate) {
-      onNavigate('booking');
-    } else {
-      window.location.href = '/home/book';
-    }
-  };
 
   return (
     <section id="villa-showcase" className="py-24 px-6 md:px-12 bg-cream/10 border-t border-sand/20 relative overflow-hidden">
@@ -42,17 +31,17 @@ export const LandingAkomodasi: React.FC<LandingAkomodasiProps> = ({
       <CoffeeBean className="bottom-20 right-[8%] w-10 h-10 text-coffee/10" delay={2} duration={8} yOffset={30} rotateSpeed={-150} />
 
       <div className="max-w-6xl mx-auto space-y-16 relative z-10">
-        <div className="text-center space-y-3 max-w-2xl mx-auto">
-          <span className="text-green-soft text-xs uppercase tracking-wider font-semibold block">
-            {lang === 'ID' ? 'Pilihan Kamar' : 'Room Types'}
+        <div className="text-center space-y-4 max-w-2xl mx-auto">
+          <span className="text-green-soft font-mono text-xs uppercase tracking-widest font-semibold block">
+            {lang === 'ID' ? 'Pilihan Akomodasi Eksklusif' : 'Exclusive Accommodation Choices'}
           </span>
           <h2 className="font-serif text-3xl md:text-4xl font-bold text-green-deep tracking-tight">
-            {lang === 'ID' ? 'Akomodasi Peno Homestay' : 'Accommodations'}
+            {lang === 'ID' ? 'Menginap Nyaman dengan View Alam' : 'Comfortable Stays with Nature Views'}
           </h2>
-          <p className="font-sans text-xs md:text-sm text-text-mid font-light leading-relaxed">
+          <p className="font-sans text-sm md:text-base text-text-mid font-light leading-relaxed">
             {lang === 'ID' 
-              ? 'Pilihan kamar nyaman dengan suasana asri di tengah perkebunan kopi Gombengsari.' 
-              : 'Comfortable rooms surrounded by the natural serenity of Gombengsari coffee plantation.'}
+              ? 'Kami menyediakan berbagai pilihan villa dan kamar premium dengan fasilitas lengkap, kenyamanan ekstra, serta pemandangan asri perkebunan kopi.' 
+              : 'We offer a collection of premium villas and rooms equipped with modern comforts, extra amenities, and direct views of the beautiful coffee farm.'}
           </p>
         </div>
 
@@ -70,9 +59,9 @@ export const LandingAkomodasi: React.FC<LandingAkomodasiProps> = ({
                 {villa.imageUrl ? (
                   <img 
                     src={villa.imageUrl} 
-                    alt={`Kamar ${villa.title} Peno Homestay Banyuwangi dengan pemandangan kebun kopi`} 
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
+                    alt={villa.title} 
                     referrerPolicy="no-referrer"
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out" 
                   />
                 ) : (
                   <div className="w-full h-full bg-green-deep/5 flex items-center justify-center">
@@ -80,12 +69,12 @@ export const LandingAkomodasi: React.FC<LandingAkomodasiProps> = ({
                   </div>
                 )}
                 
-                <div className="absolute top-4 right-4 bg-white/95 backdrop-blur-sm px-3 py-1 rounded-full text-[10px] font-bold text-green-deep flex items-center gap-1.5 shadow-sm z-10">
+                <div className="absolute top-4 right-4 bg-white/95 backdrop-blur-sm px-3 py-1 rounded-full text-[10px] font-bold text-green-deep flex items-center gap-1.5 shadow-sm">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
                   <span>{lang === 'ID' ? 'Tersedia' : 'Available'}</span>
                 </div>
 
-                <div className="absolute bottom-4 left-4 flex gap-1.5 z-10">
+                <div className="absolute bottom-4 left-4 flex gap-1.5">
                   <span className="bg-green-deep text-cream text-[10px] font-bold px-2.5 py-1 rounded-lg shadow-sm">
                     👤 Maks {villa.capacity} Pax
                   </span>
@@ -116,7 +105,12 @@ export const LandingAkomodasi: React.FC<LandingAkomodasiProps> = ({
                   </div>
                   
                   <button 
-                    onClick={() => handleBookRoom(villa.id)}
+                    onClick={() => {
+                      if (setSelectedVillaId) {
+                        setSelectedVillaId(villa.id);
+                      }
+                      onNavigate('booking');
+                    }}
                     className="inline-flex items-center space-x-1 bg-green-deep hover:bg-green-soft text-cream px-4 py-2.5 rounded-xl font-sans font-bold text-xs transition-all shadow cursor-pointer active:scale-95"
                   >
                     <span>{lang === 'ID' ? 'Pesan Kamar' : 'Book Room'}</span>

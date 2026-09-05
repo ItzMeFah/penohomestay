@@ -114,12 +114,14 @@ export function useAppState() {
     return () => clearInterval(interval);
   }, [lang]);
 
-  // Global Currency State (Strictly IDR)
-  const [currency, setCurrency] = useState<CurrencyType>("IDR");
+  // Global Currency State
+  const [currency, setCurrency] = useState<CurrencyType>(() => {
+    return (safeStorage.getItem("peno_currency") as CurrencyType) || "IDR";
+  });
 
   const handleSetCurrency = (newCurrency: CurrencyType) => {
-    setCurrency("IDR");
-    safeStorage.setItem("peno_currency", "IDR");
+    setCurrency(newCurrency);
+    safeStorage.setItem("peno_currency", newCurrency);
   };
 
   // Initialize and load default values once on mount
@@ -159,6 +161,8 @@ export function useAppState() {
       } else if (type === 'settings') {
         setSettings(data);
         setHomepageData(getHomepage());
+      } else if (type === 'notifications') {
+        setNotifications(data);
       }
     });
 

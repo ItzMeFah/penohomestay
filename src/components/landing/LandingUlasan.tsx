@@ -17,17 +17,17 @@ export const LandingUlasan: React.FC<LandingUlasanProps> = ({ homepageData, lang
       <div className="absolute bottom-0 left-0 w-96 h-96 bg-coffee/5 rounded-full blur-3xl pointer-events-none" />
 
       <div className="max-w-6xl mx-auto space-y-16 relative z-10">
-        <div className="text-center space-y-3 max-w-2xl mx-auto">
-          <span className="text-sand text-xs uppercase tracking-wider font-semibold block">
-            {lang === 'ID' ? 'Ulasan Tamu' : t.revLabel}
+        <div className="text-center space-y-4 max-w-2xl mx-auto">
+          <span className="text-sand font-mono text-xs uppercase tracking-widest font-semibold block">
+            {lang === 'ID' ? 'Apa Kata Tamu Kami' : t.revLabel}
           </span>
           <h2 className="font-serif text-3xl md:text-4xl font-bold text-cream tracking-tight">
-            {lang === 'ID' ? 'Pengalaman Tamu' : t.revTitle}
+            {lang === 'ID' ? 'Testimoni Asli dari Google' : t.revTitle}
           </h2>
-          <div className="flex items-center justify-center space-x-1 text-yellow-400 pt-1">
-            {[...Array(5)].map((_, i) => <Star key={i} className="w-4 h-4 fill-yellow-400 text-yellow-400" />)}
-            <span className="ml-2 font-sans font-medium text-cream text-xs">
-              {lang === 'ID' ? '4.9 / 5.0 di Google' : '4.9 / 5.0 on Google'}
+          <div className="flex items-center justify-center space-x-1 text-yellow-400">
+            {[...Array(5)].map((_, i) => <Star key={i} className="w-5 h-5 fill-yellow-400 text-yellow-400" />)}
+            <span className="ml-2 font-sans font-semibold text-cream">
+              {lang === 'ID' ? '4.9 / 5.0 (90+ ulasan)' : '4.9 / 5.0 (90+ reviews)'}
             </span>
           </div>
         </div>

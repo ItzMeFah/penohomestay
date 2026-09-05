@@ -1,20 +1,12 @@
 import { Booking, CMSHomepage, GalleryItem, AdminNotification } from '../types';
 import { createClient } from '@supabase/supabase-js';
 
-// Retrieve credentials dynamically from environment variables (.env) or localStorage
-// Secrets are read securely from environment variables without hardcoded keys in source
+// Retrieve credentials dynamically, checking localStorage first, then env variables.
+// NO hardcoded secrets are stored here to prevent F12 browser source leaks.
 export function getSupabaseCredentials() {
-  const envUrl = (import.meta as any).env?.VITE_SUPABASE_URL || "";
-  const envKey = (import.meta as any).env?.VITE_SUPABASE_ANON_KEY || "";
-  const localUrl = typeof localStorage !== 'undefined' ? localStorage.getItem("peno_supabase_url") : null;
-  const localKey = typeof localStorage !== 'undefined' ? localStorage.getItem("peno_supabase_anon_key") : null;
-
-  let rawUrl = (envUrl || localUrl || "").trim();
-  // Strip trailing /rest/v1/ or /rest/v1 or trailing slashes
-  rawUrl = rawUrl.replace(/\/rest\/v1\/?$/, '').replace(/\/+$/, '');
-
-  const key = (envKey || localKey || "").trim();
-  return { url: rawUrl, key };
+  const url = localStorage.getItem("peno_supabase_url") || (import.meta as any).env?.VITE_SUPABASE_URL || "";
+  const key = localStorage.getItem("peno_supabase_anon_key") || (import.meta as any).env?.VITE_SUPABASE_ANON_KEY || "";
+  return { url, key };
 }
 
 let supabaseInstance: any = null;
@@ -461,13 +453,23 @@ export function listenToBroadcast(handlers: Record<string, (data: any) => void>)
   }
 }
 
-export type CurrencyType = 'IDR';
+export type CurrencyType = 'IDR' | 'USD' | 'EUR';
 
-export function convertAndFormatPrice(amount: number, currency: CurrencyType = 'IDR'): string {
-  // Treat base amount as thousands of Rupiah (e.g., 150 means 150K)
-  const kAmount = Math.round(amount);
-  const formattedK = new Intl.NumberFormat('id-ID').format(kAmount);
-  return `${formattedK}K`;
+export function convertAndFormatPrice(amount: number, currency: CurrencyType): string {
+  if (currency === 'IDR') {
+    // Treat base amount as thousands of Rupiah (e.g., 150 means 150K)
+    const kAmount = Math.round(amount);
+    const formattedK = new Intl.NumberFormat('id-ID').format(kAmount);
+    return `${formattedK}K`;
+  } else if (currency === 'USD') {
+    // 1 USD is roughly 16.000 IDR, so we divide amount (thousands) by 16
+    const usdAmount = Math.max(1, Math.round((amount * 1000) / 16200));
+    return `$${usdAmount}`;
+  } else {
+    // 1 EUR is roughly 17.500 IDR, so we divide amount (thousands) by 17.5
+    const eurAmount = Math.max(1, Math.round((amount * 1000) / 17500));
+    return `€${eurAmount}`;
+  }
 }
 
 // Initial pull from Supabase to local storage
@@ -576,6 +578,9 @@ export function subscribeToSupabaseRealtime(onUpdate: (type: string, data: any) 
           } else if (row.id === 'settings') {
             safeStorage.setItem("peno_settings", JSON.stringify(row.data));
             onUpdate('settings', row.data);
+          } else if (row.id === 'notifications') {
+            safeStorage.setItem("peno_notifications", JSON.stringify(row.data));
+            onUpdate('notifications', row.data);
           }
         }
       }

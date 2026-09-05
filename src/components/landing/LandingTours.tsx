@@ -1,31 +1,31 @@
 import React from 'react';
 import { motion } from 'motion/react';
 import { MapPin, Phone } from 'lucide-react';
-import { CMSHomepage } from '@/src/types';
-import { LanguageType } from '@/src/utils/lang';
+import { CMSHomepage } from '../../types';
+import { LanguageType } from '../../utils/lang';
 
 interface LandingToursProps {
   homepageData: CMSHomepage;
-  lang?: LanguageType;
+  lang: LanguageType;
 }
 
-export const LandingTours: React.FC<LandingToursProps> = ({ homepageData, lang = 'ID' }) => {
+export const LandingTours: React.FC<LandingToursProps> = ({ homepageData, lang }) => {
   if (!homepageData.tours || homepageData.tours.length === 0) return null;
 
   return (
     <section className="bg-cream py-24 px-6 md:px-12 overflow-hidden border-b border-sand/30">
       <div className="max-w-6xl mx-auto space-y-12">
-        <div className="text-center space-y-3 max-w-2xl mx-auto">
-          <span className="text-green-soft text-xs uppercase tracking-wider font-semibold block">
-            {lang === 'ID' ? 'Paket Wisata' : 'Tour Packages'}
+        <div className="text-center space-y-4 max-w-2xl mx-auto">
+          <span className="text-green-soft font-mono text-xs uppercase tracking-widest font-semibold block">
+            {lang === 'ID' ? 'Paket Pengalaman' : 'Experience Packages'}
           </span>
           <h2 className="font-serif text-3xl md:text-4xl font-bold text-green-deep tracking-tight">
-            {lang === 'ID' ? 'Jelajahi Alam Banyuwangi' : 'Explore Banyuwangi'}
+            {lang === 'ID' ? 'Jelajahi Alam Banyuwangi' : 'Explore Banyuwangi Nature'}
           </h2>
-          <p className="font-sans text-xs md:text-sm text-text-mid font-light leading-relaxed">
+          <p className="font-sans text-sm md:text-base text-text-mid font-light leading-relaxed">
             {lang === 'ID' 
-              ? 'Pilihan paket wisata dan pemandu lokal untuk melengkapi pengalaman menginap Anda.' 
-              : 'Curated tour packages and local guides to enhance your stay experience.'}
+              ? 'Kami menawarkan berbagai paket wisata menarik untuk melengkapi liburan Anda. Nikmati keindahan alam dan budaya lokal bersama pemandu berpengalaman kami.' 
+              : 'We offer various exciting tour packages to complete your holiday. Enjoy the beauty of nature and local culture with our experienced guides.'}
           </p>
         </div>
 
@@ -44,9 +44,9 @@ export const LandingTours: React.FC<LandingToursProps> = ({ homepageData, lang =
                   {tour.imageUrl ? (
                     <img 
                       src={tour.imageUrl} 
-                      alt={`Foto Paket Wisata ${tour.name} Peno Homestay Banyuwangi`} 
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
+                      alt={tour.name} 
                       referrerPolicy="no-referrer"
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out" 
                     />
                   ) : (
                     <div className="w-full h-full bg-green-deep/5 flex items-center justify-center">
@@ -56,12 +56,12 @@ export const LandingTours: React.FC<LandingToursProps> = ({ homepageData, lang =
                   <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/10 to-transparent opacity-60 group-hover:opacity-75 transition-opacity duration-500" />
                   
                   {tour.price && (
-                    <div className="absolute bottom-3 left-4 bg-white/95 backdrop-blur-sm px-3 py-1 rounded-xl shadow-sm text-[11px] font-bold text-green-deep tracking-wide z-10">
+                    <div className="absolute bottom-3 left-4 bg-white/95 backdrop-blur-sm px-3 py-1 rounded-xl shadow-sm text-[11px] font-bold text-green-deep tracking-wide">
                       {tour.price}
                     </div>
                   )}
                   
-                  <div className="absolute top-3 right-4 bg-green-deep/80 backdrop-blur-sm px-2.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider text-cream z-10">
+                  <div className="absolute top-3 right-4 bg-green-deep/80 backdrop-blur-sm px-2.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider text-cream">
                     {lang === 'ID' ? 'Tur' : 'Tour'}
                   </div>
                 </div>
@@ -78,8 +78,8 @@ export const LandingTours: React.FC<LandingToursProps> = ({ homepageData, lang =
 
                   {tour.inclusions && tour.inclusions.length > 0 && (
                     <div className="space-y-1.5">
-                      <h4 className="font-sans text-[10px] font-semibold text-green-soft uppercase tracking-wider">
-                        {lang === 'ID' ? 'Fasilitas Termasuk:' : 'Inclusions:'}
+                      <h4 className="font-mono text-[9px] font-bold text-green-soft uppercase tracking-wider">
+                        {lang === 'ID' ? 'Fasilitas:' : 'Inclusions:'}
                       </h4>
                       <div className="flex flex-wrap gap-1">
                         {tour.inclusions.map((inc, i) => (
@@ -95,9 +95,9 @@ export const LandingTours: React.FC<LandingToursProps> = ({ homepageData, lang =
                     </div>
                   )}
 
-                  <div className="pt-4 border-t border-sand/20">
+                  <div className="pt-4 border-t border-sand/20 space-y-3">
                     <a 
-                      href={`https://wa.me/${tour.contactPhone?.replace(/\D/g,'') || '6281233800631'}?text=Halo%20Peno%20Homestay,%20saya%20tertarik%20dengan%20paket%20wisata%20${encodeURIComponent(tour.name)}.`}
+                      href={`https://wa.me/${tour.contactPhone.replace(/\D/g,'')}?text=Halo%20Peno%20Homestay,%20saya%20tertarik%20dengan%20paket%20wisata%20${encodeURIComponent(tour.name)}.`}
                       target="_blank"
                       rel="noreferrer"
                       className="w-full flex items-center justify-center space-x-2 bg-green-deep hover:bg-green-soft text-cream hover:text-white py-2.5 px-4 rounded-xl transition-all duration-300 font-semibold text-xs shadow-md hover:shadow-lg active:scale-[0.98]"
@@ -105,6 +105,18 @@ export const LandingTours: React.FC<LandingToursProps> = ({ homepageData, lang =
                       <Phone className="w-3.5 h-3.5" />
                       <span>{lang === 'ID' ? 'Pesan via WhatsApp' : 'Book via WhatsApp'}</span>
                     </a>
+                    
+                    <div className="flex items-center justify-between text-[10px] text-gray-400 font-mono">
+                      <span className="flex items-center space-x-1">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                        <span>{tour.contactPhone}</span>
+                      </span>
+                      {tour.contactSocial && (
+                        <span className="hover:text-green-soft transition-colors truncate max-w-[120px]">
+                          {tour.contactSocial}
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </div>
               </motion.div>

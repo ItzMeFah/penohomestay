@@ -789,8 +789,8 @@ const fileContent: Record<string, string> = {
   '.env.local': `# Supabase Environment Variables
 # Get these from your Supabase Dashboard under Project Settings > API
 
-NEXT_PUBLIC_SUPABASE_URL=https://njgsafkwldootsupwjsb.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...IbFv2u31EMjMfvRYoLMLG4Fvukp3c7NL_PWYnTBvFNQ`,
+NEXT_PUBLIC_SUPABASE_URL=https://eszvodingaehsnahsvmb.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...UpoFJqht-1pybKBeadMctnIgI3PmiPMsqWU9uJnfy1Q`,
 
   'lib/supabase/client.ts': `import { createBrowserClient } from '@supabase/ssr'
 

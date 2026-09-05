@@ -1,40 +1,14 @@
-import React from 'react';
 import { ChevronLeft } from 'lucide-react';
-import { LanguageType, translations } from '@/src/utils/lang';
+import { LanguageType, translations } from '../utils/lang';
 
 interface FooterProps {
-  settings?: any;
-  lang?: LanguageType;
-  onNavigate?: (page: 'home' | 'booking' | 'supabase' | 'admin', sectionId?: string) => void;
+  settings: any;
+  lang: LanguageType;
+  onNavigate: (page: 'home' | 'booking' | 'supabase' | 'admin', sectionId?: string) => void;
 }
 
-export function Footer({ settings: propSettings, lang = 'ID', onNavigate }: FooterProps) {
-  const t = translations[lang] || translations.ID;
-
-  const settings = propSettings || {
-    homestayName: 'Peno Homestay Banyuwangi',
-    instagramUrl: 'https://instagram.com/penohomestay',
-    address: 'Jl. Samarinda, Lingkungan Lerek RT 02 RW 01, Gombengsari, Kalipuro, Banyuwangi, Jawa Timur 68411',
-    whatsappUrl: 'https://wa.me/6281233800631?text=Halo%20Pak%20Peno,%20saya%20tertarik%20menginap%20di%20Peno%20Homestay',
-    whatsappNumber: '+62 812-3380-0631',
-    mapsUrl: 'https://maps.google.com/?q=Peno+Homestay+Banyuwangi'
-  };
-
-  const handleNavClick = (targetPage: 'home' | 'booking', sectionId?: string) => {
-    if (onNavigate) {
-      onNavigate(targetPage, sectionId);
-      return;
-    }
-
-    if (sectionId) {
-      const el = document.getElementById(sectionId);
-      if (el) {
-        el.scrollIntoView({ behavior: 'smooth' });
-      }
-    } else {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-  };
+export function Footer({ settings, lang, onNavigate }: FooterProps) {
+  const t = translations[lang];
 
   return (
     <footer className="bg-green-deep text-cream pt-20 pb-10 border-t border-green-soft/20 relative overflow-hidden no-print">
@@ -52,7 +26,7 @@ export function Footer({ settings: propSettings, lang = 'ID', onNavigate }: Foot
             <a 
               href={settings.instagramUrl}
               target="_blank"
-              rel="noopener noreferrer"
+              referrerPolicy="no-referrer"
               className="p-2.5 bg-white/5 hover:bg-white/10 border border-white/10 text-cream rounded-full transition-all"
               title="Follow kami di Instagram"
             >
@@ -66,66 +40,48 @@ export function Footer({ settings: propSettings, lang = 'ID', onNavigate }: Foot
           <h4 className="font-serif text-lg font-bold text-sand">{t.footerNav}</h4>
           <ul className="space-y-3 font-sans text-sm text-cream/75 font-light">
             <li>
-              <button onClick={() => handleNavClick('home', 'keunggulan')} className="hover:text-sand transition-colors cursor-pointer text-left">
-                {t.navExperience}
-              </button>
+              <button onClick={() => onNavigate('home', 'keunggulan')} className="hover:text-sand transition-colors cursor-pointer">{t.navExperience}</button>
             </li>
             <li>
-              <button onClick={() => handleNavClick('home', 'galeri')} className="hover:text-sand transition-colors cursor-pointer text-left">
-                {t.navGallery}
-              </button>
+              <button onClick={() => onNavigate('home', 'galeri')} className="hover:text-sand transition-colors cursor-pointer">{t.navGallery}</button>
             </li>
             <li>
-              <button onClick={() => handleNavClick('home', 'ulasan')} className="hover:text-sand transition-colors cursor-pointer text-left">
-                {t.navTestimonials}
-              </button>
+              <button onClick={() => onNavigate('home', 'ulasan')} className="hover:text-sand transition-colors cursor-pointer">{t.navTestimonials}</button>
             </li>
             <li>
-              <button onClick={() => handleNavClick('booking')} className="hover:text-sand transition-colors cursor-pointer text-left">
-                {t.infoLabel}
-              </button>
-            </li>
-            <li>
-              <button onClick={() => handleNavClick('home', 'hero')} className="hover:text-sand transition-colors cursor-pointer text-left">
-                {t.heroSubtitle}
-              </button>
+              <button onClick={() => onNavigate('booking', 'info')} className="hover:text-sand transition-colors cursor-pointer">{t.infoLabel}</button>
             </li>
           </ul>
         </div>
 
-        {/* Right Contact/Address */}
+        {/* Right Contact Details */}
         <div className="md:col-span-4 space-y-6">
-          <h4 className="font-serif text-lg font-bold text-sand">{t.footerContact}</h4>
-          <div className="space-y-3 font-sans text-sm text-cream/75 font-light">
-            <p className="leading-relaxed">
-              <strong className="font-semibold text-cream block mb-1">{t.footerAddress}:</strong>
-              {settings.address}
-            </p>
-            <p>
-              <strong className="font-semibold text-cream block mb-1">WhatsApp:</strong>
-              <a href={settings.whatsappUrl} target="_blank" rel="noopener noreferrer" className="hover:text-sand transition-colors underline decoration-sand/40">
-                {settings.whatsappNumber}
-              </a>
-            </p>
-            <div className="pt-2">
+          <h4 className="font-serif text-lg font-bold text-sand font-semibold">{t.footerContact}</h4>
+          <ul className="space-y-3 font-sans text-sm text-cream/75 font-light leading-relaxed">
+            <li className="flex items-start space-x-2">
+              <span className="font-semibold text-sand">{t.footerAddress}:</span>
+              <span>{settings.address}</span>
+            </li>
+            <li className="flex items-center space-x-2">
+              <span className="font-semibold text-sand">WhatsApp:</span>
+              <a href={settings.whatsappUrl} className="hover:text-sand hover:underline">{settings.whatsappNumber}</a>
+            </li>
+            <li>
               <a 
-                href={settings.mapsUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center space-x-2 text-xs font-bold text-green-deep bg-sand hover:bg-sand-dark px-4 py-2.5 rounded-full transition-all shadow-md"
+                href={settings.mapsUrl} 
+                target="_blank" 
+                referrerPolicy="no-referrer"
+                className="inline-flex items-center space-x-1.5 text-xs font-semibold text-sand hover:text-cream border-b border-dashed border-sand/40 pb-0.5"
               >
-                <span>{t.footerMapsBtn}</span>
+                <span>{t.footerMapsBtn} &rarr;</span>
               </a>
-            </div>
-          </div>
+            </li>
+          </ul>
         </div>
       </div>
 
-      <div className="max-w-6xl mx-auto px-6 pt-8 flex flex-col md:flex-row items-center justify-between text-xs text-cream/40 font-light space-y-4 md:space-y-0">
-        <p>© {new Date().getFullYear()} {settings.homestayName}. All rights reserved.</p>
-        <p className="flex items-center space-x-1">
-          <span>Gombengsari, Kalipuro, Banyuwangi</span>
-        </p>
+      <div className="max-w-6xl mx-auto px-6 pt-8 flex flex-col sm:flex-row justify-between items-center text-xs text-cream/50 font-sans font-light relative z-10 gap-4">
+        <div>&copy; {new Date().getFullYear()} {settings.homestayName}. All rights reserved.</div>
       </div>
     </footer>
   );

@@ -1,16 +1,16 @@
 import React from 'react';
 import { motion } from 'motion/react';
 import { Trees, Heart, Mountain, Star } from 'lucide-react';
-import { CMSHomepage } from '@/src/types';
-import { LanguageType, translations } from '@/src/utils/lang';
+import { CMSHomepage } from '../../types';
+import { LanguageType, translations } from '../../utils/lang';
 
 interface LandingAboutProps {
   homepageData: CMSHomepage;
-  lang?: LanguageType;
+  lang: LanguageType;
 }
 
-export const LandingAbout: React.FC<LandingAboutProps> = ({ homepageData, lang = 'ID' }) => {
-  const t = translations[lang] || translations.ID;
+export const LandingAbout: React.FC<LandingAboutProps> = ({ homepageData, lang }) => {
+  const t = translations[lang];
 
   return (
     <section id="tentang" className="py-24 px-6 md:px-12 max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-16 items-center">
@@ -22,8 +22,9 @@ export const LandingAbout: React.FC<LandingAboutProps> = ({ homepageData, lang =
         transition={{ duration: 0.7, ease: "easeOut" }}
         className="lg:col-span-7 space-y-6"
       >
-        <div className="text-green-soft text-xs font-semibold uppercase tracking-wider">
+        <div className="flex items-center space-x-2 text-green-soft font-mono text-xs uppercase tracking-widest font-semibold">
           <span>{t.aboutLabel}</span>
+          <div className="w-8 h-px bg-green-soft/50" />
         </div>
         <h2 className="font-serif text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight text-green-deep leading-tight">
           {lang === 'ID' ? homepageData.about.title : t.aboutTitle}
@@ -84,9 +85,9 @@ export const LandingAbout: React.FC<LandingAboutProps> = ({ homepageData, lang =
               >
                 <img 
                   src={imgUrl} 
-                  alt={`Aktivitas ${item.title} di Perkebunan Peno Homestay Banyuwangi`} 
-                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                  alt={item.title} 
                   referrerPolicy="no-referrer"
+                  className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent transition-opacity duration-300 group-hover:from-black/95" />
                 
@@ -129,56 +130,61 @@ export const LandingAbout: React.FC<LandingAboutProps> = ({ homepageData, lang =
           <div className="absolute -top-16 left-1/2 transform -translate-x-1/2 w-32 h-32 md:w-36 md:h-36 rounded-full border-4 border-cream shadow-2xl overflow-hidden z-20 bg-cream-dark">
             <img 
               src="https://njgsafkwldootsupwjsb.supabase.co/storage/v1/object/public/avatars/pak%20peno.png" 
-              alt="Foto Pak Peno - Tuan Rumah & Petani Kopi Peno Homestay Gombengsari Banyuwangi" 
-              className="w-full h-full object-cover object-top hover:scale-110 transition-transform duration-500"
+              alt="Pak Peno" 
               referrerPolicy="no-referrer"
+              className="w-full h-full object-cover object-top hover:scale-110 transition-transform duration-500"
             />
           </div>
 
           <div className="space-y-6 relative z-10 text-center">
             <div className="space-y-1">
-              <span className="text-sand text-xs uppercase tracking-wider font-semibold">
-                {lang === 'ID' ? 'Tuan Rumah' : 'Our Host'}
+              <span className="text-sand font-mono text-[10px] uppercase tracking-widest font-bold">
+                {lang === 'ID' ? 'Kisah Tuan Rumah' : 'Our Host Biography'}
               </span>
               <h3 className="font-serif text-xl md:text-2xl font-bold text-sand">
                 Pak Peno
               </h3>
-              <p className="font-sans text-xs text-cream/60">
-                {lang === 'ID' ? 'Petani Kopi & Pemandu Lokal' : 'Coffee Farmer & Local Guide'}
+              <p className="font-sans text-[10px] text-cream/60">
+                {lang === 'ID' ? 'Petani Kopi & Pemandu Wisata Senior' : 'Coffee Farmer & Senior Local Guide'}
               </p>
             </div>
 
             <div className="bg-green-soft/10 rounded-2xl p-4 border border-green-soft/20 text-left relative">
-              <p className="font-sans text-xs md:text-sm text-cream/90 font-light leading-relaxed italic">
+              <span className="font-serif text-5xl text-sand/20 absolute -top-3 -left-1 font-extrabold select-none">“</span>
+              <p className="font-sans text-xs md:text-sm text-cream/90 font-light leading-relaxed relative z-10 pl-4 italic">
                 {lang === 'ID' 
-                  ? '"Peno Homestay bukan sekadar penginapan. Di sini, Anda dapat merasakan kesejukan alam kebun kopi dan kehangatan tradisi keluarga kami."' 
+                  ? '"Peno Homestay bukan sekadar penginapan. Di sini, Anda terlelap dengan wangi cengkeh dan pala, terbangun oleh aroma sangrai kopi tradisional di dapur keluarga kami."' 
                   : t.aboutOwnerDesc}
               </p>
             </div>
 
-            <div className="text-left bg-cream/5 rounded-2xl p-4 border border-cream/5 space-y-1.5">
-              <h4 className="font-serif text-xs font-semibold text-sand uppercase tracking-wider">
-                {lang === 'ID' ? 'Tentang Pak Peno' : 'About Pak Peno'}
+            <div className="text-left bg-cream/5 rounded-2xl p-4 border border-cream/5 space-y-2">
+              <h4 className="font-serif text-xs font-bold text-sand uppercase tracking-wider flex items-center space-x-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-sand" />
+                <span>{lang === 'ID' ? 'Sekilas Tentang Pak Peno' : 'About Pak Peno'}</span>
               </h4>
               <p className="font-sans text-xs text-cream/80 font-light leading-relaxed">
                 {lang === 'ID' 
-                  ? 'Petani kopi asli Gombengsari yang siap berbagi pengalaman budidaya kopi dan keramahan khas pedesaan.'
-                  : 'A native Gombengsari coffee grower dedicated to sharing authentic coffee heritage and village hospitality.'}
+                  ? 'Pak Peno adalah generasi petani kopi Gombengsari yang mendedikasikan hidupnya untuk melestarikan kopi rakyat dan membagikan kehangatan budaya lokal kepada wisatawan mancanegara maupun domestik.'
+                  : 'Pak Peno is a coffee farmer from Gombengsari who dedicates his life to preserving traditional farming and sharing the authentic warmth of local village culture with guests from all over the world.'}
               </p>
             </div>
 
             <div className="border-t border-cream/10 pt-4 flex items-center justify-between">
               <div className="flex items-center space-x-3 text-left">
-                <div className="w-8 h-8 rounded-full bg-sand/20 border border-sand/40 flex items-center justify-center font-bold text-sand text-xs">P</div>
+                <div className="w-9 h-9 rounded-full bg-sand/20 border border-sand/40 flex items-center justify-center font-bold text-sand text-sm">P</div>
                 <div>
                   <div className="font-sans text-xs font-semibold text-cream">
                     {lang === 'ID' ? 'Peno & Keluarga' : 'Peno & Family'}
                   </div>
+                  <div className="font-sans text-[10px] text-cream/60">
+                    {lang === 'ID' ? 'Tuan Rumah Anda' : 'Your Hosts'}
+                  </div>
                 </div>
               </div>
               
-              <span className="inline-flex items-center bg-sand/15 px-2.5 py-1 rounded-full text-xs font-sans font-semibold text-sand">
-                ★ 4.9 Rating
+              <span className="inline-flex items-center bg-sand/15 px-2.5 py-1 rounded-full text-[9px] font-mono font-bold text-sand uppercase tracking-wider">
+                ★ 4.9 Google Maps
               </span>
             </div>
           </div>
