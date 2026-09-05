@@ -103,6 +103,15 @@ export const translations = {
     bookTerms3: "Termasuk sarapan sehat & seduhan kopi sepuasnya dari kebun.",
     bookTerms4: "Bantuan tur Kawah Ijen gratis disediakan oleh Peno.",
     bookCalendarHeader: "Pilih Tanggal Menginap Anda",
+    bookFormNamePlaceholder: "Contoh: Budi Santoso",
+    bookFormNotesPlaceholder: "Permintaan kasur tambahan, perkiraan jam tiba, penjemputan stasiun, dll...",
+    bookFormAgree: "Saya menyetujui syarat & ketentuan reservasi Peno Homestay",
+    bookSuccessTitle: "Pemesanan Berhasil Dikirim!",
+    bookSuccessDesc: "Terima kasih telah memesan di Peno Homestay. Detail pesanan Anda telah tersimpan dan terhubung ke WhatsApp.",
+    bookSuccessSummary: "Ringkasan Reservasi",
+    bookSuccessName: "Nama Pemesan",
+    bookSuccessAnotherBtn: "Pesan Tanggal Lain",
+    bookSuccessHomeBtn: "Kembali ke Beranda",
   },
   EN: {
     // Navbar
@@ -206,5 +215,14 @@ export const translations = {
     bookTerms3: "Includes healthy breakfast & unlimited fresh coffee from the estate.",
     bookTerms4: "Complimentary Mount Ijen tour assistance is provided by Pak Peno.",
     bookCalendarHeader: "Select Your Booking Dates",
+    bookFormNamePlaceholder: "e.g. John Doe",
+    bookFormNotesPlaceholder: "Special requests, extra bed, estimated arrival time, etc...",
+    bookFormAgree: "I agree to Peno Homestay booking terms & conditions",
+    bookSuccessTitle: "Booking Successfully Sent!",
+    bookSuccessDesc: "Thank you for reserving at Peno Homestay. Your booking details have been saved and connected to WhatsApp.",
+    bookSuccessSummary: "Reservation Summary",
+    bookSuccessName: "Guest Name",
+    bookSuccessAnotherBtn: "Book Another Date",
+    bookSuccessHomeBtn: "Return to Homepage",
   }
 };

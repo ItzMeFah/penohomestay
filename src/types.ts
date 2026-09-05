@@ -67,6 +67,7 @@ export interface CMSHomepage {
     headline: string;
     subheadline: string;
     badge: string;
+    imageUrl?: string;
   };
   stats: CMSStat[];
   about: {

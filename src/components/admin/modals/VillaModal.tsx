@@ -188,7 +188,7 @@ export const VillaModal: React.FC<VillaModalProps> = ({
                           />
                           <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
                             <button
-                              type="button; cursor-pointer"
+                              type="button"
                               onClick={() => setVillaImageUrl("")}
                               className="px-3 py-1.5 bg-rose-500 text-white text-[10px] font-bold rounded-lg shadow cursor-pointer"
                             >

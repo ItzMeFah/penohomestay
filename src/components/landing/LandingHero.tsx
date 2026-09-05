@@ -46,6 +46,13 @@ export const LandingHero: React.FC<LandingHeroProps> = ({
                 referrerPolicy="no-referrer"
                 className="w-full h-full object-cover object-center"
               />
+            ) : homepageData.hero?.imageUrl ? (
+              <img
+                src={homepageData.hero.imageUrl}
+                alt="Peno Homestay Backdrop"
+                referrerPolicy="no-referrer"
+                className="w-full h-full object-cover object-center"
+              />
             ) : (
               <div className="w-full h-full bg-[#1b3322]" />
             )}

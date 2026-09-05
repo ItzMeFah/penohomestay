@@ -46,7 +46,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
   const [loginError, setLoginError] = useState("");
 
   // Navigation / Sidebar tabs
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'bookings' | 'calendar' | 'tours' | 'block' | 'notifications' | 'cms' | 'header' | 'gallery' | 'settings'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'bookings' | 'calendar' | 'tours' | 'villas' | 'block' | 'notifications' | 'cms' | 'header' | 'gallery' | 'settings'>('dashboard');
 
   // Booking Filtering / Sorting states
   const [bookingSearch, setBookingSearch] = useState("");
@@ -191,8 +191,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
   const [showDbKey, setShowDbKey] = useState(false);
 
   // Admin View Large Calendar
-  const [calYear, setCalYear] = useState(2026);
-  const [calMonth, setCalMonth] = useState(5); // June
+  const [calYear, setCalYear] = useState(() => new Date().getFullYear());
+  const [calMonth, setCalMonth] = useState(() => new Date().getMonth());
   const [selectedCalendarVillaId, setSelectedCalendarVillaId] = useState("");
   const [offlineSelectedVillaId, setOfflineSelectedVillaId] = useState("");
 
@@ -1861,6 +1861,19 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
 
             <button
               onClick={() => {
+                setActiveTab('cms');
+                setSidebarOpen(false);
+              }}
+              className={`flex items-center space-x-3 px-4 py-3 rounded-xl font-sans text-sm font-medium transition-all text-left w-full cursor-pointer ${
+                activeTab === 'cms' ? 'bg-green-soft text-cream border-l-4 border-sand shadow-md' : 'text-cream/80 hover:bg-cream/10 hover:text-cream'
+              }`}
+            >
+              <FileEdit className="w-4 h-4" />
+              <span>Edit Konten Beranda (CMS)</span>
+            </button>
+
+            <button
+              onClick={() => {
                 setActiveTab('villas');
                 setSidebarOpen(false);
               }}
@@ -1869,7 +1882,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
               }`}
             >
               <Home className="w-4 h-4" />
-              <span>Manajemen Villa / Kamar</span>
+              <span>Katalog Villa / Kamar</span>
             </button>
 
             <button
@@ -1941,11 +1954,12 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
               <Menu className="w-6 h-6" />
             </button>
             <h1 className="text-xl font-serif font-bold text-green-deep capitalize">
-              {activeTab === 'block' ? 'Manajemen Not Available (Tutup Tanggal)' : 
+              {activeTab === 'cms' ? 'Edit Konten Beranda (CMS)' :
+               activeTab === 'block' ? 'Manajemen Not Available (Tutup Tanggal)' : 
                activeTab === 'bookings' ? 'Daftar Pemesanan Tamu' : 
                activeTab === 'calendar' ? 'Kalender Ketersediaan' :
-               activeTab === 'tours' ? 'Manajemen Paket Wisata' :
-               activeTab === 'villas' ? 'Manajemen Villa / Kamar' :
+               activeTab === 'tours' ? 'Katalog Paket Wisata' :
+               activeTab === 'villas' ? 'Katalog Villa / Kamar' :
                activeTab === 'notifications' ? 'Notifikasi Realtime' :
                activeTab === 'header' ? 'Manajemen Slideshow Header' : 
                activeTab === 'settings' ? 'Pengaturan Homestay' :
@@ -2525,25 +2539,43 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
 
 
           {/* TAB 6: CMS MANAGEMENT VIEW */}
-          {activeTab === 'settings' && settingsSubTab === 'cms' && (
+          {(activeTab === 'cms' || (activeTab === 'settings' && settingsSubTab === 'cms')) && (
             <div className="space-y-6 max-w-5xl mx-auto">
               {/* Horizontal Tab Selector for Settings */}
-              <div className="flex border-b border-sand/15 gap-6 no-print bg-white p-4 rounded-2xl border border-gray-100 shadow-sm">
-                <button
-                  type="button"
-                  onClick={() => setSettingsSubTab('general')}
-                  className="pb-2 text-sm font-serif font-bold transition-all border-b-2 cursor-pointer border-transparent text-gray-400 hover:text-green-deep"
-                >
-                  Pengaturan Umum & Kredensial
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setSettingsSubTab('cms')}
-                  className="pb-2 text-sm font-serif font-bold transition-all border-b-2 cursor-pointer border-green-soft text-green-deep"
-                >
-                  CMS Edit Konten Beranda
-                </button>
-              </div>
+              {activeTab === 'settings' ? (
+                <div className="flex border-b border-sand/15 gap-6 no-print bg-white p-4 rounded-2xl border border-gray-100 shadow-sm">
+                  <button
+                    type="button"
+                    onClick={() => setSettingsSubTab('general')}
+                    className="pb-2 text-sm font-serif font-bold transition-all border-b-2 cursor-pointer border-transparent text-gray-400 hover:text-green-deep"
+                  >
+                    Pengaturan Umum & Kredensial
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setSettingsSubTab('cms')}
+                    className="pb-2 text-sm font-serif font-bold transition-all border-b-2 cursor-pointer border-green-soft text-green-deep"
+                  >
+                    CMS Edit Konten Beranda
+                  </button>
+                </div>
+              ) : (
+                <div className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm flex items-center justify-between">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-10 h-10 rounded-xl bg-green-soft/20 text-green-deep flex items-center justify-center">
+                      <FileEdit className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <h2 className="font-serif font-bold text-green-deep text-lg">CMS Konten Beranda & Katalog</h2>
+                      <p className="text-xs text-text-muted">Kelola teks hero, statistik, tentang kami, keunggulan, ulasan, dan detail homestay yang tersinkron otomatis ke Supabase</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center space-x-2 text-xs text-emerald-700 bg-emerald-50 px-3 py-1.5 rounded-xl border border-emerald-200">
+                    <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                    <span className="font-semibold">Supabase CMS Sync Active</span>
+                  </div>
+                </div>
+              )}
 
               <div className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden flex flex-col md:flex-row min-h-[500px]">
               
@@ -2633,6 +2665,63 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                         className="w-full bg-gray-50 border border-gray-200 focus:border-green-soft px-4 py-2.5 rounded-xl text-sm"
                       />
                     </div>
+
+                    <div className="space-y-2 pt-3 border-t border-gray-100">
+                      <label className="text-xs font-semibold text-text-dark flex items-center justify-between">
+                        <span>Foto / Gambar Latar Hero (Supabase)</span>
+                        {cmsHero.imageUrl && (
+                          <span className="text-[10px] text-emerald-600 font-bold bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
+                            ✓ Gambar Terpasang
+                          </span>
+                        )}
+                      </label>
+                      <div className="flex gap-2 items-center">
+                        <input
+                          type="text"
+                          placeholder="https://... atau unggah berkas foto"
+                          value={cmsHero.imageUrl || ''}
+                          onChange={(e) => setCmsHero({ ...cmsHero, imageUrl: e.target.value })}
+                          className="flex-1 bg-gray-50 border border-gray-200 focus:border-green-soft px-4 py-2 rounded-xl text-xs font-mono"
+                        />
+                        <label className="cursor-pointer bg-sand/30 hover:bg-sand/60 text-green-deep border border-sand/50 px-3 py-2 rounded-xl text-xs font-bold transition-all inline-flex items-center gap-1.5 shadow-xs shrink-0">
+                          <Upload className="w-3.5 h-3.5" />
+                          <span>Unggah</span>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={async (e) => {
+                              const file = e.target.files?.[0];
+                              if (file) {
+                                const url = await handleUploadToSupabase(file);
+                                if (url) {
+                                  setCmsHero({ ...cmsHero, imageUrl: url });
+                                }
+                              }
+                            }}
+                          />
+                        </label>
+                      </div>
+                      {cmsHero.imageUrl && (
+                        <div className="relative w-full h-36 rounded-2xl overflow-hidden border border-gray-200 bg-gray-100 mt-2 shadow-xs group">
+                          <img
+                            src={cmsHero.imageUrl}
+                            alt="Hero Banner Preview"
+                            referrerPolicy="no-referrer"
+                            className="w-full h-full object-cover"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setCmsHero({ ...cmsHero, imageUrl: '' })}
+                            className="absolute top-2 right-2 bg-black/70 hover:bg-rose-600 text-white p-1.5 rounded-lg text-xs transition-colors shadow"
+                            title="Hapus Gambar"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      )}
+                    </div>
+
                     <button
                       onClick={handleSaveCmsHero}
                       disabled={saveStatus !== 'idle'}

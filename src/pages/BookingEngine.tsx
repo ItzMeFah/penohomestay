@@ -41,8 +41,8 @@ export const BookingEngine: React.FC<BookingEngineProps> = ({
   setSelectedVillaId
 }) => {
   const t = translations[lang];
-  const [viewYear, setViewYear] = useState(2026);
-  const [viewMonth, setViewMonth] = useState(5); // 0-indexed (5 = June)
+  const [viewYear, setViewYear] = useState(() => new Date().getFullYear());
+  const [viewMonth, setViewMonth] = useState(() => new Date().getMonth());
   const [selectStart, setSelectStart] = useState<Date | null>(null);
   const [selectEnd, setSelectEnd] = useState<Date | null>(null);
   const [hoveredDate, setHoveredDate] = useState<Date | null>(null);

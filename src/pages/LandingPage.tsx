@@ -34,11 +34,16 @@ export const LandingPage: React.FC<LandingPageProps> = ({
   const [currentSlide, setCurrentSlide] = useState(0);
 
   const slideshowImages = useMemo(() => {
-    return [...galleryData]
+    const gallerySlides = [...galleryData]
       .filter(item => item.showInSlideshow !== false && item.url && item.url.trim().length > 0)
       .sort((a, b) => a.order - b.order)
       .map(item => item.url);
-  }, [galleryData]);
+
+    if (homepageData.hero?.imageUrl && !gallerySlides.includes(homepageData.hero.imageUrl)) {
+      return [homepageData.hero.imageUrl, ...gallerySlides];
+    }
+    return gallerySlides;
+  }, [galleryData, homepageData.hero?.imageUrl]);
 
   // Slideshow interval timer (6 seconds interval for elegant crossfading transition)
   useEffect(() => {

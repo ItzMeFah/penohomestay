@@ -30,6 +30,7 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
     { id: 'dashboard', label: 'Ringkasan Dashboard', icon: LayoutDashboard },
     { id: 'bookings', label: 'Daftar Pemesanan', icon: Printer },
     { id: 'calendar', label: 'Kalender Okupansi', icon: CalendarRange },
+    { id: 'villas', label: 'Katalog Villa & Kamar', icon: Home },
     { id: 'tours', label: 'Paket Wisata & Tur', icon: MapPin },
     { id: 'block', label: 'Tutup Tanggal Kamar', icon: CalendarRange },
     { id: 'notifications', label: 'Notifikasi Sistem', icon: Bell, badge: unreadNotifsCount },

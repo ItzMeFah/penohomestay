@@ -1,5 +1,5 @@
 import React from 'react';
-import { Save, Check, RefreshCw, Plus, Edit2, Trash2, Image as ImageIcon } from 'lucide-react';
+import { Save, Check, RefreshCw, Plus, Edit2, Trash2, Image as ImageIcon, Upload } from 'lucide-react';
 import { CMSHomepage, CMSHighlightItem } from '../../types';
 
 interface AdminCMSProps {
@@ -139,6 +139,41 @@ export const AdminCMS: React.FC<AdminCMSProps> = ({
                 onChange={(e) => setCmsHero({ ...cmsHero, badge: e.target.value })}
                 className="w-full bg-gray-50 border border-gray-200 focus:border-green-soft px-4 py-2.5 rounded-xl text-sm"
               />
+            </div>
+            <div className="space-y-2 pt-2 border-t border-gray-100">
+              <label className="text-xs font-semibold text-text-dark flex items-center justify-between">
+                <span>URL Foto / Gambar Latar Hero (Supabase)</span>
+                {cmsHero.imageUrl && (
+                  <span className="text-[10px] text-emerald-600 font-bold bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
+                    ✓ Gambar Terpasang
+                  </span>
+                )}
+              </label>
+              <input
+                type="text"
+                placeholder="https://... URL gambar untuk banner hero"
+                value={cmsHero.imageUrl || ''}
+                onChange={(e) => setCmsHero({ ...cmsHero, imageUrl: e.target.value })}
+                className="w-full bg-gray-50 border border-gray-200 focus:border-green-soft px-4 py-2 rounded-xl text-xs font-mono"
+              />
+              {cmsHero.imageUrl && (
+                <div className="relative w-full h-32 rounded-2xl overflow-hidden border border-gray-200 bg-gray-100 mt-2 shadow-xs">
+                  <img
+                    src={cmsHero.imageUrl}
+                    alt="Hero Preview"
+                    referrerPolicy="no-referrer"
+                    className="w-full h-full object-cover"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setCmsHero({ ...cmsHero, imageUrl: '' })}
+                    className="absolute top-2 right-2 bg-black/70 hover:bg-rose-600 text-white p-1 rounded-md text-xs transition-colors"
+                    title="Hapus"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              )}
             </div>
             {saveBtnLabel(handleSaveCmsHero)}
           </div>
