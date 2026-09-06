@@ -1,4 +1,4 @@
-import { ChevronLeft } from 'lucide-react';
+import { Instagram } from 'lucide-react';
 import { LanguageType, translations } from '../utils/lang';
 
 interface FooterProps {
@@ -27,10 +27,10 @@ export function Footer({ settings, lang, onNavigate }: FooterProps) {
               href={settings.instagramUrl}
               target="_blank"
               referrerPolicy="no-referrer"
-              className="p-2.5 bg-white/5 hover:bg-white/10 border border-white/10 text-cream rounded-full transition-all"
-              title="Follow kami di Instagram"
+              className="p-2.5 bg-white/10 hover:bg-white/20 border border-white/20 text-white rounded-full transition-all flex items-center justify-center shadow-sm hover:scale-110 active:scale-95 cursor-pointer"
+              title="Instagram @penohomestaybanyuwangi"
             >
-              <ChevronLeft className="w-4 h-4 rotate-180" />
+              <Instagram className="w-5 h-5 text-white" />
             </a>
           </div>
         </div>

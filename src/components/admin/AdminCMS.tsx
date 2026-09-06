@@ -100,7 +100,7 @@ export const AdminCMS: React.FC<AdminCMSProps> = ({
           >
             {tab === 'hero' ? 'Banner Hero' :
              tab === 'stats' ? 'Statistik Bar' :
-             tab === 'about' ? 'Tentang Kami' :
+             tab === 'about' ? 'Tentang & Card Highlight' :
              tab === 'features' ? 'Keunggulan' :
              tab === 'testimonials' ? 'Ulasan Tamu' : 'Detail Menginap'}
           </button>

@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'motion/react';
-import { ArrowRight, Home } from 'lucide-react';
+import { ArrowRight, Home, Users, Coffee } from 'lucide-react';
 import { CoffeeBean } from '../CoffeeDecoration';
 import { CMSHomepage } from '../../types';
 import { CurrencyType, convertAndFormatPrice } from '../../utils/storage';
@@ -74,13 +74,15 @@ export const LandingAkomodasi: React.FC<LandingAkomodasiProps> = ({
                   <span>{lang === 'ID' ? 'Tersedia' : 'Available'}</span>
                 </div>
 
-                <div className="absolute bottom-4 left-4 flex gap-1.5">
-                  <span className="bg-green-deep text-cream text-[10px] font-bold px-2.5 py-1 rounded-lg shadow-sm">
-                    👤 Maks {villa.capacity} Pax
+                <div className="absolute bottom-3.5 left-3.5 flex items-center gap-2 flex-wrap">
+                  <span className="inline-flex items-center gap-1.5 bg-green-deep/90 backdrop-blur-md text-cream text-[11px] font-sans font-medium px-3 py-1 rounded-full border border-white/15 shadow-sm">
+                    <Users className="w-3.5 h-3.5 text-sand" />
+                    <span>Maks {villa.capacity} Pax</span>
                   </span>
                   {villa.includeBreakfast && (
-                    <span className="bg-amber-500 text-cream text-[10px] font-bold px-2.5 py-1 rounded-lg shadow-sm flex items-center gap-1">
-                      🍳 {lang === 'ID' ? 'Sarapan' : 'Breakfast'}
+                    <span className="inline-flex items-center gap-1.5 bg-[#3a2818]/90 backdrop-blur-md text-cream text-[11px] font-sans font-medium px-3 py-1 rounded-full border border-sand/30 shadow-sm">
+                      <Coffee className="w-3.5 h-3.5 text-sand" />
+                      <span>{lang === 'ID' ? 'Termasuk Sarapan' : 'Breakfast Included'}</span>
                     </span>
                   )}
                 </div>

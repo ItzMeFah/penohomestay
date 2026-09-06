@@ -95,28 +95,16 @@ export const LandingTours: React.FC<LandingToursProps> = ({ homepageData, lang }
                     </div>
                   )}
 
-                  <div className="pt-4 border-t border-sand/20 space-y-3">
+                  <div className="pt-4 border-t border-sand/20">
                     <a 
                       href={`https://wa.me/${tour.contactPhone.replace(/\D/g,'')}?text=Halo%20Peno%20Homestay,%20saya%20tertarik%20dengan%20paket%20wisata%20${encodeURIComponent(tour.name)}.`}
                       target="_blank"
                       rel="noreferrer"
-                      className="w-full flex items-center justify-center space-x-2 bg-green-deep hover:bg-green-soft text-cream hover:text-white py-2.5 px-4 rounded-xl transition-all duration-300 font-semibold text-xs shadow-md hover:shadow-lg active:scale-[0.98]"
+                      className="w-full flex items-center justify-center space-x-2 bg-green-deep hover:bg-green-soft text-cream hover:text-white py-2.5 px-4 rounded-xl transition-all duration-300 font-semibold text-xs shadow-md hover:shadow-lg active:scale-[0.98] cursor-pointer"
                     >
                       <Phone className="w-3.5 h-3.5" />
                       <span>{lang === 'ID' ? 'Pesan via WhatsApp' : 'Book via WhatsApp'}</span>
                     </a>
-                    
-                    <div className="flex items-center justify-between text-[10px] text-gray-400 font-mono">
-                      <span className="flex items-center space-x-1">
-                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                        <span>{tour.contactPhone}</span>
-                      </span>
-                      {tour.contactSocial && (
-                        <span className="hover:text-green-soft transition-colors truncate max-w-[120px]">
-                          {tour.contactSocial}
-                        </span>
-                      )}
-                    </div>
                   </div>
                 </div>
               </motion.div>

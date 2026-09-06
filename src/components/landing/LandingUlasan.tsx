@@ -1,5 +1,5 @@
 import React from 'react';
-import { Star } from 'lucide-react';
+import { Star, MapPin, Navigation, ExternalLink } from 'lucide-react';
 import { CMSHomepage } from '../../types';
 import { LanguageType, translations } from '../../utils/lang';
 
@@ -73,6 +73,70 @@ export const LandingUlasan: React.FC<LandingUlasanProps> = ({ homepageData, lang
               </div>
             );
           })}
+        </div>
+
+        {/* 🗺️ Live Compact Google Maps Section */}
+        <div className="pt-6">
+          <div className="bg-white/5 border border-white/10 rounded-3xl p-6 sm:p-8 backdrop-blur-md shadow-2xl relative overflow-hidden">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+              <div className="space-y-1">
+                <div className="inline-flex items-center gap-1.5 text-sand font-mono text-xs uppercase tracking-wider font-semibold">
+                  <MapPin className="w-3.5 h-3.5 text-green-soft" />
+                  <span>{lang === 'ID' ? 'Lokasi Homestay' : 'Homestay Location'}</span>
+                </div>
+                <h3 className="font-serif text-xl sm:text-2xl font-bold text-cream">
+                  {lang === 'ID' ? 'Peta Google Maps Langsung' : 'Live Google Maps Location'}
+                </h3>
+                <p className="text-xs sm:text-sm text-cream/75 font-sans font-light">
+                  Gombengsari, Kec. Kalipuro, Kabupaten Banyuwangi, Jawa Timur
+                </p>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <a
+                  href="https://maps.google.com/?q=Peno+Homestay+Gombengsari+Banyuwangi"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-2 bg-sand hover:bg-cream text-green-deep font-sans font-semibold text-xs px-4 py-2.5 rounded-xl shadow transition-all hover:scale-105 active:scale-95 cursor-pointer"
+                >
+                  <Navigation className="w-3.5 h-3.5" />
+                  <span>{lang === 'ID' ? 'Buka Petunjuk Arah' : 'Get Directions'}</span>
+                  <ExternalLink className="w-3 h-3 opacity-70" />
+                </a>
+              </div>
+            </div>
+
+            {/* Compact Map Frame */}
+            <div className="w-full h-64 sm:h-72 rounded-2xl overflow-hidden border border-white/10 shadow-inner bg-black/40 relative">
+              <iframe
+                title="Peno Homestay Google Maps"
+                src="https://maps.google.com/maps?q=Peno+Homestay+Gombengsari+Banyuwangi&t=&z=15&ie=UTF8&iwloc=&output=embed"
+                width="100%"
+                height="100%"
+                style={{ border: 0, filter: 'contrast(1.02)' }}
+                allowFullScreen={false}
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
+                className="w-full h-full"
+              />
+            </div>
+
+            {/* Fast Quick Notes */}
+            <div className="mt-4 flex flex-wrap items-center gap-2 text-[11px] text-cream/70 font-sans">
+              <span className="inline-flex items-center gap-1.5 bg-white/5 border border-white/10 px-3 py-1 rounded-full">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                <span>{lang === 'ID' ? '±45 Menit ke Kawah Ijen' : '±45 Mins to Mount Ijen'}</span>
+              </span>
+              <span className="inline-flex items-center gap-1.5 bg-white/5 border border-white/10 px-3 py-1 rounded-full">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                <span>{lang === 'ID' ? 'Di tengah kebun kopi organik' : 'In the heart of organic coffee farm'}</span>
+              </span>
+              <span className="inline-flex items-center gap-1.5 bg-white/5 border border-white/10 px-3 py-1 rounded-full">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                <span>{lang === 'ID' ? 'Akses kendaraan & parkir aman' : 'Easy car access & secure parking'}</span>
+              </span>
+            </div>
+          </div>
         </div>
       </div>
     </section>

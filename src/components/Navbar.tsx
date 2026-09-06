@@ -25,12 +25,6 @@ export function LanguageSelector({ lang, setLang, compact = false }: LanguageSel
           onChange={(e) => {
             const nextLang = e.target.checked ? 'EN' : 'ID';
             setLang(nextLang);
-            
-            const combo = document.querySelector('.goog-te-combo') as HTMLSelectElement | null;
-            if (combo) {
-              combo.value = e.target.checked ? 'en' : 'id';
-              combo.dispatchEvent(new Event('change'));
-            }
           }}
           className="sr-only peer" 
         />

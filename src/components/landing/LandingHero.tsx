@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Calendar } from 'lucide-react';
+import { Calendar, Star } from 'lucide-react';
 import { CMSHomepage } from '../../types';
 import { LanguageType, translations } from '../../utils/lang';
 
@@ -22,6 +22,37 @@ export const LandingHero: React.FC<LandingHeroProps> = ({
   onNavigate
 }) => {
   const t = translations[lang];
+
+  // Rotating descriptions every 4 seconds
+  const idDescriptions = [
+    homepageData.hero.subheadline || 'Homestay keluarga di Banyuwangi — gerbang Kawah Ijen & Bromo',
+    'Rehat tenang di tengah perkebunan kopi asri dengan hawa sejuk pegunungan',
+    'Tur privat kebun kopi & petualangan alam bersama keramahan Pak Peno',
+    'Sensasi menginap hangat penuh kekeluargaan dan hidangan autentik desa'
+  ];
+
+  const enDescriptions = [
+    t.heroDesc || 'Family-run homestay in Banyuwangi — gateway to Mount Ijen & Bromo',
+    'Peaceful retreat amidst lush coffee plantations & fresh mountain air',
+    'Private coffee estate tours & authentic warm hospitality with Pak Peno',
+    'A tranquil rustic countryside escape with delicious homemade dining'
+  ];
+
+  const currentDescList = lang === 'ID' ? idDescriptions : enDescriptions;
+  const [descIndex, setDescIndex] = useState(0);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setDescIndex((prev) => (prev + 1) % currentDescList.length);
+    }, 4000);
+    return () => clearInterval(timer);
+  }, [currentDescList.length, lang]);
+
+  // Clean badge text so any unicode stars don't render as uncolored/white stars
+  const rawBadge = lang === 'ID' ? homepageData.hero.badge : t.heroSubtitle;
+  const cleanedBadgeText = (rawBadge || '4.9/5 · 90+ Ulasan Google')
+    .replace(/^[★\s*]+/, '')
+    .trim();
 
   return (
     <section
@@ -64,15 +95,24 @@ export const LandingHero: React.FC<LandingHeroProps> = ({
 
       {/* Content Wrapper */}
       <div className="max-w-4xl mx-auto text-center relative z-20 flex flex-col items-center">
-        {/* Badge */}
+        {/* Badge - 5 Full Gold/Yellow Stars */}
         <motion.div
           initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
-          className="inline-flex items-center space-x-2 bg-green-soft/20 backdrop-blur-md border border-green-soft/30 px-4 py-2 rounded-full text-sand text-xs md:text-sm font-medium tracking-wide mb-8 shadow-sm"
+          className="inline-flex items-center gap-2.5 bg-green-soft/20 backdrop-blur-md border border-green-soft/35 px-4 py-2 rounded-full text-cream text-xs md:text-sm font-medium tracking-wide mb-8 shadow-sm"
         >
-          <span className="flex items-center text-yellow-400">★</span>
-          <span>{lang === 'ID' ? homepageData.hero.badge : t.heroSubtitle}</span>
+          <div className="flex items-center space-x-0.5 text-amber-400">
+            {[...Array(5)].map((_, i) => (
+              <Star
+                key={i}
+                className="w-3.5 h-3.5 fill-amber-400 text-amber-400 drop-shadow-[0_0_6px_rgba(251,191,36,0.6)]"
+              />
+            ))}
+          </div>
+          <span className="font-semibold text-sand">
+            {cleanedBadgeText || '4.9/5 · 90+ Ulasan Google'}
+          </span>
         </motion.div>
 
         {/* Headline */}
@@ -84,15 +124,21 @@ export const LandingHero: React.FC<LandingHeroProps> = ({
           dangerouslySetInnerHTML={{ __html: lang === 'ID' ? homepageData.hero.headline : t.heroTitle }}
         />
 
-        {/* Subheadline */}
-        <motion.p
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.2 }}
-          className="text-sm sm:text-base md:text-lg text-cream/85 font-sans font-light max-w-2xl mb-12 leading-relaxed"
-        >
-          {lang === 'ID' ? homepageData.hero.subheadline : t.heroDesc}
-        </motion.p>
+        {/* Subheadline - Smooth Motion Changing Every 4 Seconds */}
+        <div className="h-16 sm:h-14 flex items-center justify-center mb-10 max-w-2xl px-4 overflow-hidden">
+          <AnimatePresence mode="wait">
+            <motion.p
+              key={`${lang}-${descIndex}`}
+              initial={{ opacity: 0, y: 12, filter: 'blur(3px)' }}
+              animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+              exit={{ opacity: 0, y: -12, filter: 'blur(3px)' }}
+              transition={{ duration: 0.65, ease: [0.16, 1, 0.3, 1] }}
+              className="text-sm sm:text-base md:text-lg text-cream/90 font-sans font-light text-center leading-relaxed"
+            >
+              {currentDescList[descIndex]}
+            </motion.p>
+          </AnimatePresence>
+        </div>
 
         {/* CTA Buttons */}
         <motion.div
@@ -103,7 +149,7 @@ export const LandingHero: React.FC<LandingHeroProps> = ({
         >
           <button
             onClick={() => onNavigate('booking')}
-            className="w-full sm:w-auto inline-flex items-center justify-center space-x-2 bg-sand hover:bg-cream text-green-deep font-sans font-semibold px-8 py-4 rounded-full shadow-lg transition-all duration-300 transform hover:-translate-y-1 hover:shadow-2xl hover:scale-105 active:scale-95 group"
+            className="w-full sm:w-auto inline-flex items-center justify-center space-x-2 bg-sand hover:bg-cream text-green-deep font-sans font-semibold px-8 py-4 rounded-full shadow-lg transition-all duration-300 transform hover:-translate-y-1 hover:shadow-2xl hover:scale-105 active:scale-95 group cursor-pointer"
           >
             <Calendar className="w-5 h-5 transition-transform group-hover:rotate-6" />
             <span>{t.heroCtaBook}</span>
@@ -113,7 +159,7 @@ export const LandingHero: React.FC<LandingHeroProps> = ({
               const galleryElem = document.getElementById('galeri');
               if (galleryElem) galleryElem.scrollIntoView({ behavior: 'smooth' });
             }}
-            className="w-full sm:w-auto inline-flex items-center justify-center space-x-2 bg-transparent hover:bg-cream/10 text-cream border-2 border-cream/30 hover:border-cream font-sans font-medium px-8 py-4 rounded-full transition-all duration-300 transform hover:-translate-y-0.5"
+            className="w-full sm:w-auto inline-flex items-center justify-center space-x-2 bg-transparent hover:bg-cream/10 text-cream border-2 border-cream/30 hover:border-cream font-sans font-medium px-8 py-4 rounded-full transition-all duration-300 transform hover:-translate-y-0.5 cursor-pointer"
           >
             <span>{t.heroCtaExplore}</span>
           </button>

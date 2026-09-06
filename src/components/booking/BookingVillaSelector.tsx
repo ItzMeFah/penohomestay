@@ -122,9 +122,9 @@ export const BookingVillaSelector: React.FC<BookingVillaSelectorProps> = ({
                       {villa.capacity} Pax
                     </span>
                     {villa.includeBreakfast && (
-                      <span className="bg-amber-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-lg shadow-xs flex items-center gap-1">
-                        <Coffee className="w-3 h-3" />
-                        Sarapan
+                      <span className="bg-[#3a2818]/90 text-cream text-[10px] font-semibold px-2 py-0.5 rounded-lg shadow-xs flex items-center gap-1 border border-sand/20">
+                        <Coffee className="w-3 h-3 text-sand" />
+                        <span>Sarapan</span>
                       </span>
                     )}
                   </div>
