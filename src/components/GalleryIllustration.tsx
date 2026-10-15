@@ -295,7 +295,7 @@ export const GalleryIllustration: React.FC<GalleryIllustrationProps> = ({ type, 
 
           {/* Badge Label Overlay */}
           <rect x="20" y="20" width="130" height="26" rx="13" fill="#6b4c35" opacity="0.9" />
-          <text x="85" y="37" fill="#f7f3ec" fontSize="11" fontFamily="sans-serif" fontWeight="bold" textAnchor="middle">KAWAH IJEN CRATER</text>
+          <text x="85" y="37" fill="#f7f3ec" fontSize="11" fontFamily="sans-serif" fontWeight="bold" textAnchor="middle">MOUNTAIN CRATER</text>
         </svg>
       );
     default:

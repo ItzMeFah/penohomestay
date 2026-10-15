@@ -92,7 +92,7 @@ export const LandingGaleri: React.FC<LandingGaleriProps> = ({ galleryData, lang 
                 if (l.includes('kamar standar')) return "Standard Bedroom";
                 if (l.includes('sungai')) return "Crystal River Walk";
                 if (l.includes('sarapan')) return "Authentic Breakfast";
-                if (l.includes('kawah ijen') || l.includes('tur') || l.includes('ijen')) return "Mount Ijen Trekking";
+                if (l.includes('tur') || l.includes('alam') || l.includes('ijen')) return "Nature & Plantation Walk";
                 if (l.includes('kambing') || l.includes('etawa')) return "Etawa Dairy Goats";
                 return label;
               };
@@ -241,7 +241,7 @@ export const LandingGaleri: React.FC<LandingGaleriProps> = ({ galleryData, lang 
                     sortedGallery[lightboxIndex].label.toLowerCase().includes('kamar standar') ? 'Standard Bedroom' :
                     sortedGallery[lightboxIndex].label.toLowerCase().includes('sungai') ? 'Crystal River Walk' :
                     sortedGallery[lightboxIndex].label.toLowerCase().includes('sarapan') ? 'Authentic Breakfast' :
-                    sortedGallery[lightboxIndex].label.toLowerCase().includes('kawah ijen') || sortedGallery[lightboxIndex].label.toLowerCase().includes('tur') ? 'Mount Ijen Trekking' :
+                    sortedGallery[lightboxIndex].label.toLowerCase().includes('tur') || sortedGallery[lightboxIndex].label.toLowerCase().includes('alam') || sortedGallery[lightboxIndex].label.toLowerCase().includes('ijen') ? 'Nature & Plantation Walk' :
                     sortedGallery[lightboxIndex].label.toLowerCase().includes('kambing') || sortedGallery[lightboxIndex].label.toLowerCase().includes('etawa') ? 'Etawa Dairy Goats' : sortedGallery[lightboxIndex].label}
               </h3>
             </div>

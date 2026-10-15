@@ -25,14 +25,14 @@ export const LandingHero: React.FC<LandingHeroProps> = ({
 
   // Rotating descriptions every 4 seconds
   const idDescriptions = [
-    homepageData.hero.subheadline || 'Homestay keluarga di Banyuwangi — gerbang Kawah Ijen & Bromo',
+    homepageData.hero.subheadline || 'Homestay keluarga di Banyuwangi — kebun kopi asri & kenyamanan alam',
     'Rehat tenang di tengah perkebunan kopi asri dengan hawa sejuk pegunungan',
     'Tur privat kebun kopi & petualangan alam bersama keramahan Pak Peno',
     'Sensasi menginap hangat penuh kekeluargaan dan hidangan autentik desa'
   ];
 
   const enDescriptions = [
-    t.heroDesc || 'Family-run homestay in Banyuwangi — gateway to Mount Ijen & Bromo',
+    t.heroDesc || 'Family-run homestay in Banyuwangi — lush coffee farm & natural warmth',
     'Peaceful retreat amidst lush coffee plantations & fresh mountain air',
     'Private coffee estate tours & authentic warm hospitality with Pak Peno',
     'A tranquil rustic countryside escape with delicious homemade dining'

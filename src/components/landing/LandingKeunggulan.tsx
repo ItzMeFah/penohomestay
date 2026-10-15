@@ -58,7 +58,7 @@ export const LandingKeunggulan: React.FC<LandingKeunggulanProps> = ({ homepageDa
               if (lang === 'ID') return item.title;
               const titleLower = item.title.toLowerCase();
               if (titleLower.includes('kopi')) return "Unlimited Estate Coffee";
-              if (titleLower.includes('ijen') || titleLower.includes('tur')) return "Mount Ijen Guiding";
+              if (titleLower.includes('tur') || titleLower.includes('alam')) return "Nature & Plantation Guiding";
               if (titleLower.includes('sarapan') || titleLower.includes('kuliner')) return "Authentic Farm Breakfast";
               if (titleLower.includes('kambing') || titleLower.includes('etawa') || titleLower.includes('susu')) return "Milking Etawa Goats";
               if (titleLower.includes('keluarga') || titleLower.includes('ramah')) return "Local Family Warmth";
@@ -70,7 +70,7 @@ export const LandingKeunggulan: React.FC<LandingKeunggulanProps> = ({ homepageDa
               if (lang === 'ID') return item.desc;
               const titleLower = item.title.toLowerCase();
               if (titleLower.includes('kopi')) return "Enjoy unlimited, fresh organic robusta & liberika coffee brewed straight from our farm.";
-              if (titleLower.includes('ijen') || titleLower.includes('tur')) return "Get direct, experienced local guiding and equipment preparation for Mount Ijen hiking.";
+              if (titleLower.includes('tur') || titleLower.includes('alam')) return "Get direct, experienced local guiding through plantations and scenic village trails.";
               if (titleLower.includes('sarapan') || titleLower.includes('kuliner')) return "Wake up to delicious, home-cooked traditional Banyuwangi breakfast made with fresh ingredients.";
               if (titleLower.includes('kambing') || titleLower.includes('etawa') || titleLower.includes('susu')) return "Experience dairy goat farming, feed our local goats, and try milking them yourself.";
               if (titleLower.includes('keluarga') || titleLower.includes('ramah')) return "Be hosted like family with authentic stories, sincere hospitality, and comfortable village living.";

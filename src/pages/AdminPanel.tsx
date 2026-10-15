@@ -4498,7 +4498,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                       <input
                         type="text"
                         required
-                        placeholder="Contoh: Kawah Ijen Blue Fire Tour"
+                        placeholder="Contoh: Tur Perkebunan Kopi & Air Terjun"
                         value={tourName}
                         onChange={(e) => setTourName(e.target.value)}
                         className="w-full bg-gray-50 border border-gray-200 focus:border-green-soft px-3 py-2 rounded-xl text-xs"

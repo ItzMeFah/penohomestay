@@ -68,7 +68,7 @@ export const LandingAbout: React.FC<LandingAboutProps> = ({ homepageData, lang }
               if (lowerTitle.includes("family") || lowerTitle.includes("keluarga") || lowerTitle.includes("host") || lowerTitle.includes("warm") || itemId === "hl-3") {
                 return <Heart className="w-3.5 h-3.5 fill-sand text-sand" />;
               }
-              if (lowerTitle.includes("ijen") || lowerTitle.includes("kawah") || lowerTitle.includes("mount") || lowerTitle.includes("gunung") || itemId === "hl-4") {
+              if (lowerTitle.includes("panorama") || lowerTitle.includes("alam") || lowerTitle.includes("mountain") || lowerTitle.includes("gunung") || itemId === "hl-4") {
                 return <Mountain className="w-3.5 h-3.5 text-sand" />;
               }
               return <Star className="w-3.5 h-3.5 fill-sand text-sand" />;

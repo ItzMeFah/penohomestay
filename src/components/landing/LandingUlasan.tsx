@@ -45,7 +45,7 @@ export const LandingUlasan: React.FC<LandingUlasanProps> = ({ homepageData, lang
                 return "Comfortable and very clean rooms. The mountain air is incredibly fresh, and having unlimited fresh coffee from the estate is amazing!";
               }
               if (tLower.includes('ijen') || tLower.includes('gunung') || tLower.includes('kawah')) {
-                return "The absolute perfect gateway to Mount Ijen! Pak Peno prepared everything for our hiking tour and showed us real village hospitality.";
+                return "The absolute perfect getaway! Pak Peno prepared everything for our village stay and showed us real Banyuwangi hospitality.";
               }
               return text;
             };
@@ -125,7 +125,7 @@ export const LandingUlasan: React.FC<LandingUlasanProps> = ({ homepageData, lang
             <div className="mt-4 flex flex-wrap items-center gap-2 text-[11px] text-cream/70 font-sans">
               <span className="inline-flex items-center gap-1.5 bg-white/5 border border-white/10 px-3 py-1 rounded-full">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-                <span>{lang === 'ID' ? '±45 Menit ke Kawah Ijen' : '±45 Mins to Mount Ijen'}</span>
+                <span>{lang === 'ID' ? 'Udara sejuk & asri' : 'Cool & refreshing air'}</span>
               </span>
               <span className="inline-flex items-center gap-1.5 bg-white/5 border border-white/10 px-3 py-1 rounded-full">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />

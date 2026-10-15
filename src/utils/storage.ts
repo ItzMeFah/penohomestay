@@ -70,7 +70,7 @@ export const supabase = new Proxy({} as any, {
 export const DEFAULT_HOMEPAGE: CMSHomepage = {
   hero: {
     headline: 'Rehat di Tengah <em>Kebun Kopi</em>',
-    subheadline: 'Homestay keluarga di Banyuwangi — gerbang Kawah Ijen & Bromo',
+    subheadline: 'Homestay keluarga di Banyuwangi — kebun kopi asri & kenyamanan alam',
     badge: '★★★★★ 4.9/5 · 90+ Ulasan Google'
   },
   stats: [
@@ -86,7 +86,7 @@ export const DEFAULT_HOMEPAGE: CMSHomepage = {
       "Kebun Kopi Milik Sendiri",
       "Tur Alam Bersama Peno",
       "Masakan Keluarga Autentik",
-      "Gerbang ke Kawah Ijen & Bromo"
+      "Udara Segar & Alami"
     ],
     highlightItems: [
       {
@@ -109,15 +109,15 @@ export const DEFAULT_HOMEPAGE: CMSHomepage = {
       },
       {
         id: "hl-4",
-        title: "Close to Mount Ijen",
-        description: "The perfect basecamp nestled close to Mount Ijen, making early morning climbs and blue fire viewings effortless.",
+        title: "Panorama Alam Asri",
+        description: "Suasana tenang dan asri dengan udara pegunungan segar yang menenangkan pikiran dan cocok untuk rehat santai.",
         imageUrl: "https://images.unsplash.com/photo-1544735716-392fe2489ffa?auto=format&fit=crop&w=600&h=400&q=80"
       }
     ]
   },
   features: [
     { icon: "coffee", title: "Kopi Homegrown", desc: "Kopi terbaik dipanen dan disangrai langsung dari kebun kami sendiri." },
-    { icon: "map", title: "Dekat Kawah Ijen", desc: "Lokasi strategis sebagai basecamp sebelum atau sesudah mendaki Ijen dan Bromo." },
+    { icon: "map", title: "Lokasi Tenang & Nyaman", desc: "Suasana damai di perkebunan kopi Gombengsari untuk peristirahatan dan liburan keluarga." },
     { icon: "home", title: "Keramahan Keluarga", desc: "Peno dan keluarga menyambut tamu seperti saudara sendiri." },
     { icon: "leaf", title: "Tur Perkebunan", desc: "Tur menyusuri perkebunan kopi, sawah, dan sungai bersama Peno." },
     { icon: "food", title: "Masakan Rumahan", desc: "Sarapan dan makanan segar dimasak langsung oleh keluarga Peno." },
@@ -137,7 +137,7 @@ export const DEFAULT_HOMEPAGE: CMSHomepage = {
   ],
   testimonials: [
     { text: "The most amazing Homestay ever… Peno and his family made us really feel at home. The best homegrown coffee ever!", author: "Tamu Google", rating: 5 },
-    { text: "Perfect place to rest before or after Ijen/Bromo. Very peaceful — one of those places you feel sad leaving so soon!", author: "Tamu Google", rating: 5 },
+    { text: "A peaceful retreat with great family warmth and quiet atmosphere. One of those places you feel sad leaving so soon!", author: "Tamu Google", rating: 5 },
     { text: "Peno guided us through the magnificent coffee plantation and rice fields — a true Indonesian experience!", author: "Tamu Google", rating: 5 }
   ],
   info: {
@@ -145,7 +145,7 @@ export const DEFAULT_HOMEPAGE: CMSHomepage = {
     checkout: "12:00",
     price_from: 140,
     facilities: ["Kamar luas & bersih", "Sarapan tersedia", "Kopi gratis dari kebun", "Parkir gratis", "WiFi"],
-    activities: ["Trekking Kawah Ijen", "Tur kebun kopi", "Bersepeda", "Menikmati sungai", "Fotografi alam"]
+    activities: ["Tur kebun kopi", "Bersepeda santai", "Menikmati sungai", "Trekking alam", "Fotografi alam"]
   },
   villas: [
     {
@@ -223,7 +223,7 @@ export const safeStorage = {
     } catch (e: any) {
       console.warn('localStorage setItem failed, likely due to quota exceeded', e);
       if (e.name === 'QuotaExceededError' || e.name === 'NS_ERROR_DOM_QUOTA_REACHED') {
-        alert("Penyimpanan lokal penuh (melebihi 5MB). Tidak bisa menyimpan foto Base64 lebih banyak. Silakan unggah foto ke Cloud atau gunakan URL.");
+        console.warn("Penyimpanan lokal penuh (melebihi 5MB). Tidak bisa menyimpan foto Base64 lebih banyak. Silakan unggah foto ke Cloud atau gunakan URL.");
       }
     }
   }
@@ -260,6 +260,36 @@ export function getHomepage(): CMSHomepage {
     }
     if (!parsed.villas || parsed.villas.length === 0) {
       parsed.villas = DEFAULT_HOMEPAGE.villas;
+    }
+    // Clean any legacy references to "dekat kawah ijen" or "close to mount ijen"
+    if (parsed.features) {
+      parsed.features = parsed.features.map((f: any) => {
+        if (f.title?.toLowerCase().includes('kawah ijen') || f.title?.toLowerCase().includes('dekat')) {
+          return { icon: "map", title: "Lokasi Tenang & Nyaman", desc: "Suasana damai di perkebunan kopi Gombengsari untuk peristirahatan dan liburan keluarga." };
+        }
+        return f;
+      });
+    }
+    if (parsed.about?.highlights) {
+      parsed.about.highlights = parsed.about.highlights.map((h: string) => 
+        h.toLowerCase().includes('ijen') ? "Udara Segar & Alami" : h
+      );
+    }
+    if (parsed.about?.highlightItems) {
+      parsed.about.highlightItems = parsed.about.highlightItems.map((item: any) => {
+        if (item.title?.toLowerCase().includes('ijen') || item.id === 'hl-4') {
+          return {
+            id: "hl-4",
+            title: "Panorama Alam Asri",
+            description: "Suasana tenang dan asri dengan udara pegunungan segar yang menenangkan pikiran dan cocok untuk rehat santai.",
+            imageUrl: item.imageUrl || "https://images.unsplash.com/photo-1544735716-392fe2489ffa?auto=format&fit=crop&w=600&h=400&q=80"
+          };
+        }
+        return item;
+      });
+    }
+    if (parsed.hero?.subheadline?.toLowerCase().includes('ijen')) {
+      parsed.hero.subheadline = 'Homestay keluarga di Banyuwangi — kebun kopi asri & kenyamanan alam';
     }
     return parsed;
   } catch (e) {

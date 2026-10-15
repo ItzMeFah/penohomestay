@@ -107,7 +107,7 @@ export const HIGHLIGHTS: Highlight[] = [
   {
     id: "lokasi-strategis",
     title: "Lokasi Strategis",
-    description: "Tempat transit ideal di Banyuwangi, sangat pas untuk beristirahat sebelum atau sesudah ekspedisi ke Kawah Ijen & Bromo.",
+    description: "Tempat peristirahatan ideal di Banyuwangi, sangat pas untuk bersantai dan menikmati keasrian alam perkebunan kopi.",
     iconName: "map-pin"
   },
   {
@@ -162,7 +162,7 @@ export const GALLERY_ITEMS: GalleryItem[] = [
   },
   {
     id: "g6",
-    title: "Kawah Ijen",
+    title: "Kawah Pegunungan",
     category: "Destinasi",
     accentColor: "#c0392b",
     illustrationType: "ijen"
