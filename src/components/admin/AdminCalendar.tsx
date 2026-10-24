@@ -83,11 +83,19 @@ export const AdminCalendar: React.FC<AdminCalendarProps> = ({
     const activeBooking = paidBooking || pendingBooking;
     const isBlocked = blockedDates.includes(key) || blockedDates.includes(`${currentCalendarVillaId}:${key}`);
 
-    let statusType: 'available' | 'paid' | 'pending' | 'blocked' = 'available';
+    let statusType: 'available' | 'occupied' | 'paid' | 'pending' | 'blocked' = 'available';
     let label = "";
 
     if (activeBooking) {
-      if (activeBooking.status === 'paid') {
+      const bStart = new Date(activeBooking.check_in);
+      const bEnd = new Date(activeBooking.check_out);
+      bStart.setHours(0,0,0,0);
+      bEnd.setHours(0,0,0,0);
+      const isStayActiveToday = today >= bStart && today < bEnd;
+
+      if (activeBooking.status === 'occupied' || (activeBooking.status === 'paid' && isStayActiveToday)) {
+        statusType = 'occupied';
+      } else if (activeBooking.status === 'paid') {
         statusType = 'paid';
       } else {
         statusType = 'pending';
@@ -121,16 +129,19 @@ export const AdminCalendar: React.FC<AdminCalendarProps> = ({
           }
         }}
         className={`aspect-square w-full p-1.5 flex flex-col items-center justify-center transition-all duration-200 relative group rounded-xl border ${
-          statusType === 'paid'
-            ? 'bg-rose-50/70 border-rose-200 text-rose-900 hover:bg-rose-100/70'
-            : statusType === 'pending'
-              ? 'bg-amber-50/70 border-amber-200 text-amber-950 hover:bg-amber-100/70'
-              : statusType === 'blocked'
-                ? 'bg-gray-100 border-gray-200 text-gray-500 hover:bg-gray-200/50'
-                : 'bg-emerald-50/30 border-emerald-100 text-emerald-900 hover:bg-emerald-50/90'
+          statusType === 'occupied'
+            ? 'bg-indigo-50 border-indigo-300 text-indigo-900 hover:bg-indigo-100 ring-1 ring-indigo-400'
+            : statusType === 'paid'
+              ? 'bg-rose-50/70 border-rose-200 text-rose-900 hover:bg-rose-100/70'
+              : statusType === 'pending'
+                ? 'bg-amber-50/70 border-amber-200 text-amber-950 hover:bg-amber-100/70'
+                : statusType === 'blocked'
+                  ? 'bg-gray-100 border-gray-200 text-gray-500 hover:bg-gray-200/50'
+                  : 'bg-emerald-50/30 border-emerald-100 text-emerald-900 hover:bg-emerald-50/90'
         } cursor-pointer hover:scale-105 active:scale-95 shadow-xs`}
       >
         <span className={`text-xs sm:text-sm font-extrabold ${
+          statusType === 'occupied' ? 'text-indigo-800' :
           statusType === 'paid' ? 'text-rose-700' :
           statusType === 'pending' ? 'text-amber-700' :
           statusType === 'blocked' ? 'text-gray-500' : 'text-emerald-800'
@@ -139,6 +150,7 @@ export const AdminCalendar: React.FC<AdminCalendarProps> = ({
         </span>
         
         <span className={`w-1.5 h-1.5 rounded-full mt-0.5 ${
+          statusType === 'occupied' ? 'bg-indigo-600 shadow-indigo-300 shadow' :
           statusType === 'paid' ? 'bg-rose-500 shadow-rose-200 shadow' :
           statusType === 'pending' ? 'bg-amber-500 shadow-amber-200 shadow' :
           statusType === 'blocked' ? 'bg-gray-400' : 'bg-emerald-500 shadow-emerald-200 shadow'
@@ -147,7 +159,8 @@ export const AdminCalendar: React.FC<AdminCalendarProps> = ({
         {/* Elegant Hover Tooltip */}
         <div className="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 hidden group-hover:flex flex-col items-center pointer-events-none z-50">
           <div className="bg-gray-900/95 text-white text-[9px] font-sans font-medium px-2 py-1 rounded-md shadow-lg whitespace-nowrap leading-tight text-center">
-            {statusType === 'paid' && `Lunas: ${label}`}
+            {statusType === 'occupied' && `OCCUPIED (Sedang Ditempati): ${label}`}
+            {statusType === 'paid' && `BOOKED (Reservasi): ${label}`}
             {statusType === 'pending' && `Menunggu: ${label}`}
             {statusType === 'blocked' && "Ditutup Admin"}
             {statusType === 'available' && "Tersedia (Kosong)"}
@@ -260,15 +273,19 @@ export const AdminCalendar: React.FC<AdminCalendarProps> = ({
         {/* Legend Indicator */}
         <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-xs font-sans text-gray-500 font-medium bg-gray-50/70 p-3 rounded-2xl border border-gray-100">
           <div className="flex items-center space-x-2">
-            <span className="w-3 h-3 rounded-full bg-emerald-500" />
+            <span className="w-3 h-3 rounded-full bg-emerald-500 shadow-sm" />
             <span className="font-semibold text-emerald-800">Tersedia (Kosong)</span>
           </div>
           <div className="flex items-center space-x-2">
-            <span className="w-3 h-3 rounded-full bg-rose-500" />
-            <span className="font-semibold text-rose-800">Terisi (Lunas)</span>
+            <span className="w-3 h-3 rounded-full bg-indigo-600 shadow-sm" />
+            <span className="font-semibold text-indigo-800">Sedang Ditempati (OCCUPIED)</span>
           </div>
           <div className="flex items-center space-x-2">
-            <span className="w-3 h-3 rounded-full bg-amber-500" />
+            <span className="w-3 h-3 rounded-full bg-rose-500 shadow-sm" />
+            <span className="font-semibold text-rose-800">Reservasi Mendatang (BOOKED)</span>
+          </div>
+          <div className="flex items-center space-x-2">
+            <span className="w-3 h-3 rounded-full bg-amber-500 shadow-sm" />
             <span className="font-semibold text-amber-800">Menunggu Pembayaran</span>
           </div>
           <div className="flex items-center space-x-2">

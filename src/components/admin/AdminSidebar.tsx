@@ -51,7 +51,7 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
         {/* Brand Header */}
         <div className="flex items-center justify-between border-b border-cream/10 pb-4">
           <div className="space-y-1">
-            <h1 className="font-serif font-bold text-xl tracking-tight text-cream">Admin Portal</h1>
+            <h1 className="font-serif font-bold text-xl tracking-tight text-cream">Backoffice Portal</h1>
             <p className="font-sans text-[11px] font-bold text-cream/60 tracking-wider uppercase truncate max-w-[220px]">
               {homestayName || "Peno Homestay"}
             </p>

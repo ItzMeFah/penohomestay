@@ -43,7 +43,7 @@ interface NavbarProps {
   activeSection: string;
   showLangTooltip: boolean;
   isScrolled: boolean;
-  onNavigate: (page: 'home' | 'booking' | 'supabase' | 'admin', sectionId?: string) => void;
+  onNavigate: (page: 'home' | 'booking' | 'supabase' | 'admin' | 'backoffice', sectionId?: string) => void;
 }
 
 export function Navbar({

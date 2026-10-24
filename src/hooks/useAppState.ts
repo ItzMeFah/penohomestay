@@ -27,8 +27,16 @@ function parseCurrentRoute(): string {
   const path = window.location.pathname;
   const hash = window.location.hash;
 
+  if (path.startsWith('/backoffice') || hash.startsWith('#/backoffice') || hash === '#backoffice') {
+    return '/backoffice';
+  }
+
+  // Graceful redirect for previous /admin bookmarks
   if (path.startsWith('/admin') || hash.startsWith('#/admin') || hash === '#admin') {
-    return '/admin';
+    if (typeof window !== 'undefined' && window.history) {
+      window.history.replaceState(null, '', '/backoffice');
+    }
+    return '/backoffice';
   }
 
   if (path === '/supabase' || hash.startsWith('#/supabase') || hash === '#/supabase' || hash === '#supabase') {
@@ -185,7 +193,7 @@ export function useAppState() {
 
     const handleRouteUpdate = () => {
       const nextRoute = parseCurrentRoute();
-      const needsLoader = nextRoute === '/home/book' || nextRoute.startsWith('/admin');
+      const needsLoader = nextRoute === '/home/book' || nextRoute.startsWith('/backoffice') || nextRoute.startsWith('/admin');
       
       if (needsLoader) {
         setIsRouteLoading(true);
@@ -330,10 +338,10 @@ export function useAppState() {
     return newBooking;
   };
 
-  const navigateToPage = (page: 'home' | 'booking' | 'supabase' | 'admin', sectionId?: string) => {
+  const navigateToPage = (page: 'home' | 'booking' | 'supabase' | 'admin' | 'backoffice', sectionId?: string) => {
     setMobileMenuOpen(false);
     
-    const targetPath = page === 'home' ? '/home' : page === 'booking' ? '/home/book' : page === 'admin' ? '/admin' : '/supabase';
+    const targetPath = page === 'home' ? '/home' : page === 'booking' ? '/home/book' : (page === 'admin' || page === 'backoffice') ? '/backoffice' : '/supabase';
     
     const changeRoute = () => {
       if (window.location.pathname !== targetPath) {
@@ -363,7 +371,7 @@ export function useAppState() {
       }
     };
 
-    const needsLoader = targetPath === '/home/book' || targetPath.startsWith('/admin');
+    const needsLoader = targetPath === '/home/book' || targetPath.startsWith('/backoffice') || targetPath.startsWith('/admin');
 
     if (route !== targetPath) {
       if (needsLoader) {

@@ -37,7 +37,7 @@ export default function App() {
     navigateToPage
   } = useAppState();
 
-  const isAdminView = route.startsWith('/admin');
+  const isAdminView = route.startsWith('/backoffice') || route.startsWith('/admin');
 
   return (
     <div className="font-sans min-h-screen text-text-dark bg-cream/40">
@@ -65,6 +65,7 @@ export default function App() {
             homepageData={homepageData}
             galleryData={galleryData}
             settings={settings}
+            bookings={bookings}
             onNavigate={navigateToPage}
             currency={currency}
             lang={lang}
@@ -94,7 +95,7 @@ export default function App() {
           </div>
         )}
 
-        {route.startsWith('/admin') && (
+        {(route.startsWith('/backoffice') || route.startsWith('/admin')) && (
           <AdminPanel
             bookings={bookings}
             blockedDates={blockedDates}

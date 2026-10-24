@@ -247,6 +247,7 @@ export const BookingEngine: React.FC<BookingEngineProps> = ({
             {/* Step 1: Select Room / Villa with Slide-Down Calendar */}
             <BookingVillaSelector
               homepageData={homepageData}
+              bookings={bookings}
               lang={lang}
               currency={currency}
               activeVillaId={activeVillaId}

@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import { Booking, CMSHomepage, GalleryItem, AdminNotification, CMSTourPackage, CMSHighlightItem } from '../types';
 import { DEFAULT_GALLERY, convertAndFormatPrice, supabase, getSupabaseCredentials } from '../utils/storage';
+import { isBookingCurrentlyOccupied } from '../utils/bookingStatus';
 
 interface AdminPanelProps {
   bookings: Booking[];
@@ -329,14 +330,14 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
   };
 
   // Booking Actions
-  const handleUpdateBookingStatus = (bookingId: string, newStatus: 'pending' | 'paid' | 'cancelled') => {
+  const handleUpdateBookingStatus = (bookingId: string, newStatus: 'pending' | 'paid' | 'occupied' | 'cancelled') => {
     const updated = bookings.map(b => {
       if (b.id === bookingId) {
         // Send notification sync
         const notif: AdminNotification = {
           id: Date.now(),
           read: false,
-          type: newStatus === 'paid' ? 'booking_confirmed' as const : newStatus === 'cancelled' ? 'booking_cancelled' : 'new_booking',
+          type: (newStatus === 'paid' || newStatus === 'occupied') ? 'booking_confirmed' as const : newStatus === 'cancelled' ? 'booking_cancelled' : 'new_booking',
           booking: { ...b, status: newStatus },
           time: new Date().toISOString()
         };
@@ -347,8 +348,10 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
     });
     onUpdateBookings(updated);
     
-    if (newStatus === 'paid') {
-      showAdminToast(`Pemesanan ${bookingId} telah di-stel ke PAID! Kamar sekarang otomatis terisi di kalender ketersediaan.`, 'success');
+    if (newStatus === 'occupied') {
+      showAdminToast(`Pemesanan ${bookingId} telah di-stel ke OCCUPIED! Kamar sedang ditempati tamu.`, 'success');
+    } else if (newStatus === 'paid') {
+      showAdminToast(`Pemesanan ${bookingId} telah di-stel ke PAID (BOOKED)! Kamar terpesan di kalender.`, 'success');
     } else if (newStatus === 'cancelled') {
       showAdminToast(`Pemesanan ${bookingId} telah dibatalkan (CANCELLED)!`, 'danger');
     } else {
@@ -1378,7 +1381,13 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
 
     // Filter by Status
     if (bookingStatusFilter !== 'all') {
-      result = result.filter(b => b.status === bookingStatusFilter);
+      if (bookingStatusFilter === 'occupied') {
+        result = result.filter(b => b.status === 'occupied' || isBookingCurrentlyOccupied(b));
+      } else if (bookingStatusFilter === 'paid') {
+        result = result.filter(b => b.status === 'paid' && !isBookingCurrentlyOccupied(b));
+      } else {
+        result = result.filter(b => b.status === bookingStatusFilter);
+      }
     }
 
     // Filter by Room Code
@@ -1438,9 +1447,20 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
   // Calculations for Admin Dashboard counters
   const totalBookingsCount = bookings.length;
   const pendingCount = bookings.filter(b => b.status === 'pending').length;
-  const confirmedCount = bookings.filter(b => b.status === 'paid').length;
+  const occupiedCount = bookings.filter(b => isBookingCurrentlyOccupied(b)).length;
+  const todayForCal = new Date();
+  todayForCal.setHours(0,0,0,0);
+  const futureBookedCount = bookings.filter(b => {
+    if (b.status === 'paid' && !isBookingCurrentlyOccupied(b)) {
+      const start = new Date(b.check_in);
+      start.setHours(0,0,0,0);
+      return start > todayForCal;
+    }
+    return false;
+  }).length;
+  const confirmedCount = bookings.filter(b => b.status === 'paid' || b.status === 'occupied').length;
   const totalRevenue = bookings
-    .filter(b => b.status === 'paid')
+    .filter(b => b.status === 'paid' || b.status === 'occupied')
     .reduce((sum, b) => sum + b.total_eur, 0);
 
   // Large Calendar Days Calculation
@@ -1465,7 +1485,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
       const key = `${calYear}-${calMonth + 1}-${d}`;
       
       const paidBooking = bookings.find(b => {
-        if (b.status !== 'paid') return false;
+        if (b.status !== 'paid' && b.status !== 'occupied') return false;
         const bVillaId = b.villa_id || (villasList[0]?.id || "");
         if (bVillaId !== currentCalendarVillaId) return false;
         let start = new Date(b.check_in);
@@ -1494,11 +1514,19 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
 
       const isBlocked = blockedDates.includes(key) || blockedDates.includes(`${currentCalendarVillaId}:${key}`);
 
-      let statusType: 'available' | 'paid' | 'pending' | 'blocked' = 'available';
+      let statusType: 'available' | 'occupied' | 'paid' | 'pending' | 'blocked' = 'available';
       let label = "";
 
       if (activeBooking) {
-        if (activeBooking.status === 'paid') {
+        const bStart = new Date(activeBooking.check_in);
+        const bEnd = new Date(activeBooking.check_out);
+        bStart.setHours(0,0,0,0);
+        bEnd.setHours(0,0,0,0);
+        const isStayActiveToday = today >= bStart && today < bEnd;
+
+        if (activeBooking.status === 'occupied' || (activeBooking.status === 'paid' && isStayActiveToday)) {
+          statusType = 'occupied';
+        } else if (activeBooking.status === 'paid') {
           statusType = 'paid';
         } else {
           statusType = 'pending';
@@ -1531,17 +1559,20 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
             }
           }}
           className={`aspect-square w-full p-1.5 flex flex-col items-center justify-center transition-all duration-200 relative group rounded-xl border ${
-            statusType === 'paid'
-              ? 'bg-rose-50/70 border-rose-200 text-rose-900 hover:bg-rose-100/70'
-              : statusType === 'pending'
-                ? 'bg-amber-50/70 border-amber-200 text-amber-950 hover:bg-amber-100/70'
-                : statusType === 'blocked'
-                  ? 'bg-gray-100 border-gray-200 text-gray-500 hover:bg-gray-200/50'
-                  : 'bg-emerald-50/30 border-emerald-100 text-emerald-900 hover:bg-emerald-50/90'
+            statusType === 'occupied'
+              ? 'bg-indigo-50 border-indigo-300 text-indigo-900 hover:bg-indigo-100 ring-1 ring-indigo-400'
+              : statusType === 'paid'
+                ? 'bg-rose-50/70 border-rose-200 text-rose-900 hover:bg-rose-100/70'
+                : statusType === 'pending'
+                  ? 'bg-amber-50/70 border-amber-200 text-amber-950 hover:bg-amber-100/70'
+                  : statusType === 'blocked'
+                    ? 'bg-gray-100 border-gray-200 text-gray-500 hover:bg-gray-200/50'
+                    : 'bg-emerald-50/30 border-emerald-100 text-emerald-900 hover:bg-emerald-50/90'
           } cursor-pointer hover:scale-105 active:scale-95 shadow-xs`}
         >
           {/* Centered clean date number */}
           <span className={`text-xs sm:text-sm font-extrabold ${
+            statusType === 'occupied' ? 'text-indigo-800' :
             statusType === 'paid' ? 'text-rose-700' :
             statusType === 'pending' ? 'text-amber-700' :
             statusType === 'blocked' ? 'text-gray-500' : 'text-emerald-800'
@@ -1551,6 +1582,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
           
           {/* Small status indicator dot */}
           <span className={`w-1.5 h-1.5 rounded-full mt-0.5 ${
+            statusType === 'occupied' ? 'bg-indigo-600 shadow-indigo-300 shadow' :
             statusType === 'paid' ? 'bg-rose-500 shadow-rose-200 shadow' :
             statusType === 'pending' ? 'bg-amber-500 shadow-amber-200 shadow' :
             statusType === 'blocked' ? 'bg-gray-400' : 'bg-emerald-500 shadow-emerald-200 shadow'
@@ -1559,7 +1591,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
           {/* Elegant Floating Hover Tooltip */}
           <div className="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 hidden group-hover:flex flex-col items-center pointer-events-none z-50">
             <div className="bg-gray-900/95 text-white text-[9px] font-sans font-medium px-2 py-1 rounded-md shadow-lg whitespace-nowrap leading-tight text-center">
-              {statusType === 'paid' && `Lunas: ${label}`}
+              {statusType === 'occupied' && `OCCUPIED (Sedang Ditempati): ${label}`}
+              {statusType === 'paid' && `BOOKED (Reservasi): ${label}`}
               {statusType === 'pending' && `Menunggu: ${label}`}
               {statusType === 'blocked' && "Ditutup Admin"}
               {statusType === 'available' && "Tersedia (Kosong)"}
@@ -1646,7 +1679,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
         >
           <div className="text-center space-y-2">
             <h2 className="font-serif text-3xl font-bold text-green-deep">Peno Homestay</h2>
-            <p className="font-sans text-sm text-text-mid font-light">Admin Portal Login Gate</p>
+            <p className="font-sans text-sm text-text-mid font-light">Backoffice Portal Login Gate</p>
           </div>
 
           <form onSubmit={handleLogin} className="space-y-6">
@@ -1694,7 +1727,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
               className="w-full bg-green-deep hover:bg-green-mid text-cream font-sans font-semibold py-3.5 rounded-xl shadow-lg transition-transform hover:-translate-y-0.5 active:scale-95 cursor-pointer text-center flex items-center justify-center space-x-2"
             >
               <Lock className="w-4 h-4" />
-              <span>Masuk Portal Admin</span>
+              <span>Masuk Portal Backoffice</span>
             </button>
           </form>
 
@@ -1752,8 +1785,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
           {/* Logo / Header with Close Button */}
           <div className="border-b border-green-soft/20 pb-4 flex items-center justify-between">
             <div>
-              <h2 className="font-serif text-2xl font-bold tracking-tight text-cream">Peno Admin</h2>
-              <p className="font-mono text-[10px] text-sand/65 uppercase tracking-widest">Homestay Control Center</p>
+              <h2 className="font-serif text-2xl font-bold tracking-tight text-cream">Peno Backoffice</h2>
+              <p className="font-mono text-[10px] text-sand/65 uppercase tracking-widest">Backoffice Control Center</p>
             </div>
             <button
               onClick={() => setSidebarOpen(false)}

@@ -4,7 +4,7 @@ import {
   Star, MessageSquare, Calendar, Coffee, Compass, Utensils, MapPin, Droplets, Heart, Home, Map 
 } from 'lucide-react';
 import { CMSHomepage } from '../../types';
-import { LanguageType, translations } from '../../utils/lang';
+import { LanguageType, translations, translateFeature } from '../../utils/lang';
 
 interface LandingKeunggulanProps {
   homepageData: CMSHomepage;
@@ -54,29 +54,7 @@ export const LandingKeunggulan: React.FC<LandingKeunggulanProps> = ({ homepageDa
         {/* Features grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {homepageData.features.map((item, idx) => {
-            const getFeatureTitle = () => {
-              if (lang === 'ID') return item.title;
-              const titleLower = item.title.toLowerCase();
-              if (titleLower.includes('kopi')) return "Unlimited Estate Coffee";
-              if (titleLower.includes('tur') || titleLower.includes('alam')) return "Nature & Plantation Guiding";
-              if (titleLower.includes('sarapan') || titleLower.includes('kuliner')) return "Authentic Farm Breakfast";
-              if (titleLower.includes('kambing') || titleLower.includes('etawa') || titleLower.includes('susu')) return "Milking Etawa Goats";
-              if (titleLower.includes('keluarga') || titleLower.includes('ramah')) return "Local Family Warmth";
-              if (titleLower.includes('tenang') || titleLower.includes('damai') || titleLower.includes('udara')) return "Peaceful & Crisp Air";
-              return item.title;
-            };
-
-            const getFeatureDesc = () => {
-              if (lang === 'ID') return item.desc;
-              const titleLower = item.title.toLowerCase();
-              if (titleLower.includes('kopi')) return "Enjoy unlimited, fresh organic robusta & liberika coffee brewed straight from our farm.";
-              if (titleLower.includes('tur') || titleLower.includes('alam')) return "Get direct, experienced local guiding through plantations and scenic village trails.";
-              if (titleLower.includes('sarapan') || titleLower.includes('kuliner')) return "Wake up to delicious, home-cooked traditional Banyuwangi breakfast made with fresh ingredients.";
-              if (titleLower.includes('kambing') || titleLower.includes('etawa') || titleLower.includes('susu')) return "Experience dairy goat farming, feed our local goats, and try milking them yourself.";
-              if (titleLower.includes('keluarga') || titleLower.includes('ramah')) return "Be hosted like family with authentic stories, sincere hospitality, and comfortable village living.";
-              if (titleLower.includes('tenang') || titleLower.includes('damai') || titleLower.includes('udara')) return "Rejuvenate in a quiet coffee farm far from city noise, with clean mountain air.";
-              return item.desc;
-            };
+            const tFeature = translateFeature(item, lang);
 
             return (
               <motion.div
@@ -91,10 +69,10 @@ export const LandingKeunggulan: React.FC<LandingKeunggulanProps> = ({ homepageDa
                   {renderIcon(item.icon, "w-6 h-6")}
                 </div>
                 <h3 className="font-serif text-lg font-bold text-green-deep group-hover:text-green-soft transition-colors duration-300">
-                  {getFeatureTitle()}
+                  {tFeature.title}
                 </h3>
                 <p className="font-sans text-sm text-text-mid font-light leading-relaxed">
-                  {getFeatureDesc()}
+                  {tFeature.desc}
                 </p>
               </motion.div>
             );

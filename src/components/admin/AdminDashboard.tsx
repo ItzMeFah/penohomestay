@@ -1,8 +1,9 @@
 import React from 'react';
 import { motion } from 'motion/react';
-import { LayoutDashboard, CalendarRange, Bell, Check, Info, FileEdit } from 'lucide-react';
+import { LayoutDashboard, CalendarRange, Bell, Check, Info, FileEdit, Users, Clock } from 'lucide-react';
 import { Booking, CMSHomepage } from '../../types';
 import { convertAndFormatPrice } from '../../utils/storage';
+import { isBookingCurrentlyOccupied, getEffectiveBookingStatus } from '../../utils/bookingStatus';
 
 interface AdminDashboardProps {
   bookings: Booking[];
@@ -19,9 +20,24 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
 }) => {
   const totalBookingsCount = bookings.length;
   const pendingCount = bookings.filter(b => b.status === 'pending').length;
-  const confirmedCount = bookings.filter(b => b.status === 'paid').length;
+  
+  // Real-time calculation: Kamar sedang ditempati (OCCUPIED)
+  const occupiedCount = bookings.filter(b => isBookingCurrentlyOccupied(b)).length;
+
+  // Reservasi mendatang (BOOKED)
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const futureBookedCount = bookings.filter(b => {
+    if (b.status === 'paid' && !isBookingCurrentlyOccupied(b)) {
+      const start = new Date(b.check_in);
+      start.setHours(0, 0, 0, 0);
+      return start > today;
+    }
+    return false;
+  }).length;
+
   const totalRevenue = bookings
-    .filter(b => b.status === 'paid')
+    .filter(b => b.status === 'paid' || b.status === 'occupied')
     .reduce((sum, b) => sum + b.total_eur, 0);
 
   // Recent Bookings Log
@@ -35,7 +51,43 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
       {/* Overview Stat Cards Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         
-        {/* Stat 1: Revenue */}
+        {/* Stat 1: Kamar Sedang Ditempati (OCCUPIED) */}
+        <div className="bg-white p-6 rounded-2xl border-2 border-indigo-200/80 shadow-sm flex flex-col justify-between space-y-4 relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-24 h-24 bg-indigo-500/5 rounded-full blur-2xl pointer-events-none" />
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] uppercase font-bold text-indigo-700 tracking-wider font-sans flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-indigo-600 animate-pulse" />
+              <span>Sedang Ditempati (OCCUPIED)</span>
+            </span>
+            <span className="p-1.5 bg-indigo-50 text-indigo-700 rounded-lg">
+              <Users className="w-4 h-4" />
+            </span>
+          </div>
+          <div className="space-y-1">
+            <h3 className="font-serif font-bold text-3xl text-indigo-900">
+              {occupiedCount} <span className="text-xs font-sans font-normal text-indigo-700">Kamar Aktif</span>
+            </h3>
+            <p className="font-sans text-[10px] text-gray-500 font-light">Tamu sedang menginap di homestay hari ini</p>
+          </div>
+        </div>
+
+        {/* Stat 2: Reservasi Mendatang (BOOKED) */}
+        <div className="bg-white p-6 rounded-2xl border border-gray-150/40 shadow-sm flex flex-col justify-between space-y-4">
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] uppercase font-bold text-rose-600 tracking-wider font-sans">Reservasi Terjadwal (BOOKED)</span>
+            <span className="p-1.5 bg-rose-50 text-rose-600 rounded-lg">
+              <CalendarRange className="w-4 h-4" />
+            </span>
+          </div>
+          <div className="space-y-1">
+            <h3 className="font-serif font-bold text-3xl text-rose-800">
+              {futureBookedCount} <span className="text-xs font-sans font-normal text-text-mid">Jadwal</span>
+            </h3>
+            <p className="font-sans text-[10px] text-gray-400 font-light">Kamar terpesan untuk tanggal mendatang</p>
+          </div>
+        </div>
+
+        {/* Stat 3: Total Keuangan Lunas */}
         <div className="bg-white p-6 rounded-2xl border border-gray-150/40 shadow-sm flex flex-col justify-between space-y-4">
           <div className="flex items-center justify-between">
             <span className="text-[10px] uppercase font-bold text-gray-400 tracking-wider font-sans">Total Keuangan Lunas</span>
@@ -47,55 +99,23 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
             <h3 className="font-serif font-bold text-xl text-green-deep truncate">
               {convertAndFormatPrice(totalRevenue, 'IDR')}
             </h3>
-            <p className="font-sans text-[10px] text-gray-400 font-light">Estimasi terhitung lunas (PAID)</p>
-          </div>
-        </div>
-
-        {/* Stat 2: Total Bookings */}
-        <div className="bg-white p-6 rounded-2xl border border-gray-150/40 shadow-sm flex flex-col justify-between space-y-4">
-          <div className="flex items-center justify-between">
-            <span className="text-[10px] uppercase font-bold text-gray-400 tracking-wider font-sans">Total Transaksi</span>
-            <span className="p-1.5 bg-green-soft/10 text-green-deep rounded-lg">
-              <LayoutDashboard className="w-4 h-4" />
-            </span>
-          </div>
-          <div className="space-y-1">
-            <h3 className="font-serif font-bold text-2xl text-green-deep">
-              {totalBookingsCount} <span className="text-xs font-sans font-normal text-text-mid">Pemesanan</span>
-            </h3>
-            <p className="font-sans text-[10px] text-gray-400 font-light">Seluruh status di dalam sistem</p>
-          </div>
-        </div>
-
-        {/* Stat 3: Confirmed */}
-        <div className="bg-white p-6 rounded-2xl border border-gray-150/40 shadow-sm flex flex-col justify-between space-y-4">
-          <div className="flex items-center justify-between">
-            <span className="text-[10px] uppercase font-bold text-gray-400 tracking-wider font-sans">Okupansi Kamar Lunas</span>
-            <span className="p-1.5 bg-emerald-50 text-emerald-600 rounded-lg">
-              <Check className="w-4 h-4" />
-            </span>
-          </div>
-          <div className="space-y-1">
-            <h3 className="font-serif font-bold text-2xl text-green-deep">
-              {confirmedCount} <span className="text-xs font-sans font-normal text-text-mid">Kamar Terisi</span>
-            </h3>
-            <p className="font-sans text-[10px] text-gray-400 font-light">Booking aktif & lunas terverifikasi</p>
+            <p className="font-sans text-[10px] text-gray-400 font-light">Akumulasi pendapatan transaksi lunas</p>
           </div>
         </div>
 
         {/* Stat 4: Pending Bookings */}
         <div className="bg-white p-6 rounded-2xl border border-gray-150/40 shadow-sm flex flex-col justify-between space-y-4">
           <div className="flex items-center justify-between">
-            <span className="text-[10px] uppercase font-bold text-gray-400 tracking-wider font-sans">Menunggu Pembayaran</span>
+            <span className="text-[10px] uppercase font-bold text-amber-700 tracking-wider font-sans">Menunggu Pembayaran</span>
             <span className="p-1.5 bg-amber-50 text-amber-600 rounded-lg">
-              <Info className="w-4 h-4" />
+              <Clock className="w-4 h-4" />
             </span>
           </div>
           <div className="space-y-1">
-            <h3 className="font-serif font-bold text-2xl text-amber-700">
+            <h3 className="font-serif font-bold text-3xl text-amber-700">
               {pendingCount} <span className="text-xs font-sans font-normal text-text-mid">Pending</span>
             </h3>
-            <p className="font-sans text-[10px] text-gray-400 font-light">Menunggu transfer dari pelanggan</p>
+            <p className="font-sans text-[10px] text-gray-400 font-light">Menunggu verifikasi / transfer tamu</p>
           </div>
         </div>
 
@@ -123,31 +143,45 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
               recentBookings.map((b) => {
                 const matchingVilla = (homepageData.villas || []).find((v: any) => v.id === b.villa_id) || homepageData.villas?.[0];
                 const roomName = matchingVilla ? matchingVilla.title : "Kamar Utama";
+                const isOccupied = isBookingCurrentlyOccupied(b);
 
                 return (
                   <div 
                     key={b.id} 
                     onClick={() => setSelectedBookingDetail(b)}
-                    className="flex items-center justify-between p-3.5 border border-gray-50 hover:border-green-soft/20 rounded-xl transition-all cursor-pointer bg-gray-50/20 hover:bg-white"
+                    className={`flex items-center justify-between p-3.5 border rounded-xl transition-all cursor-pointer ${
+                      isOccupied 
+                        ? 'bg-indigo-50/40 border-indigo-200 hover:bg-indigo-50/70' 
+                        : 'border-gray-50 hover:border-green-soft/20 bg-gray-50/20 hover:bg-white'
+                    }`}
                   >
                     <div className="min-w-0 space-y-1">
-                      <p className="font-serif font-bold text-sm text-green-deep truncate">{b.guest_name}</p>
+                      <div className="flex items-center space-x-2">
+                        <p className="font-serif font-bold text-sm text-green-deep truncate">{b.guest_name}</p>
+                        {isOccupied && (
+                          <span className="px-1.5 py-0.5 rounded text-[8px] font-black uppercase tracking-wider bg-indigo-600 text-white animate-pulse">
+                            Sedang Ditempati
+                          </span>
+                        )}
+                      </div>
                       <div className="flex items-center space-x-2 text-[10px] text-gray-400">
-                        <span className="font-mono text-gray-300">ID: {b.id}</span>
+                        <span className="font-mono text-gray-400">ID: {b.id}</span>
                         <span>•</span>
-                        <span className="truncate max-w-[120px]">{roomName}</span>
+                        <span className="truncate max-w-[120px] font-medium text-text-dark">{roomName}</span>
                       </div>
                     </div>
                     <div className="text-right space-y-1">
                       <p className="text-xs font-serif font-extrabold text-green-soft">{convertAndFormatPrice(b.total_eur, 'IDR')}</p>
                       <span className={`inline-block px-2 py-0.5 rounded text-[9px] uppercase font-bold ${
-                        b.status === 'paid' 
-                          ? 'bg-emerald-100 text-emerald-800' 
-                          : b.status === 'cancelled' 
-                            ? 'bg-rose-100 text-rose-800' 
-                            : 'bg-amber-100 text-amber-800'
+                        isOccupied
+                          ? 'bg-indigo-600 text-white'
+                          : b.status === 'paid' 
+                            ? 'bg-emerald-100 text-emerald-800' 
+                            : b.status === 'cancelled' 
+                              ? 'bg-rose-100 text-rose-800' 
+                              : 'bg-amber-100 text-amber-800'
                       }`}>
-                        {b.status === 'paid' ? 'Paid' : b.status === 'cancelled' ? 'Cancelled' : 'Pending'}
+                        {isOccupied ? 'Occupied' : b.status === 'paid' ? 'Booked (Paid)' : b.status === 'cancelled' ? 'Cancelled' : 'Pending'}
                       </span>
                     </div>
                   </div>

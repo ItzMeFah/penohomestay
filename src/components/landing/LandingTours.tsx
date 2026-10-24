@@ -2,7 +2,7 @@ import React from 'react';
 import { motion } from 'motion/react';
 import { MapPin, Phone } from 'lucide-react';
 import { CMSHomepage } from '../../types';
-import { LanguageType } from '../../utils/lang';
+import { LanguageType, translateTour } from '../../utils/lang';
 
 interface LandingToursProps {
   homepageData: CMSHomepage;
@@ -31,7 +31,9 @@ export const LandingTours: React.FC<LandingToursProps> = ({ homepageData, lang }
 
         <div className="relative">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 justify-center items-stretch max-w-5xl mx-auto">
-            {homepageData.tours.filter(t => t.isActive).map((tour, idx) => (
+            {homepageData.tours.filter(t => t.isActive).map((tour, idx) => {
+              const tTour = translateTour(tour, lang);
+              return (
               <motion.div
                 key={tour.id}
                 initial={{ opacity: 0, y: 30 }}
@@ -44,7 +46,7 @@ export const LandingTours: React.FC<LandingToursProps> = ({ homepageData, lang }
                   {tour.imageUrl ? (
                     <img 
                       src={tour.imageUrl} 
-                      alt={tour.name} 
+                      alt={tTour.name} 
                       referrerPolicy="no-referrer"
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out" 
                     />
@@ -69,20 +71,20 @@ export const LandingTours: React.FC<LandingToursProps> = ({ homepageData, lang }
                 <div className="p-6 flex-1 flex flex-col justify-between space-y-4">
                   <div className="space-y-2">
                     <h3 className="font-serif text-base font-bold text-green-deep leading-snug line-clamp-2 group-hover:text-green-soft transition-colors duration-300">
-                      {tour.name}
+                      {tTour.name}
                     </h3>
                     <p className="font-sans text-xs text-text-mid font-light leading-relaxed line-clamp-3">
-                      {tour.description}
+                      {tTour.description}
                     </p>
                   </div>
 
-                  {tour.inclusions && tour.inclusions.length > 0 && (
+                  {tTour.inclusions && tTour.inclusions.length > 0 && (
                     <div className="space-y-1.5">
                       <h4 className="font-mono text-[9px] font-bold text-green-soft uppercase tracking-wider">
                         {lang === 'ID' ? 'Fasilitas:' : 'Inclusions:'}
                       </h4>
                       <div className="flex flex-wrap gap-1">
-                        {tour.inclusions.map((inc, i) => (
+                        {tTour.inclusions.map((inc, i) => (
                           <span 
                             key={i} 
                             className="inline-flex items-center space-x-1 bg-sand/20 border border-sand/40 px-2 py-0.5 rounded-lg text-[10px] text-text-dark font-medium leading-none"
@@ -97,7 +99,7 @@ export const LandingTours: React.FC<LandingToursProps> = ({ homepageData, lang }
 
                   <div className="pt-4 border-t border-sand/20">
                     <a 
-                      href={`https://wa.me/${tour.contactPhone.replace(/\D/g,'')}?text=Halo%20Peno%20Homestay,%20saya%20tertarik%20dengan%20paket%20wisata%20${encodeURIComponent(tour.name)}.`}
+                      href={`https://wa.me/${tour.contactPhone.replace(/\D/g,'')}?text=Halo%20Peno%20Homestay,%20saya%20tertarik%20dengan%20paket%20wisata%20${encodeURIComponent(tTour.name)}.`}
                       target="_blank"
                       rel="noreferrer"
                       className="w-full flex items-center justify-center space-x-2 bg-green-deep hover:bg-green-soft text-cream hover:text-white py-2.5 px-4 rounded-xl transition-all duration-300 font-semibold text-xs shadow-md hover:shadow-lg active:scale-[0.98] cursor-pointer"
@@ -108,7 +110,7 @@ export const LandingTours: React.FC<LandingToursProps> = ({ homepageData, lang }
                   </div>
                 </div>
               </motion.div>
-            ))}
+            )})}
           </div>
         </div>
       </div>

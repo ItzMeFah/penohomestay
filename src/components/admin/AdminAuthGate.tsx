@@ -36,7 +36,7 @@ export const AdminAuthGate: React.FC<AdminAuthGateProps> = ({
       >
         <div className="text-center space-y-2">
           <h2 className="font-serif text-3xl font-bold text-green-deep">Peno Homestay</h2>
-          <p className="font-sans text-sm text-text-mid font-light">Admin Portal Login Gate</p>
+          <p className="font-sans text-sm text-text-mid font-light">Backoffice Portal Login Gate</p>
         </div>
 
         <form onSubmit={handleLogin} className="space-y-6">
@@ -88,7 +88,7 @@ export const AdminAuthGate: React.FC<AdminAuthGateProps> = ({
             className="w-full bg-green-deep hover:bg-green-mid text-cream font-sans font-semibold py-3.5 rounded-xl shadow-lg transition-transform hover:-translate-y-0.5 active:scale-95 cursor-pointer text-center flex items-center justify-center space-x-2"
           >
             <Lock className="w-4 h-4" />
-            <span>Masuk Portal Admin</span>
+            <span>Masuk Portal Backoffice</span>
           </button>
         </form>
 

@@ -1,13 +1,15 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Home, Calendar, ChevronDown, ChevronUp, Check, Users, Coffee, ArrowDown } from 'lucide-react';
-import { CMSHomepage } from '../../types';
-import { LanguageType } from '../../utils/lang';
+import { Booking, CMSHomepage } from '../../types';
+import { LanguageType, translateVilla } from '../../utils/lang';
 import { CurrencyType, convertAndFormatPrice } from '../../utils/storage';
 import { BookingCalendar } from './BookingCalendar';
+import { getRoomCurrentOccupancy } from '../../utils/bookingStatus';
 
 interface BookingVillaSelectorProps {
   homepageData: CMSHomepage;
+  bookings?: Booking[];
   lang: LanguageType;
   currency: CurrencyType;
   activeVillaId: string;
@@ -28,6 +30,7 @@ interface BookingVillaSelectorProps {
 
 export const BookingVillaSelector: React.FC<BookingVillaSelectorProps> = ({
   homepageData,
+  bookings = [],
   lang,
   currency,
   activeVillaId,
@@ -80,6 +83,8 @@ export const BookingVillaSelector: React.FC<BookingVillaSelectorProps> = ({
         {villas.map((villa, idx) => {
           const isSelected = activeVillaId === villa.id;
           const isExpanded = expandedVillaId === villa.id;
+          const tVilla = translateVilla(villa, lang);
+          const roomOccupancy = getRoomCurrentOccupancy(villa.id, bookings);
 
           return (
             <div
@@ -100,7 +105,7 @@ export const BookingVillaSelector: React.FC<BookingVillaSelectorProps> = ({
                   {villa.imageUrl ? (
                     <img
                       src={villa.imageUrl}
-                      alt={villa.title}
+                      alt={tVilla.title}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                       referrerPolicy="no-referrer"
                     />
@@ -113,18 +118,30 @@ export const BookingVillaSelector: React.FC<BookingVillaSelectorProps> = ({
 
                   {/* Badges on image */}
                   <div className="absolute top-3 left-3 bg-green-deep/90 backdrop-blur-xs text-cream text-[10px] font-bold px-2.5 py-1 rounded-lg shadow-sm">
-                    Tipe #{idx + 1}
+                    {tVilla.typeLabel}
+                  </div>
+
+                  {/* Dynamic Occupancy Status Badge */}
+                  <div className={`absolute top-3 right-3 text-[9px] font-bold px-2 py-0.5 rounded-lg shadow-sm flex items-center gap-1 backdrop-blur-xs ${
+                    roomOccupancy.isOccupied
+                      ? 'bg-indigo-600 text-white border border-indigo-500 ring-2 ring-indigo-300'
+                      : roomOccupancy.isBookedFuture
+                        ? 'bg-rose-500 text-white border border-rose-600'
+                        : 'bg-emerald-600 text-white border border-emerald-700'
+                  }`}>
+                    <span className={`w-1.5 h-1.5 rounded-full ${roomOccupancy.isOccupied ? 'bg-white animate-pulse' : 'bg-white'}`} />
+                    <span>{lang === 'ID' ? roomOccupancy.displayBadge.textId : roomOccupancy.displayBadge.textEn}</span>
                   </div>
 
                   <div className="absolute bottom-3 left-3 flex gap-1.5 flex-wrap">
                     <span className="bg-white/95 text-[10px] font-bold text-text-dark px-2 py-0.5 rounded-lg shadow-xs flex items-center gap-1">
                       <Users className="w-3 h-3 text-green-soft" />
-                      {villa.capacity} Pax
+                      {tVilla.capacityLabel}
                     </span>
                     {villa.includeBreakfast && (
                       <span className="bg-[#3a2818]/90 text-cream text-[10px] font-semibold px-2 py-0.5 rounded-lg shadow-xs flex items-center gap-1 border border-sand/20">
                         <Coffee className="w-3 h-3 text-sand" />
-                        <span>Sarapan</span>
+                        <span>{lang === 'ID' ? 'Sarapan' : 'Breakfast'}</span>
                       </span>
                     )}
                   </div>
@@ -135,25 +152,25 @@ export const BookingVillaSelector: React.FC<BookingVillaSelectorProps> = ({
                   <div className="space-y-1.5">
                     <div className="flex items-center justify-between">
                       <h5 className="font-serif font-bold text-base md:text-lg text-green-deep group-hover:text-green-soft transition-colors">
-                        {villa.title}
+                        {tVilla.title}
                       </h5>
                       {isSelected && (
                         <span className="bg-green-deep text-cream text-[10px] font-bold px-3 py-1 rounded-full shadow-xs flex items-center gap-1">
                           <Check className="w-3 h-3" />
-                          <span>Dipilih</span>
+                          <span>{lang === 'ID' ? 'Dipilih' : 'Selected'}</span>
                         </span>
                       )}
                     </div>
 
                     <p className="font-sans text-xs text-text-mid font-light leading-relaxed line-clamp-3">
-                      {villa.description || "Villa nyaman bernuansa alam kebun kopi Gombengsari."}
+                      {tVilla.description || "Villa nyaman bernuansa alam kebun kopi Gombengsari."}
                     </p>
                   </div>
 
                   {/* Price & Slide-down Trigger */}
                   <div className="pt-3 border-t border-gray-100 flex flex-wrap items-center justify-between gap-3">
                     <div className="flex flex-col">
-                      <span className="font-sans text-[10px] text-gray-400 font-light">Harga Per Malam</span>
+                      <span className="font-sans text-[10px] text-gray-400 font-light">{lang === 'ID' ? 'Harga Per Malam' : 'Rate Per Night'}</span>
                       <span className="font-serif font-bold text-base text-green-soft">
                         {convertAndFormatPrice(villa.pricePerPax, currency)}
                       </span>
@@ -199,7 +216,7 @@ export const BookingVillaSelector: React.FC<BookingVillaSelectorProps> = ({
                       <div className="w-12 h-1.5 bg-gray-300/80 rounded-full animate-pulse" />
                       <div className="flex items-center gap-1.5 text-xs font-mono font-bold text-green-deep">
                         <ArrowDown className="w-3.5 h-3.5 text-green-soft animate-bounce" />
-                        <span>{lang === 'ID' ? `Kalender Ketersediaan: ${villa.title}` : `Availability Calendar: ${villa.title}`}</span>
+                        <span>{lang === 'ID' ? `Kalender Ketersediaan: ${tVilla.title}` : `Availability Calendar: ${tVilla.title}`}</span>
                       </div>
                     </div>
 
@@ -223,11 +240,13 @@ export const BookingVillaSelector: React.FC<BookingVillaSelectorProps> = ({
                     {selectStart && selectEnd && (
                       <div className="bg-green-deep text-cream p-4 rounded-2xl flex flex-col md:flex-row items-center justify-between gap-3 shadow-md animate-fade-in">
                         <div className="text-center md:text-left space-y-0.5">
-                          <p className="text-[10px] uppercase font-mono text-sand font-bold">Tanggal Menginap Terpilih</p>
+                          <p className="text-[10px] uppercase font-mono text-sand font-bold">
+                            {lang === 'ID' ? 'Tanggal Menginap Terpilih' : 'Selected Stay Dates'}
+                          </p>
                           <p className="text-xs font-serif font-bold">
-                            {selectStart.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}
+                            {selectStart.toLocaleDateString(lang === 'ID' ? 'id-ID' : 'en-US', { day: 'numeric', month: 'short', year: 'numeric' })}
                             {' — '}
-                            {selectEnd.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}
+                            {selectEnd.toLocaleDateString(lang === 'ID' ? 'id-ID' : 'en-US', { day: 'numeric', month: 'short', year: 'numeric' })}
                           </p>
                         </div>
                         <button
@@ -235,7 +254,7 @@ export const BookingVillaSelector: React.FC<BookingVillaSelectorProps> = ({
                           onClick={onScrollToForm}
                           className="px-5 py-2.5 bg-amber-500 hover:bg-amber-600 text-cream font-bold text-xs rounded-xl shadow cursor-pointer transition-all active:scale-95 flex items-center gap-2"
                         >
-                          <span>Lanjutkan Mengisi Data Tamu</span>
+                          <span>{lang === 'ID' ? 'Lanjutkan Mengisi Data Tamu' : 'Proceed to Guest Details'}</span>
                           <ArrowDown className="w-3.5 h-3.5" />
                         </button>
                       </div>

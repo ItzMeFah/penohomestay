@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { CMSHomepage, GalleryItem } from '../types';
+import { Booking, CMSHomepage, GalleryItem } from '../types';
 import { CurrencyType } from '../utils/storage';
 import { LanguageType, translations } from '../utils/lang';
 
@@ -16,7 +16,8 @@ interface LandingPageProps {
   homepageData: CMSHomepage;
   galleryData: GalleryItem[];
   settings: any;
-  onNavigate: (page: 'home' | 'booking' | 'supabase' | 'admin', sectionId?: string) => void;
+  bookings?: Booking[];
+  onNavigate: (page: 'home' | 'booking' | 'supabase' | 'admin' | 'backoffice', sectionId?: string) => void;
   currency: CurrencyType;
   lang: LanguageType;
   setSelectedVillaId?: (id: string) => void;
@@ -26,6 +27,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
   homepageData,
   galleryData,
   settings,
+  bookings = [],
   onNavigate,
   currency,
   lang,
@@ -81,6 +83,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
       {/* 4. EXCLUSIVE ACCOMMODATION (VILLAS & ROOMS) */}
       <LandingAkomodasi
         homepageData={homepageData}
+        bookings={bookings}
         currency={currency}
         lang={lang}
         setSelectedVillaId={setSelectedVillaId}

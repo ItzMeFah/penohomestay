@@ -77,13 +77,13 @@ export const BookingSummaryCard: React.FC<BookingSummaryCardProps> = ({
             {selectStart ? (
               <div className="space-y-3 font-sans text-sm bg-gray-50/50 p-4 rounded-2xl border border-gray-100">
                 <div className="flex justify-between py-1.5 border-b border-gray-100">
-                  <span className="text-text-mid font-medium">Tanggal Check-In</span>
+                  <span className="text-text-mid font-medium">{lang === 'ID' ? 'Tanggal Check-In' : 'Check-In Date'}</span>
                   <span className="font-semibold text-green-deep">
                     {selectStart.toLocaleDateString(lang === 'ID' ? 'id-ID' : 'en-US', { day: 'numeric', month: 'long', year: 'numeric' })}
                   </span>
                 </div>
                 <div className="flex justify-between py-1.5 border-b border-gray-100">
-                  <span className="text-text-mid font-medium">Tanggal Check-Out</span>
+                  <span className="text-text-mid font-medium">{lang === 'ID' ? 'Tanggal Check-Out' : 'Check-Out Date'}</span>
                   <span className="font-semibold text-green-deep">
                     {selectEnd ? selectEnd.toLocaleDateString(lang === 'ID' ? 'id-ID' : 'en-US', { day: 'numeric', month: 'long', year: 'numeric' }) : (lang === 'ID' ? "Silakan pilih tanggal check-out pada kalender..." : "Choose check-out date from calendar...")}
                   </span>

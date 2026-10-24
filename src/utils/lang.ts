@@ -226,3 +226,210 @@ export const translations = {
     bookSuccessHomeBtn: "Return to Homepage",
   }
 };
+
+/**
+ * Translates Villa title, description, and capacity badge
+ */
+export function translateVilla(
+  villa: { id?: string; title: string; description: string; capacity?: number },
+  lang: LanguageType
+) {
+  if (lang === 'ID') {
+    return {
+      title: villa.title,
+      description: villa.description,
+      capacityLabel: `Maks ${villa.capacity || 2} Pax`,
+      typeLabel: `Tipe #${villa.id?.replace(/\D/g, '') || '1'}`
+    };
+  }
+
+  const tLower = (villa.title || '').toLowerCase();
+  const dLower = (villa.description || '').toLowerCase();
+
+  let title = villa.title;
+  let description = villa.description;
+
+  // Title translation
+  if (tLower.includes('villa 1') || tLower.includes('robusta')) {
+    title = tLower.includes('villa 1') ? 'Villa 1 — Robusta Coffee Garden' : 'Robusta Coffee Garden Villa';
+  } else if (tLower.includes('villa 2') || tLower.includes('liberika') || tLower.includes('family')) {
+    title = tLower.includes('villa 2') ? 'Villa 2 — Liberica Family Suite' : 'Liberica Family Suite';
+  } else if (tLower.includes('villa 3') || tLower.includes('arabica')) {
+    title = tLower.includes('villa 3') ? 'Villa 3 — Arabica Deluxe Garden' : 'Arabica Deluxe Garden View';
+  }
+
+  // Description translation
+  if (dLower.includes('kayu') || dLower.includes('semi-terbuka') || dLower.includes('robusta')) {
+    description = 'Semi-open premium wooden villa with direct scenic views of lush Robusta coffee groves. Features a king-size bed, private relaxing terrace, semi-outdoor bathroom with hot shower, and serene Gombengsari village tranquility.';
+  } else if (dLower.includes('keluarga') || dLower.includes('ruang tengah') || dLower.includes('liberika') || dLower.includes('bambu')) {
+    description = 'Spacious family villa featuring an expansive living area and elegant ethnic bamboo interior. Large sliding glass doors provide breathtaking greenery views of coffee and durian orchards. Ideal for a cozy family stay.';
+  } else if (dLower.includes('arabica') || dLower.includes('roaster') || dLower.includes('lanskap')) {
+    description = 'Private retreat villa with mountain views overlooking Arabica coffee plantation. Equipped with king bed, private terrace, mini coffee roasting station, and fresh home-cooked breakfast.';
+  } else {
+    description = description
+      .replace(/Villa bernuansa privat dengan pemandangan lanskap kebun kopi Arabica khas pegunungan\./gi, 'Private villa with mountain views overlooking Arabica coffee plantation.')
+      .replace(/Dilengkapi king bed, teras santai privat, meja roaster kopi mini, serta sarapan nikmat masakan rumahan\./gi, 'Equipped with king bed, private terrace, mini coffee roasting table, and delicious home-cooked breakfast.')
+      .replace(/Villa kayu premium semi-terbuka dengan pemandangan langsung ke barisan pohon kopi Robusta yang asri\./gi, 'Semi-open premium wooden villa with direct views of lush Robusta coffee trees.')
+      .replace(/Dilengkapi dengan ranjang king-size, teras santai pribadi, kamar mandi semi-outdoor dengan air hangat, dan ketenangan alam pedesaan Gombengsari\./gi, 'Equipped with king-size bed, private relaxing terrace, semi-outdoor bathroom with hot shower, and serene Gombengsari village tranquility.')
+      .replace(/Villa keluarga berkapasitas besar dengan ruang tengah yang lapang dan desain interior bernuansa etnik bambu yang elegan\./gi, 'Spacious family villa with an expansive living room and elegant ethnic bamboo interior.')
+      .replace(/Pintu kaca geser memberikan akses pemandangan hijau kebun kopi dan kebun durian\./gi, 'Sliding glass doors provide access to green views of coffee and durian orchards.')
+      .replace(/Sangat cocok untuk trip keluarga hangat Anda\./gi, 'Perfect for your warm family getaway.');
+  }
+
+  return {
+    title,
+    description,
+    capacityLabel: `Max ${villa.capacity || 2} Guests`,
+    typeLabel: `Type #${villa.id?.replace(/\D/g, '') || '1'}`
+  };
+}
+
+/**
+ * Translates Highlight cards in About section
+ */
+export function translateHighlight(
+  item: { id?: string; title: string; description?: string },
+  lang: LanguageType
+) {
+  if (lang === 'ID') {
+    return {
+      title: item.title,
+      description: item.description || ''
+    };
+  }
+
+  const tLower = (item.title || '').toLowerCase();
+  const id = item.id || '';
+
+  if (id === 'hl-1' || tLower.includes('coffee') || tLower.includes('kopi')) {
+    return {
+      title: 'Lush Coffee Plantation',
+      description: 'Take a guided stroll around the coffee plantation, learn how coffee is harvested, roasted, and served fresh.'
+    };
+  }
+  if (id === 'hl-2' || tLower.includes('tur alam') || tLower.includes('guide')) {
+    return {
+      title: 'Nature Guided Tour with Peno',
+      description: 'Explore Gombengsari natural beauty, rice paddies, and clear rivers with Pak Peno as your private guide.'
+    };
+  }
+  if (id === 'hl-3' || tLower.includes('host') || tLower.includes('keluarga') || tLower.includes('warm')) {
+    return {
+      title: 'Warm Host Family',
+      description: 'Experience genuine Javanese hospitality. Peno and his warm family welcome you like a part of their own.'
+    };
+  }
+  if (id === 'hl-4' || tLower.includes('panorama') || tLower.includes('alam') || tLower.includes('mountain')) {
+    return {
+      title: 'Scenic Mountain & Nature',
+      description: 'Enjoy crisp fresh air and calming mountain nature scenery perfect for an authentic relaxing retreat.'
+    };
+  }
+
+  return {
+    title: item.title,
+    description: item.description || ''
+  };
+}
+
+/**
+ * Translates Features in Keunggulan section
+ */
+export function translateFeature(
+  feature: { icon: string; title: string; desc: string },
+  lang: LanguageType
+) {
+  if (lang === 'ID') {
+    return {
+      title: feature.title,
+      desc: feature.desc
+    };
+  }
+
+  const tLower = (feature.title || '').toLowerCase();
+
+  if (tLower.includes('kopi')) {
+    return {
+      title: 'Homegrown Estate Coffee',
+      desc: 'Enjoy unlimited, fresh organic robusta & liberica coffee brewed straight from our farm.'
+    };
+  }
+  if (tLower.includes('lokasi') || tLower.includes('strategis') || tLower.includes('tenang')) {
+    return {
+      title: 'Tranquil & Strategic Base',
+      desc: 'A peaceful countryside basecamp in Banyuwangi, ideal for relaxing and recharging amidst nature.'
+    };
+  }
+  if (tLower.includes('keluarga') || tLower.includes('ramah')) {
+    return {
+      title: 'Local Family Warmth',
+      desc: 'Be hosted like family with authentic stories, sincere hospitality, and comfortable village living.'
+    };
+  }
+  if (tLower.includes('tur') || tLower.includes('alam')) {
+    return {
+      title: 'Coffee Plantation Tour',
+      desc: 'Guided strolls through coffee groves, rice fields, and pristine rivers with Pak Peno.'
+    };
+  }
+  if (tLower.includes('masakan') || tLower.includes('makanan') || tLower.includes('sarapan') || tLower.includes('kuliner')) {
+    return {
+      title: 'Authentic Homemade Dining',
+      desc: 'Wake up to delicious, home-cooked traditional Banyuwangi breakfast made with fresh local ingredients.'
+    };
+  }
+  if (tLower.includes('sungai') || tLower.includes('alam')) {
+    return {
+      title: 'Pristine Nature & River',
+      desc: 'Crystal-clear mountain streams and mesmerizing natural landscapes surrounding the homestay.'
+    };
+  }
+
+  return {
+    title: feature.title,
+    desc: feature.desc
+  };
+}
+
+/**
+ * Translates Tour Packages
+ */
+export function translateTour(
+  tour: { name: string; description: string; inclusions?: string[] },
+  lang: LanguageType
+) {
+  if (lang === 'ID') {
+    return {
+      name: tour.name,
+      description: tour.description,
+      inclusions: tour.inclusions || []
+    };
+  }
+
+  const nLower = (tour.name || '').toLowerCase();
+  let name = tour.name;
+  let description = tour.description;
+
+  if (nLower.includes('plantation') || nLower.includes('gombengsari') || nLower.includes('kopi')) {
+    name = 'Gombengsari Coffee Plantation Tour';
+    description = 'We will take you on a tour around the coffee plantation, explore community life in rice fields, and experience village culture.';
+  }
+
+  const translatedInclusions = (tour.inclusions || []).map((inc) => {
+    const iLower = inc.toLowerCase();
+    if (iLower.includes('welcome')) return 'Welcome drink';
+    if (iLower.includes('snack')) return 'Local snack';
+    if (iLower.includes('paket') || iLower.includes('tour')) return 'Tour package';
+    if (iLower.includes('guide') || iLower.includes('pemandu')) return 'Local Guide';
+    if (iLower.includes('dokumen') || iLower.includes('foto')) return 'Documentation';
+    if (iLower.includes('selesai') || iLower.includes('finish')) return 'Finish';
+    return inc;
+  });
+
+  return {
+    name,
+    description,
+    inclusions: translatedInclusions
+  };
+}
+

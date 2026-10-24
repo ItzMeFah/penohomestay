@@ -137,20 +137,28 @@ export const BookingCalendar: React.FC<BookingCalendarProps> = ({
       const date = new Date(year, month, d);
       const key = `${year}-${month + 1}-${d}`;
       const isPast = isPastDate(date);
-      
       const isUnavailable = isPast || unavailableDates.has(key);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const isToday = date.getTime() === today.getTime();
 
       let cellClass = "bg-[#dcfce7] text-green-900 font-semibold border border-green-250 hover:bg-emerald-100 cursor-pointer";
       let tooltip = "";
 
       if (isPast) {
         cellClass = "bg-gray-100 text-gray-300 cursor-not-allowed opacity-40";
-        tooltip = "Sudah lewat";
+        tooltip = lang === 'ID' ? "Sudah lewat" : "Past date";
       } else if (isUnavailable) {
-        cellClass = "bg-rose-500 text-white font-bold cursor-not-allowed relative border border-rose-600 rounded-md shadow-xs";
-        tooltip = "BOOKED";
+        if (isToday) {
+          cellClass = "bg-indigo-600 text-white font-bold cursor-not-allowed relative border border-indigo-700 rounded-md shadow-xs ring-2 ring-indigo-300";
+          tooltip = lang === 'ID' ? "OCCUPIED (Sedang Ditempati)" : "OCCUPIED (In Stay)";
+        } else {
+          cellClass = "bg-rose-500 text-white font-bold cursor-not-allowed relative border border-rose-600 rounded-md shadow-xs";
+          tooltip = lang === 'ID' ? "BOOKED (Reservasi Mendatang)" : "BOOKED (Upcoming)";
+        }
       } else {
         cellClass = "cursor-pointer hover:bg-emerald-600 hover:text-white bg-emerald-500 text-white font-bold border border-emerald-600 rounded-md shadow-xs active:scale-95 transition-all";
+        tooltip = lang === 'ID' ? "TERSEDIA (Available)" : "AVAILABLE";
       }
 
       const isSelectedStart = selectStart && date.getTime() === selectStart.getTime();
@@ -259,6 +267,10 @@ export const BookingCalendar: React.FC<BookingCalendarProps> = ({
           <div className="flex items-center space-x-2">
             <div className="w-5 h-4 bg-emerald-500 border border-emerald-600 rounded" />
             <span className="font-bold text-emerald-600">{lang === 'ID' ? 'TERSEDIA (HIJAU)' : 'AVAILABLE (GREEN)'}</span>
+          </div>
+          <div className="flex items-center space-x-2">
+            <div className="w-5 h-4 bg-indigo-600 border border-indigo-700 rounded shadow-xs" />
+            <span className="font-bold text-indigo-700">{lang === 'ID' ? 'OCCUPIED (SEDANG DITEMPATI)' : 'OCCUPIED (IN STAY)'}</span>
           </div>
           <div className="flex items-center space-x-2">
             <div className="w-5 h-4 bg-rose-500 border border-rose-600 rounded" />

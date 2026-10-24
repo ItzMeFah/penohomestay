@@ -2,20 +2,23 @@ import React from 'react';
 import { motion } from 'motion/react';
 import { ArrowRight, Home, Users, Coffee } from 'lucide-react';
 import { CoffeeBean } from '../CoffeeDecoration';
-import { CMSHomepage } from '../../types';
+import { Booking, CMSHomepage } from '../../types';
 import { CurrencyType, convertAndFormatPrice } from '../../utils/storage';
-import { LanguageType } from '../../utils/lang';
+import { LanguageType, translateVilla } from '../../utils/lang';
+import { getRoomCurrentOccupancy } from '../../utils/bookingStatus';
 
 interface LandingAkomodasiProps {
   homepageData: CMSHomepage;
+  bookings?: Booking[];
   currency: CurrencyType;
   lang: LanguageType;
   setSelectedVillaId?: (id: string) => void;
-  onNavigate: (page: 'home' | 'booking' | 'supabase' | 'admin', sectionId?: string) => void;
+  onNavigate: (page: 'home' | 'booking' | 'supabase' | 'admin' | 'backoffice', sectionId?: string) => void;
 }
 
 export const LandingAkomodasi: React.FC<LandingAkomodasiProps> = ({
   homepageData,
+  bookings = [],
   currency,
   lang,
   setSelectedVillaId,
@@ -46,7 +49,11 @@ export const LandingAkomodasi: React.FC<LandingAkomodasiProps> = ({
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 justify-center items-stretch">
-          {villas.map((villa, idx) => (
+          {villas.map((villa, idx) => {
+            const tVilla = translateVilla(villa, lang);
+            const occupancy = getRoomCurrentOccupancy(villa.id, bookings);
+
+            return (
             <motion.div
               key={villa.id}
               initial={{ opacity: 0, y: 30 }}
@@ -59,7 +66,7 @@ export const LandingAkomodasi: React.FC<LandingAkomodasiProps> = ({
                 {villa.imageUrl ? (
                   <img 
                     src={villa.imageUrl} 
-                    alt={villa.title} 
+                    alt={tVilla.title} 
                     referrerPolicy="no-referrer"
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out" 
                   />
@@ -69,15 +76,24 @@ export const LandingAkomodasi: React.FC<LandingAkomodasiProps> = ({
                   </div>
                 )}
                 
-                <div className="absolute top-4 right-4 bg-white/95 backdrop-blur-sm px-3 py-1 rounded-full text-[10px] font-bold text-green-deep flex items-center gap-1.5 shadow-sm">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                  <span>{lang === 'ID' ? 'Tersedia' : 'Available'}</span>
+                {/* Dynamic Room Occupancy Badge */}
+                <div className={`absolute top-4 right-4 px-3 py-1 rounded-full text-[10px] font-bold flex items-center gap-1.5 shadow-sm backdrop-blur-sm ${
+                  occupancy.isOccupied
+                    ? 'bg-indigo-600 text-white border border-indigo-500 ring-2 ring-indigo-300'
+                    : occupancy.isBookedFuture
+                      ? 'bg-rose-500 text-white border border-rose-600'
+                      : 'bg-white/95 text-green-deep border border-emerald-150'
+                }`}>
+                  <span className={`w-1.5 h-1.5 rounded-full ${
+                    occupancy.isOccupied ? 'bg-white animate-pulse' : occupancy.isBookedFuture ? 'bg-white' : 'bg-emerald-500'
+                  }`} />
+                  <span>{lang === 'ID' ? occupancy.displayBadge.textId : occupancy.displayBadge.textEn}</span>
                 </div>
 
                 <div className="absolute bottom-3.5 left-3.5 flex items-center gap-2 flex-wrap">
                   <span className="inline-flex items-center gap-1.5 bg-green-deep/90 backdrop-blur-md text-cream text-[11px] font-sans font-medium px-3 py-1 rounded-full border border-white/15 shadow-sm">
                     <Users className="w-3.5 h-3.5 text-sand" />
-                    <span>Maks {villa.capacity} Pax</span>
+                    <span>{tVilla.capacityLabel}</span>
                   </span>
                   {villa.includeBreakfast && (
                     <span className="inline-flex items-center gap-1.5 bg-[#3a2818]/90 backdrop-blur-md text-cream text-[11px] font-sans font-medium px-3 py-1 rounded-full border border-sand/30 shadow-sm">
@@ -91,10 +107,10 @@ export const LandingAkomodasi: React.FC<LandingAkomodasiProps> = ({
               <div className="p-6 flex-1 flex flex-col justify-between space-y-4">
                 <div className="space-y-2">
                   <h3 className="font-serif text-lg font-bold text-green-deep leading-snug line-clamp-2 group-hover:text-green-soft transition-colors duration-300">
-                    {villa.title}
+                    {tVilla.title}
                   </h3>
                   <p className="font-sans text-xs text-text-mid font-light leading-relaxed line-clamp-3">
-                    {villa.description}
+                    {tVilla.description}
                   </p>
                 </div>
 
@@ -121,7 +137,8 @@ export const LandingAkomodasi: React.FC<LandingAkomodasiProps> = ({
                 </div>
               </div>
             </motion.div>
-          ))}
+            );
+          })}
         </div>
       </div>
     </section>

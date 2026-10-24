@@ -757,7 +757,63 @@ create policy "Anyone can update avatars"
 -- Delete Access: Anyone can delete files in 'avatars'
 create policy "Anyone can delete avatars"
   on storage.objects for delete
-  using (bucket_id = 'avatars');`
+  using (bucket_id = 'avatars');`,
+  occupancyMigration: `-- ==========================================
+-- 🏨 SKRIP MIGRASI STATUS OCCUPIED vs BOOKED
+-- Kamar sedang ditempati hari ini -> status 'occupied' (OCCUPIED)
+-- ==========================================
+
+-- 1. Perbarui constraint status pada tabel peno_bookings
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM information_schema.table_constraints 
+    WHERE constraint_name = 'peno_bookings_status_check' 
+      AND table_name = 'peno_bookings'
+  ) THEN
+    ALTER TABLE peno_bookings DROP CONSTRAINT peno_bookings_status_check;
+  END IF;
+
+  ALTER TABLE peno_bookings 
+    ADD CONSTRAINT peno_bookings_status_check 
+    CHECK (status IN ('pending', 'paid', 'occupied', 'cancelled'));
+END $$;
+
+-- 2. Kolom ROOM & villa_id
+ALTER TABLE peno_bookings ADD COLUMN IF NOT EXISTS "ROOM" text;
+ALTER TABLE peno_bookings ADD COLUMN IF NOT EXISTS villa_id text;
+
+-- 3. Update otomatis booking yang saat ini aktif menginap menjadi 'occupied'
+UPDATE peno_bookings
+SET status = 'occupied'
+WHERE status = 'paid'
+  AND CURRENT_DATE >= check_in::date
+  AND CURRENT_DATE < check_out::date;
+
+-- 4. View Realtime Okupansi Kamar
+CREATE OR REPLACE VIEW v_peno_room_occupancy AS
+SELECT 
+  id AS booking_id,
+  guest_name,
+  guest_wa,
+  check_in,
+  check_out,
+  nights,
+  villa_id,
+  "ROOM" AS room_code,
+  status AS raw_status,
+  CASE
+    WHEN status = 'cancelled' THEN 'CANCELLED'
+    WHEN status = 'pending' THEN 'PENDING'
+    WHEN status = 'occupied' THEN 'OCCUPIED'
+    WHEN status = 'paid' AND CURRENT_DATE >= check_in::date AND CURRENT_DATE < check_out::date THEN 'OCCUPIED'
+    WHEN status = 'paid' AND CURRENT_DATE < check_in::date THEN 'BOOKED'
+    WHEN status = 'paid' AND CURRENT_DATE >= check_out::date THEN 'COMPLETED'
+    ELSE 'AVAILABLE'
+  END AS live_occupancy_status
+FROM peno_bookings;
+
+GRANT SELECT ON v_peno_room_occupancy TO anon, authenticated;`
 };
 
 // Next.js 15 Files Catalog

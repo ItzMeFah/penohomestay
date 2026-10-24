@@ -10,7 +10,7 @@ interface LandingHeroProps {
   slideshowImages: string[];
   currentSlide: number;
   lang: LanguageType;
-  onNavigate: (page: 'home' | 'booking' | 'supabase' | 'admin', sectionId?: string) => void;
+  onNavigate: (page: 'home' | 'booking' | 'supabase' | 'admin' | 'backoffice', sectionId?: string) => void;
 }
 
 export const LandingHero: React.FC<LandingHeroProps> = ({

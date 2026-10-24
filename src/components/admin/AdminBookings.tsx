@@ -2,6 +2,7 @@ import React from 'react';
 import { Search, Plus, Download, Printer, Eye, Trash2 } from 'lucide-react';
 import { Booking, CMSHomepage } from '../../types';
 import { convertAndFormatPrice } from '../../utils/storage';
+import { isBookingCurrentlyOccupied } from '../../utils/bookingStatus';
 
 interface AdminBookingsProps {
   processedBookings: Booking[];
@@ -74,8 +75,9 @@ export const AdminBookings: React.FC<AdminBookingsProps> = ({
             className="px-4 py-2 bg-gray-50 border border-gray-200 focus:border-green-soft rounded-xl text-sm outline-none font-sans"
           >
             <option value="all">Semua Status</option>
+            <option value="occupied">Sedang Ditempati (OCCUPIED)</option>
+            <option value="paid">Lunas / Terpesan (Booked)</option>
             <option value="pending">Menunggu (Pending)</option>
-            <option value="paid">Lunas (Paid)</option>
             <option value="cancelled">Dibatalkan</option>
           </select>
 
@@ -225,21 +227,38 @@ export const AdminBookings: React.FC<AdminBookingsProps> = ({
                     <td className="p-4 text-center text-gray-500">{b.guest_count}</td>
                     <td className="p-4 font-serif font-bold text-green-deep">{convertAndFormatPrice(b.total_eur, 'IDR')}</td>
                     <td className="p-4">
-                      <select
-                        value={b.status}
-                        onChange={(e) => handleUpdateBookingStatus(b.id, e.target.value as any)}
-                        className={`px-2.5 py-1 rounded-xl text-xs font-bold border outline-none cursor-pointer transition-all uppercase tracking-wider ${
-                          b.status === 'paid'
-                            ? 'bg-emerald-500 text-white border-emerald-600'
-                            : b.status === 'cancelled'
-                              ? 'bg-rose-500 text-white border-rose-600'
-                              : 'bg-amber-100 text-amber-950 border-amber-300 text-amber-900'
-                        }`}
-                      >
-                        <option value="pending" className="bg-white text-gray-700">Pending</option>
-                        <option value="paid" className="bg-white text-gray-700">Paid</option>
-                        <option value="cancelled" className="bg-white text-gray-700">Cancelled</option>
-                      </select>
+                      {(() => {
+                        const isCurrentlyOccupied = isBookingCurrentlyOccupied(b);
+                        const effectiveStatus = b.status === 'occupied' || (b.status === 'paid' && isCurrentlyOccupied) ? 'occupied' : b.status;
+                        
+                        return (
+                          <div className="flex flex-col gap-1">
+                            <select
+                              value={b.status}
+                              onChange={(e) => handleUpdateBookingStatus(b.id, e.target.value as any)}
+                              className={`px-2.5 py-1 rounded-xl text-xs font-bold border outline-none cursor-pointer transition-all uppercase tracking-wider ${
+                                b.status === 'occupied' || (b.status === 'paid' && isCurrentlyOccupied)
+                                  ? 'bg-indigo-600 text-white border-indigo-700 ring-2 ring-indigo-300'
+                                  : b.status === 'paid'
+                                    ? 'bg-emerald-500 text-white border-emerald-600'
+                                    : b.status === 'cancelled'
+                                      ? 'bg-rose-500 text-white border-rose-600'
+                                      : 'bg-amber-100 text-amber-950 border-amber-300'
+                              }`}
+                            >
+                              <option value="pending" className="bg-white text-gray-700">Pending</option>
+                              <option value="paid" className="bg-white text-gray-700">Paid (Booked)</option>
+                              <option value="occupied" className="bg-white text-gray-700">Occupied (Sedang Ditempati)</option>
+                              <option value="cancelled" className="bg-white text-gray-700">Cancelled</option>
+                            </select>
+                            {isCurrentlyOccupied && b.status !== 'occupied' && (
+                              <span className="text-[9px] font-bold text-indigo-700 uppercase tracking-tight">
+                                Aktif Menginap (OCCUPIED)
+                              </span>
+                            )}
+                          </div>
+                        );
+                      })()}
                     </td>
                     <td className="p-4 text-right space-x-2 no-print">
                       <button

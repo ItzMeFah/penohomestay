@@ -4,7 +4,7 @@ import { LanguageType, translations } from '../utils/lang';
 interface FooterProps {
   settings: any;
   lang: LanguageType;
-  onNavigate: (page: 'home' | 'booking' | 'supabase' | 'admin', sectionId?: string) => void;
+  onNavigate: (page: 'home' | 'booking' | 'supabase' | 'admin' | 'backoffice', sectionId?: string) => void;
 }
 
 export function Footer({ settings, lang, onNavigate }: FooterProps) {

@@ -2,7 +2,7 @@ import React from 'react';
 import { motion } from 'motion/react';
 import { Trees, Heart, Mountain, Star } from 'lucide-react';
 import { CMSHomepage } from '../../types';
-import { LanguageType, translations } from '../../utils/lang';
+import { LanguageType, translations, translateHighlight } from '../../utils/lang';
 
 interface LandingAboutProps {
   homepageData: CMSHomepage;
@@ -74,6 +74,8 @@ export const LandingAbout: React.FC<LandingAboutProps> = ({ homepageData, lang }
               return <Star className="w-3.5 h-3.5 fill-sand text-sand" />;
             };
 
+            const tHighlight = translateHighlight(item, lang);
+
             return (
               <motion.div
                 key={item.id || idx}
@@ -85,7 +87,7 @@ export const LandingAbout: React.FC<LandingAboutProps> = ({ homepageData, lang }
               >
                 <img 
                   src={imgUrl} 
-                  alt={item.title} 
+                  alt={tHighlight.title} 
                   referrerPolicy="no-referrer"
                   className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                 />
@@ -97,12 +99,12 @@ export const LandingAbout: React.FC<LandingAboutProps> = ({ homepageData, lang }
                       {getHighlightIcon()}
                     </div>
                     <span className="font-sans text-sm sm:text-base font-semibold text-white drop-shadow-sm group-hover:text-sand transition-colors duration-300">
-                      {item.title}
+                      {tHighlight.title}
                     </span>
                   </div>
-                  {item.description && (
+                  {tHighlight.description && (
                     <p className="text-[10px] sm:text-[11px] text-cream/65 font-light tracking-wide line-clamp-2 leading-relaxed transition-all duration-300 group-hover:text-cream/85">
-                      {item.description}
+                      {tHighlight.description}
                     </p>
                   )}
                 </div>

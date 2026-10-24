@@ -8,7 +8,7 @@ interface BookingDetailModalProps {
   selectedBookingDetail: Booking | null;
   onClose: () => void;
   homepageData: CMSHomepage;
-  handleUpdateBookingStatus: (id: string, status: 'pending' | 'paid' | 'cancelled') => void;
+  handleUpdateBookingStatus: (id: string, status: 'pending' | 'paid' | 'occupied' | 'cancelled') => void;
   handleDeleteBooking: (id: string) => void;
   getAdminWhatsAppLink: (b: Booking) => string;
 }
@@ -84,21 +84,24 @@ export const BookingDetailModal: React.FC<BookingDetailModalProps> = ({
               <span className="text-gray-400">Estimasi Tagihan</span>
               <span className="text-right font-serif font-bold text-green-deep text-base">{convertAndFormatPrice(selectedBookingDetail.total_eur, 'IDR')}</span>
 
-              <span className="text-gray-400">Status</span>
+              <span className="text-gray-400">Status Okupansi</span>
               <span className="text-right">
                 <select
                   value={selectedBookingDetail.status}
                   onChange={(e) => handleUpdateBookingStatus(selectedBookingDetail.id, e.target.value as any)}
                   className={`px-3 py-1 rounded-xl text-xs font-bold border outline-none cursor-pointer transition-all uppercase tracking-wider ${
-                    selectedBookingDetail.status === 'paid'
-                      ? 'bg-emerald-500 text-white border-emerald-600'
-                      : selectedBookingDetail.status === 'cancelled'
-                        ? 'bg-rose-500 text-white border-rose-600'
-                        : 'bg-amber-100 text-amber-900 border-amber-300'
+                    selectedBookingDetail.status === 'occupied'
+                      ? 'bg-indigo-600 text-white border-indigo-700 ring-2 ring-indigo-300'
+                      : selectedBookingDetail.status === 'paid'
+                        ? 'bg-emerald-500 text-white border-emerald-600'
+                        : selectedBookingDetail.status === 'cancelled'
+                          ? 'bg-rose-500 text-white border-rose-600'
+                          : 'bg-amber-100 text-amber-900 border-amber-300'
                   }`}
                 >
                   <option value="pending" className="bg-white text-gray-700">Pending</option>
-                  <option value="paid" className="bg-white text-gray-700">Paid</option>
+                  <option value="paid" className="bg-white text-gray-700">Paid (Booked)</option>
+                  <option value="occupied" className="bg-white text-gray-700">Occupied (Sedang Ditempati)</option>
                   <option value="cancelled" className="bg-white text-gray-700">Cancelled</option>
                 </select>
               </span>

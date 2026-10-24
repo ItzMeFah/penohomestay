@@ -2,7 +2,7 @@ import React from 'react';
 import { motion } from 'motion/react';
 import { CheckCircle2, MessageSquare, Mail } from 'lucide-react';
 import { Booking, CMSHomepage } from '../../types';
-import { LanguageType, translations } from '../../utils/lang';
+import { LanguageType, translations, translateVilla } from '../../utils/lang';
 import { CurrencyType, convertAndFormatPrice } from '../../utils/storage';
 
 interface BookingSuccessProps {
@@ -26,14 +26,20 @@ export const BookingSuccess: React.FC<BookingSuccessProps> = ({
 }) => {
   const t = translations[lang];
 
-  const selectedVilla = (homepageData.villas || []).find((v: any) => v.id === successBooking.villa_id) || (homepageData.villas?.[0]);
+  const selectedVillaRaw = (homepageData.villas || []).find((v: any) => v.id === successBooking.villa_id) || (homepageData.villas?.[0]);
+  const selectedVilla = selectedVillaRaw ? translateVilla(selectedVillaRaw, lang) : null;
 
   const getWhatsAppMessage = (b: Booking) => {
-    const formattedCheckIn = new Date(b.check_in).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
-    const formattedCheckOut = new Date(b.check_out).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+    const formattedCheckIn = new Date(b.check_in).toLocaleDateString(lang === 'ID' ? 'id-ID' : 'en-US', { day: 'numeric', month: 'long', year: 'numeric' });
+    const formattedCheckOut = new Date(b.check_out).toLocaleDateString(lang === 'ID' ? 'id-ID' : 'en-US', { day: 'numeric', month: 'long', year: 'numeric' });
     const priceFormatted = convertAndFormatPrice(b.total_eur, currency);
+    const villaName = selectedVilla ? selectedVilla.title : 'Villa';
 
-    return `Halo Peno Homestay! 🏡\n\nSaya telah mengisi form pemesanan dengan detail:\n\n📋 ID Pemesanan : ${b.id}\n👤 Nama         : ${b.guest_name}\n📅 Check-in     : ${formattedCheckIn}\n📅 Check-out    : ${formattedCheckOut}\n🌙 Durasi       : ${b.nights} malam\n👥 Jumlah Tamu  : ${b.guest_count} orang\n💶 Total Est.   : ${priceFormatted}\n\nMohon konfirmasi ketersediaan. Terima kasih! 🙏`;
+    if (lang === 'ID') {
+      return `Halo Peno Homestay! 🏡\n\nSaya telah mengisi form pemesanan dengan detail:\n\n📋 ID Pemesanan : ${b.id}\n👤 Nama         : ${b.guest_name}\n🏠 Kamar/Villa  : ${villaName}\n📅 Check-in     : ${formattedCheckIn}\n📅 Check-out    : ${formattedCheckOut}\n🌙 Durasi       : ${b.nights} malam\n👥 Jumlah Tamu  : ${b.guest_count} orang\n💶 Total Est.   : ${priceFormatted}\n\nMohon konfirmasi ketersediaan. Terima kasih! 🙏`;
+    }
+
+    return `Hello Peno Homestay! 🏡\n\nI have submitted a booking inquiry with details:\n\n📋 Booking ID : ${b.id}\n👤 Guest Name : ${b.guest_name}\n🏠 Room/Villa : ${villaName}\n📅 Check-in   : ${formattedCheckIn}\n📅 Check-out  : ${formattedCheckOut}\n🌙 Duration   : ${b.nights} nights\n👥 Guests     : ${b.guest_count} persons\n💶 Total Est. : ${priceFormatted}\n\nPlease confirm availability. Thank you! 🙏`;
   };
 
   const getWhatsAppLink = (b: Booking) => {
@@ -46,9 +52,14 @@ export const BookingSuccess: React.FC<BookingSuccessProps> = ({
     const formattedCheckIn = new Date(b.check_in).toLocaleDateString(lang === 'ID' ? 'id-ID' : 'en-US', { day: 'numeric', month: 'long', year: 'numeric' });
     const formattedCheckOut = new Date(b.check_out).toLocaleDateString(lang === 'ID' ? 'id-ID' : 'en-US', { day: 'numeric', month: 'long', year: 'numeric' });
     const priceFormatted = convertAndFormatPrice(b.total_eur, currency);
+    const villaName = selectedVilla ? selectedVilla.title : 'Villa';
 
-    const subject = `Pemesanan Peno Homestay #${b.id} - ${b.guest_name}`;
-    const body = `Halo Peno Homestay! 🏡\n\nSaya telah mengisi form pemesanan dengan detail:\n\n📋 ID Pemesanan : ${b.id}\n👤 Nama         : ${b.guest_name}\n📧 Email        : ${b.guest_email}\n📱 WhatsApp     : ${b.guest_wa}\n📅 Check-in     : ${formattedCheckIn}\n📅 Check-out    : ${formattedCheckOut}\n🌙 Durasi       : ${b.nights} malam\n👥 Jumlah Tamu  : ${b.guest_count} orang\n💶 Total Est.   : ${priceFormatted}\n📝 Catatan      : ${b.notes || '-'}\n\nMohon konfirmasi ketersediaan. Terima kasih! 🙏`;
+    const subject = lang === 'ID' 
+      ? `Pemesanan Peno Homestay #${b.id} - ${b.guest_name}`
+      : `Booking Inquiry Peno Homestay #${b.id} - ${b.guest_name}`;
+    const body = lang === 'ID'
+      ? `Halo Peno Homestay! 🏡\n\nSaya telah mengisi form pemesanan dengan detail:\n\n📋 ID Pemesanan : ${b.id}\n👤 Nama         : ${b.guest_name}\n🏠 Kamar/Villa  : ${villaName}\n📧 Email        : ${b.guest_email}\n📱 WhatsApp     : ${b.guest_wa}\n📅 Check-in     : ${formattedCheckIn}\n📅 Check-out    : ${formattedCheckOut}\n🌙 Durasi       : ${b.nights} malam\n👥 Jumlah Tamu  : ${b.guest_count} orang\n💶 Total Est.   : ${priceFormatted}\n📝 Catatan      : ${b.notes || '-'}\n\nMohon konfirmasi ketersediaan. Terima kasih! 🙏`
+      : `Hello Peno Homestay! 🏡\n\nI have submitted a booking inquiry with details:\n\n📋 Booking ID : ${b.id}\n👤 Guest Name : ${b.guest_name}\n🏠 Room/Villa : ${villaName}\n📧 Email      : ${b.guest_email}\n📱 WhatsApp   : ${b.guest_wa}\n📅 Check-in   : ${formattedCheckIn}\n📅 Check-out  : ${formattedCheckOut}\n🌙 Duration   : ${b.nights} nights\n👥 Guests     : ${b.guest_count} persons\n💶 Total Est. : ${priceFormatted}\n📝 Notes      : ${b.notes || '-'}\n\nPlease confirm availability. Thank you! 🙏`;
 
     return `mailto:Fikcri.me@gmail.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
   };

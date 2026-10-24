@@ -1,7 +1,7 @@
 export interface Booking {
   id: string;
   created_at: string;
-  status: 'pending' | 'paid' | 'cancelled';
+  status: 'pending' | 'paid' | 'occupied' | 'cancelled';
   check_in: string; // ISO String
   check_out: string; // ISO String
   nights: number;
