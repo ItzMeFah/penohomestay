@@ -105,7 +105,7 @@ export const DEFAULT_HOMEPAGE: CMSHomepage = {
         id: "hl-3",
         title: "Warm Host Family",
         description: "Experience genuine Javanese hospitality. Peno and his warm family welcome you like a part of their own.",
-        imageUrl: "https://images.unsplash.com/photo-1551882547-ff40c63fe5fa?auto=format&fit=crop&w=600&h=400&q=80"
+        imageUrl: "https://njgsafkwldootsupwjsb.supabase.co/storage/v1/object/public/avatars/pak%20peno.png"
       },
       {
         id: "hl-4",
@@ -236,7 +236,13 @@ export function initDefaultData() {
   if (!safeStorage.getItem("peno_blocked")) {
     safeStorage.setItem("peno_blocked", JSON.stringify(DEFAULT_BLOCKED_DATES));
   }
-  if (!safeStorage.getItem("peno_homepage")) {
+  if (safeStorage.getItem("peno_homepage")) {
+    const rawSaved = safeStorage.getItem("peno_homepage") || "";
+    if (rawSaved.includes("1551882547-ff40c63fe5fa")) {
+      const cleaned = rawSaved.replace(/https:\/\/images\.unsplash\.com\/photo-1551882547-ff40c63fe5fa[^\"]*/g, "https://njgsafkwldootsupwjsb.supabase.co/storage/v1/object/public/avatars/pak%20peno.png");
+      safeStorage.setItem("peno_homepage", cleaned);
+    }
+  } else {
     safeStorage.setItem("peno_homepage", JSON.stringify(DEFAULT_HOMEPAGE));
   }
   if (!safeStorage.getItem("peno_gallery")) {
@@ -277,6 +283,15 @@ export function getHomepage(): CMSHomepage {
     }
     if (parsed.about?.highlightItems) {
       parsed.about.highlightItems = parsed.about.highlightItems.map((item: any) => {
+        // Automatically purge any dummy villa photo from hl-3 or highlight items
+        if (item.imageUrl?.includes('1551882547') || item.id === 'hl-3') {
+          if (!item.imageUrl || item.imageUrl.includes('1551882547')) {
+            return {
+              ...item,
+              imageUrl: "https://njgsafkwldootsupwjsb.supabase.co/storage/v1/object/public/avatars/pak%20peno.png"
+            };
+          }
+        }
         if (item.title?.toLowerCase().includes('ijen') || item.id === 'hl-4') {
           return {
             id: "hl-4",

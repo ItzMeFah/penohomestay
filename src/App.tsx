@@ -40,7 +40,7 @@ export default function App() {
   const isAdminView = route.startsWith('/backoffice') || route.startsWith('/admin');
 
   return (
-    <div className="font-sans min-h-screen text-text-dark bg-cream/40">
+    <div className="font-sans min-h-screen text-text-dark bg-cream/40 overflow-x-hidden w-full max-w-full">
       <AnimatePresence>
         {isRouteLoading && <RouteLoader />}
       </AnimatePresence>
@@ -59,7 +59,7 @@ export default function App() {
       )}
 
       {/* 2. CORE Switch Route Views */}
-      <div className="min-h-screen">
+      <div className="min-h-screen overflow-x-hidden w-full max-w-full">
         {route === '/home' && (
           <LandingPage
             homepageData={homepageData}

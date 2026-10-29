@@ -13,7 +13,7 @@ export const LandingAbout: React.FC<LandingAboutProps> = ({ homepageData, lang }
   const t = translations[lang];
 
   return (
-    <section id="tentang" className="py-24 px-6 md:px-12 max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-16 items-center">
+    <section id="tentang" className="py-24 px-6 md:px-12 max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-16 items-center overflow-hidden">
       {/* Left column text */}
       <motion.div 
         initial={{ opacity: 0, y: 30 }}
@@ -39,10 +39,12 @@ export const LandingAbout: React.FC<LandingAboutProps> = ({ homepageData, lang }
             const defaultImages: Record<string, string> = {
               "hl-1": "https://images.unsplash.com/photo-1509042239860-f550ce710b93?auto=format&fit=crop&w=600&h=400&q=80",
               "hl-2": "https://images.unsplash.com/photo-1448375240586-882707db888b?auto=format&fit=crop&w=600&h=400&q=80",
-              "hl-3": "https://images.unsplash.com/photo-1551882547-ff40c63fe5fa?auto=format&fit=crop&w=600&h=400&q=80",
+              "hl-3": "https://njgsafkwldootsupwjsb.supabase.co/storage/v1/object/public/avatars/pak%20peno.png",
               "hl-4": "https://images.unsplash.com/photo-1544735716-392fe2489ffa?auto=format&fit=crop&w=600&h=400&q=80"
             };
-            const imgUrl = item.imageUrl || defaultImages[item.id] || "https://images.unsplash.com/photo-1551882547-ff40c63fe5fa?auto=format&fit=crop&w=600&h=400&q=80";
+            const rawUrl = item.imageUrl || defaultImages[item.id] || "https://njgsafkwldootsupwjsb.supabase.co/storage/v1/object/public/avatars/pak%20peno.png";
+            // Completely purge any legacy dummy villa photo from appearing
+            const imgUrl = rawUrl.includes('1551882547') ? "https://njgsafkwldootsupwjsb.supabase.co/storage/v1/object/public/avatars/pak%20peno.png" : rawUrl;
 
             // Get dynamic thematic icon based on highlight category or text
             const getHighlightIcon = () => {
@@ -79,8 +81,8 @@ export const LandingAbout: React.FC<LandingAboutProps> = ({ homepageData, lang }
             return (
               <motion.div
                 key={item.id || idx}
-                initial={{ opacity: 0, x: idx % 2 === 0 ? -60 : 60 }}
-                whileInView={{ opacity: 1, x: 0 }}
+                initial={{ opacity: 0, y: 25 }}
+                whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, amount: 0.1 }}
                 transition={{ duration: 0.8, delay: idx * 0.1, ease: "easeOut" }}
                 className="relative h-48 sm:h-56 lg:h-60 rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 group cursor-pointer border border-sand/20"

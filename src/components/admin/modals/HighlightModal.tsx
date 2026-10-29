@@ -207,7 +207,7 @@ export const HighlightModal: React.FC<HighlightModalProps> = ({
                           className="w-full h-full object-cover" 
                           referrerPolicy="no-referrer"
                           onError={(e) => {
-                            (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1551882547-ff40c63fe5fa?auto=format&fit=crop&w=600&h=400&q=80';
+                            (e.target as HTMLImageElement).src = 'https://njgsafkwldootsupwjsb.supabase.co/storage/v1/object/public/avatars/pak%20peno.png';
                           }}
                         />
                       </div>

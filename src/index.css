@@ -22,12 +22,29 @@
 }
 
 @layer base {
+  html {
+    overflow-x: hidden;
+    width: 100%;
+    max-width: 100%;
+    -webkit-text-size-adjust: 100%;
+  }
+
   body {
     background-color: var(--color-cream);
     color: var(--color-green-deep);
     font-family: var(--font-sans);
     overflow-x: hidden;
+    width: 100%;
+    max-width: 100%;
+    position: relative;
     scroll-behavior: smooth;
+  }
+
+  #root {
+    overflow-x: hidden;
+    width: 100%;
+    max-width: 100%;
+    position: relative;
   }
 }
 

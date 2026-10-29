@@ -60,7 +60,7 @@ export function Navbar({
   return (
     <nav
       id="navbar"
-      className={`fixed top-0 left-0 w-full z-50 transition-all duration-300 px-4 py-3 md:px-12 flex flex-col md:flex-row md:items-center md:justify-between ${
+      className={`fixed top-0 left-0 w-full max-w-full z-50 transition-all duration-300 px-3.5 sm:px-6 py-2.5 sm:py-3 md:px-12 flex flex-col md:flex-row md:items-center md:justify-between overflow-x-clip md:overflow-x-visible ${
         isScrolled || window.location.pathname === '/home/book'
           ? 'bg-green-deep/90 backdrop-blur-md shadow-xl border-b border-green-soft/20' 
           : 'bg-green-deep/40 backdrop-blur-sm border-b border-white/5'
@@ -69,10 +69,10 @@ export function Navbar({
       <div className="flex items-center justify-between w-full md:w-auto">
         <button
           onClick={() => onNavigate('home')}
-          className="font-serif text-cream text-lg sm:text-xl md:text-2xl font-bold tracking-wide cursor-pointer outline-none flex items-center space-x-3 group text-left"
+          className="font-serif text-cream text-base sm:text-xl md:text-2xl font-bold tracking-wide cursor-pointer outline-none flex items-center space-x-2.5 sm:space-x-3 group text-left"
         >
-          <div className="relative flex items-center justify-center w-14 h-14 rounded-full bg-white shadow-md border border-sand/30 overflow-visible transition-transform duration-300 group-hover:scale-105 z-10 mr-1.5 flex-shrink-0">
-            <div className="absolute w-[80px] h-[80px] -inset-[13px] pointer-events-none select-none z-0 animate-coffee-pulse-slow">
+          <div className="relative flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 rounded-full bg-white shadow-md border border-sand/30 overflow-visible transition-transform duration-300 group-hover:scale-105 z-10 mr-1 sm:mr-1.5 flex-shrink-0">
+            <div className="absolute w-[56px] h-[56px] -inset-[8px] sm:w-[68px] sm:h-[68px] sm:-inset-[10px] md:w-[80px] md:h-[80px] md:-inset-[13px] pointer-events-none select-none z-0 animate-coffee-pulse-slow">
               <svg viewBox="0 0 120 120" className="w-full h-full" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <defs>
                   <radialGradient id="coffeeSplash" cx="50%" cy="50%" r="50%" fx="35%" fy="35%">
@@ -109,8 +109,8 @@ export function Navbar({
               </svg>
             </div>
 
-            <div className="absolute -inset-[14px] pointer-events-none select-none z-20 animate-coffee-spin-slow">
-              <div className="absolute top-1 right-1 w-4 h-4 transform -rotate-12 animate-float-gentle">
+            <div className="absolute -inset-[8px] sm:-inset-[11px] md:-inset-[14px] pointer-events-none select-none z-20 animate-coffee-spin-slow">
+              <div className="absolute top-1 right-1 w-3 h-3 sm:w-3.5 sm:h-3.5 md:w-4 md:h-4 transform -rotate-12 animate-float-gentle">
                 <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full drop-shadow-[0_2px_4px_rgba(0,0,0,0.4)]">
                   <path 
                     d="M19.5 8.5c-1.5-3-5-4.5-8-4-3 .5-6 3.5-7 6.5s.5 6 3.5 7.5 7 1 9-2c1.5-2.5 4-5 2.5-8z" 
@@ -125,7 +125,7 @@ export function Navbar({
                 </svg>
               </div>
 
-              <div className="absolute bottom-1.5 left-0.5 w-3.5 h-3.5 transform rotate-[110deg] animate-float-gentle" style={{ animationDelay: '2.5s' }}>
+              <div className="absolute bottom-1 left-0.5 w-2.5 h-2.5 sm:w-3 sm:h-3 md:w-3.5 md:h-3.5 transform rotate-[110deg] animate-float-gentle" style={{ animationDelay: '2.5s' }}>
                 <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full drop-shadow-[0_2px_4px_rgba(0,0,0,0.4)]">
                   <path 
                     d="M19.5 8.5c-1.5-3-5-4.5-8-4-3 .5-6 3.5-7 6.5s.5 6 3.5 7.5 7 1 9-2c1.5-2.5 4-5 2.5-8z" 
@@ -141,7 +141,7 @@ export function Navbar({
               </div>
             </div>
 
-            <div className="w-12 h-12 rounded-full overflow-hidden flex items-center justify-center bg-white z-10 relative shadow-inner">
+            <div className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 rounded-full overflow-hidden flex items-center justify-center bg-white z-10 relative shadow-inner">
               <img 
                 src="https://njgsafkwldootsupwjsb.supabase.co/storage/v1/object/public/avatars/421966157_3180688145419564_5828608585761882436_n.jpg" 
                 alt="Peno Homestay Logo" 
@@ -174,7 +174,7 @@ export function Navbar({
                     },
                     default: { duration: 0.3 }
                   }}
-                  className="absolute top-full mt-2.5 right-0 bg-sand text-green-deep text-[10px] font-bold px-2.5 py-1.5 rounded-lg shadow-lg border border-sand-dark/15 whitespace-nowrap z-50 flex flex-col items-center"
+                  className="absolute top-full mt-2.5 right-0 bg-sand text-green-deep text-[10px] font-bold px-2.5 py-1.5 rounded-lg shadow-lg border border-sand-dark/15 whitespace-nowrap z-50 flex flex-col items-center pointer-events-none"
                 >
                   <div className="absolute top-0 -mt-1 right-5 w-2 h-2 bg-sand transform rotate-45 border-l border-t border-sand-dark/15" />
                   <span className="relative z-10">Switch language here! 🌐</span>
@@ -185,7 +185,7 @@ export function Navbar({
         </div>
       </div>
 
-      <div className="flex items-center justify-start md:justify-end space-x-5 md:space-x-8 mt-3 md:mt-0 overflow-x-auto md:overflow-visible no-scrollbar scroll-smooth py-1 -mx-4 px-4 md:mx-0 md:px-0">
+      <div className="flex items-center justify-start md:justify-end space-x-4 sm:space-x-5 md:space-x-8 mt-2.5 md:mt-0 overflow-x-auto md:overflow-visible no-scrollbar scroll-smooth py-1 max-w-full">
         <button 
           onClick={() => onNavigate('home', 'keunggulan')} 
           className={`text-xs md:text-sm font-semibold tracking-wider whitespace-nowrap transition-all cursor-pointer hover:text-sand hover:-translate-y-0.5 pb-1 border-b-2 ${

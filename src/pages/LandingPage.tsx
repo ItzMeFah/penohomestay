@@ -57,7 +57,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
   }, [slideshowImages]);
 
   return (
-    <div className="bg-cream min-h-screen text-text-dark selection:bg-green-soft selection:text-cream">
+    <div className="bg-cream min-h-screen text-text-dark selection:bg-green-soft selection:text-cream overflow-x-hidden w-full max-w-full">
       {/* 1. HERO SECTION */}
       <LandingHero
         homepageData={homepageData}
