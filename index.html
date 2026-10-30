@@ -7,11 +7,15 @@
     <meta name="description" content="Peno Homestay Banyuwangi: penginapan keluarga autentik di tengah perkebunan kopi Gombengsari. Nikmati tur kebun kopi, udara segar pegunungan, dan masakan rumahan hangat." />
     <meta name="keywords" content="Peno Homestay, Peno Homestay Banyuwangi, homestay Banyuwangi, homestay kebun kopi Gombengsari, penginapan Kalipuro, wisata Banyuwangi" />
     <meta name="robots" content="index, follow" />
-    <link rel="canonical" href="https://penohomestay.com/" />
+    <link rel="canonical" href="https://www.penohomestay.com/" />
+
+    <!-- Primary Thumbnail Hints for Google Search Snippet -->
+    <meta name="thumbnail" content="https://njgsafkwldootsupwjsb.supabase.co/storage/v1/object/public/avatars/pak%20peno.png" />
+    <link rel="image_src" href="https://njgsafkwldootsupwjsb.supabase.co/storage/v1/object/public/avatars/pak%20peno.png" />
 
     <!-- Open Graph / Facebook / WhatsApp Share Cards -->
     <meta property="og:type" content="website" />
-    <meta property="og:url" content="https://penohomestay.com/" />
+    <meta property="og:url" content="https://www.penohomestay.com/" />
     <meta property="og:title" content="Peno Homestay Banyuwangi – Rehat di Tengah Kebun Kopi" />
     <meta property="og:description" content="Penginapan keluarga autentik di tengah perkebunan kopi Gombengsari, Banyuwangi. Dikelilingi alam asri, tur kopi bersama Pak Peno, dan kehangatan keluarga." />
     <meta property="og:image" content="https://njgsafkwldootsupwjsb.supabase.co/storage/v1/object/public/avatars/pak%20peno.png" />
@@ -22,56 +26,102 @@
     <meta property="og:site_name" content="Peno Homestay" />
 
     <!-- Twitter / X Cards -->
-    <meta name="twitter:card" content="summary" />
-    <meta name="twitter:url" content="https://penohomestay.com/" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:url" content="https://www.penohomestay.com/" />
     <meta name="twitter:title" content="Peno Homestay Banyuwangi – Rehat di Tengah Kebun Kopi" />
     <meta name="twitter:description" content="Penginapan keluarga autentik di tengah perkebunan kopi Gombengsari, Banyuwangi. Dikelilingi alam asri dan kehangatan keluarga Pak Peno." />
     <meta name="twitter:image" content="https://njgsafkwldootsupwjsb.supabase.co/storage/v1/object/public/avatars/pak%20peno.png" />
 
-    <!-- Schema.org JSON-LD for Google Rich Results, Knowledge Graph & Hotel/Homestay SERP -->
+    <!-- Schema.org JSON-LD for Google Rich Results, Official Logo & Authentic Thumbnail -->
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
-      "@type": "BedAndBreakfast",
-      "name": "Peno Homestay Banyuwangi",
-      "image": "https://njgsafkwldootsupwjsb.supabase.co/storage/v1/object/public/avatars/pak%20peno.png",
-      "logo": "https://njgsafkwldootsupwjsb.supabase.co/storage/v1/object/public/avatars/421966157_3180688145419564_5828608585761882436_n.jpg",
-      "url": "https://penohomestay.com",
-      "telephone": "+6281233800631",
-      "priceRange": "Rp 140.000 - Rp 180.000",
-      "address": {
-        "@type": "PostalAddress",
-        "streetAddress": "Jl. Samarinda, Gombengsari",
-        "addressLocality": "Kec. Kalipuro",
-        "addressRegion": "Kabupaten Banyuwangi, Jawa Timur",
-        "postalCode": "68411",
-        "addressCountry": "ID"
-      },
-      "geo": {
-        "@type": "GeoCoordinates",
-        "latitude": -8.145,
-        "longitude": 114.341
-      },
-      "aggregateRating": {
-        "@type": "AggregateRating",
-        "ratingValue": "4.9",
-        "reviewCount": "90"
-      },
-      "description": "Homestay keluarga autentik di tengah perkebunan kopi Gombengsari, Banyuwangi. Menyambut Anda dengan kehangatan khas pedesaan, tur kebun kopi, dan udara sejuk pegunungan."
+      "@graph": [
+        {
+          "@type": "Organization",
+          "@id": "https://www.penohomestay.com/#organization",
+          "name": "Peno Homestay",
+          "alternateName": "Peno Homestay Banyuwangi",
+          "url": "https://www.penohomestay.com/",
+          "logo": {
+            "@type": "ImageObject",
+            "url": "https://www.penohomestay.com/favicon-512x512.png",
+            "contentUrl": "https://njgsafkwldootsupwjsb.supabase.co/storage/v1/object/public/avatars/421966157_3180688145419564_5828608585761882436_n.jpg",
+            "width": 512,
+            "height": 512
+          },
+          "image": "https://njgsafkwldootsupwjsb.supabase.co/storage/v1/object/public/avatars/pak%20peno.png",
+          "sameAs": [
+            "https://www.instagram.com/penohomestaybanyuwangi/",
+            "https://maps.google.com/?cid=7953698942961987726"
+          ]
+        },
+        {
+          "@type": "WebSite",
+          "@id": "https://www.penohomestay.com/#website",
+          "url": "https://www.penohomestay.com/",
+          "name": "Peno Homestay Banyuwangi",
+          "publisher": {
+            "@id": "https://www.penohomestay.com/#organization"
+          },
+          "primaryImageOfPage": {
+            "@type": "ImageObject",
+            "url": "https://njgsafkwldootsupwjsb.supabase.co/storage/v1/object/public/avatars/pak%20peno.png"
+          }
+        },
+        {
+          "@type": "BedAndBreakfast",
+          "@id": "https://www.penohomestay.com/#lodging",
+          "name": "Peno Homestay Banyuwangi",
+          "image": [
+            "https://njgsafkwldootsupwjsb.supabase.co/storage/v1/object/public/avatars/pak%20peno.png",
+            "https://njgsafkwldootsupwjsb.supabase.co/storage/v1/object/public/avatars/421966157_3180688145419564_5828608585761882436_n.jpg"
+          ],
+          "thumbnailUrl": "https://njgsafkwldootsupwjsb.supabase.co/storage/v1/object/public/avatars/pak%20peno.png",
+          "logo": "https://www.penohomestay.com/favicon-512x512.png",
+          "url": "https://www.penohomestay.com/",
+          "telephone": "+6281233800631",
+          "priceRange": "Rp 140.000 - Rp 180.000",
+          "address": {
+            "@type": "PostalAddress",
+            "streetAddress": "Jl. Samarinda, Gombengsari",
+            "addressLocality": "Kec. Kalipuro",
+            "addressRegion": "Kabupaten Banyuwangi, Jawa Timur",
+            "postalCode": "68411",
+            "addressCountry": "ID"
+          },
+          "geo": {
+            "@type": "GeoCoordinates",
+            "latitude": -8.145,
+            "longitude": 114.341
+          },
+          "aggregateRating": {
+            "@type": "AggregateRating",
+            "ratingValue": "4.9",
+            "reviewCount": "93"
+          },
+          "description": "Homestay keluarga autentik di tengah perkebunan kopi Gombengsari, Banyuwangi. Menyambut Anda dengan kehangatan khas pedesaan, tur kebun kopi, dan udara sejuk pegunungan."
+        }
+      ]
     }
     </script>
-    
-    <!-- Favicon Peno Homestay (Clean Round Logo with Transparent Corners) -->
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=3" />
-    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png?v=3" />
-    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png?v=3" />
-    <link rel="icon" type="image/png" href="/favicon.png?v=3" />
-    <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=3" />
-    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=3" />
+
+    <!-- Favicons (Google Search requires stable URLs & multiples of 48px: 48x48, 96x96, 144x144, 192x192) -->
+    <link rel="icon" type="image/x-icon" href="/favicon.ico" sizes="16x16 32x32 48x48" />
+    <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico" />
+    <link rel="icon" type="image/png" sizes="48x48" href="/favicon-48x48.png" />
+    <link rel="icon" type="image/png" sizes="96x96" href="/favicon-96x96.png" />
+    <link rel="icon" type="image/png" sizes="144x144" href="/favicon-144x144.png" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/favicon-192x192.png" />
+    <link rel="icon" type="image/png" sizes="512x512" href="/favicon-512x512.png" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/site.webmanifest" />
   </head>
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
-

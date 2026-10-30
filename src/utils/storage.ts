@@ -548,10 +548,24 @@ export async function fetchAllFromSupabase() {
     if (!cError && cmsData) {
       cmsData.forEach(row => {
         if (row.id === 'homepage') {
-          safeStorage.setItem("peno_homepage", JSON.stringify(row.data));
+          const rawStr = JSON.stringify(row.data || {});
+          if (rawStr.includes("1551882547")) {
+            const cleanedStr = rawStr.replace(
+              /https:\/\/images\.unsplash\.com\/photo-1551882547-ff40c63fe5fa[^\"]*/g,
+              "https://njgsafkwldootsupwjsb.supabase.co/storage/v1/object/public/avatars/pak%20peno.png"
+            );
+            const cleanedObj = JSON.parse(cleanedStr);
+            safeStorage.setItem("peno_homepage", cleanedStr);
+            // Permanently overwrite legacy dummy photo in Supabase peno_cms database
+            supabase.from('peno_cms').upsert({ id: 'homepage', data: cleanedObj, updated_at: new Date().toISOString() }).then(({ error }) => {
+              if (error) console.error("Auto-cleaned homepage table error:", error.message);
+            });
+          } else {
+            safeStorage.setItem("peno_homepage", rawStr);
+          }
         } else if (row.id === 'gallery') {
           const fetchedGallery: GalleryItem[] = row.data || [];
-          const cleanedGallery = fetchedGallery.filter((item: GalleryItem) => item.url && item.url.trim().length > 0);
+          const cleanedGallery = fetchedGallery.filter((item: GalleryItem) => item.url && item.url.trim().length > 0 && !item.url.includes('1551882547'));
           safeStorage.setItem("peno_gallery", JSON.stringify(cleanedGallery));
           // Proactively update Supabase if the fetched list contained dummy items to clean up database permanently!
           if (fetchedGallery.length !== cleanedGallery.length) {
@@ -614,10 +628,10 @@ export function subscribeToSupabaseRealtime(onUpdate: (type: string, data: any) 
         if (row && row.id) {
           if (row.id === 'homepage') {
             safeStorage.setItem("peno_homepage", JSON.stringify(row.data));
-            onUpdate('homepage', row.data);
+            onUpdate('homepage', getHomepage());
           } else if (row.id === 'gallery') {
             const fetchedGallery: GalleryItem[] = row.data || [];
-            const cleanedGallery = fetchedGallery.filter((item: GalleryItem) => item.url && item.url.trim().length > 0);
+            const cleanedGallery = fetchedGallery.filter((item: GalleryItem) => item.url && item.url.trim().length > 0 && !item.url.includes('1551882547'));
             safeStorage.setItem("peno_gallery", JSON.stringify(cleanedGallery));
             onUpdate('gallery', cleanedGallery);
           } else if (row.id === 'settings') {
