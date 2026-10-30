@@ -54,6 +54,19 @@ export const LandingHero: React.FC<LandingHeroProps> = ({
     .replace(/^[★\s*]+/, '')
     .trim();
 
+  // Strict HTML sanitizer for headline: escapes all raw HTML entities and only allows safe <em> and <br> tags
+  const sanitizeHeadlineHtml = (rawHtml: string): string => {
+    const escaped = String(rawHtml || '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
+    return escaped
+      .replace(/&lt;em&gt;(.*?)&lt;\/em&gt;/gi, '<em>$1</em>')
+      .replace(/&lt;br\s*\/?&gt;/gi, '<br />');
+  };
+
   return (
     <section
       id="hero"
@@ -121,7 +134,9 @@ export const LandingHero: React.FC<LandingHeroProps> = ({
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.1 }}
           className="font-serif text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight text-cream mb-6 leading-tight"
-          dangerouslySetInnerHTML={{ __html: lang === 'ID' ? homepageData.hero.headline : t.heroTitle }}
+          dangerouslySetInnerHTML={{
+            __html: sanitizeHeadlineHtml(lang === 'ID' ? homepageData.hero.headline : t.heroTitle)
+          }}
         />
 
         {/* Subheadline - Smooth Motion Changing Every 4 Seconds */}

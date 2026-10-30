@@ -89,7 +89,7 @@ export default function App() {
           />
         )}
 
-        {route === '/supabase' && (
+        {(import.meta as any).env?.DEV && route === '/supabase' && (
           <div className="pt-28 pb-16 px-4 md:px-12 max-w-7xl mx-auto">
             <SupabasePlaybook />
           </div>

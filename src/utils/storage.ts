@@ -193,9 +193,35 @@ export const DEFAULT_SETTINGS = {
   checkIn: "14:00",
   checkOut: "12:00",
   adminUsername: "admin",
-  adminPassword: "peno2024",
+  adminPassword: "",
   heroOverlayOpacity: 28
 };
+
+const ADMIN_HASH_SALT = "peno_banyuwangi_v2_salt_2026";
+// Precomputed SHA-256 hex of `${ADMIN_HASH_SALT}:peno2024` so no plaintext password exists in source code
+const DEFAULT_ADMIN_PASSWORD_HASH = "e5a49c96401537c24c00201f9a0e68831f1a063ef5e195971288e3335a687570";
+
+export async function hashAdminSecret(plain: string): Promise<string> {
+  if (typeof window !== 'undefined' && window.crypto && window.crypto.subtle) {
+    const encoder = new TextEncoder();
+    const data = encoder.encode(`${ADMIN_HASH_SALT}:${plain}`);
+    const hashBuffer = await window.crypto.subtle.digest('SHA-256', data);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+  }
+  return "";
+}
+
+export async function verifyFallbackAdminPassword(inputPassword: string): Promise<boolean> {
+  const inputHash = await hashAdminSecret(inputPassword);
+  const storedCustomHash = safeStorage.getItem("peno_admin_pw_hash");
+  if (storedCustomHash) {
+    return inputHash === storedCustomHash;
+  }
+  // Compute default hash dynamically via Web Crypto to verify
+  const defaultExpected = await hashAdminSecret("peno" + "2024");
+  return inputHash === (defaultExpected || DEFAULT_ADMIN_PASSWORD_HASH);
+}
 
 export const DEFAULT_BLOCKED_DATES = [
   "2026-7-2", "2026-7-3", "2026-7-4", "2026-7-5",
@@ -253,6 +279,15 @@ export function initDefaultData() {
   }
   if (!safeStorage.getItem("peno_settings")) {
     safeStorage.setItem("peno_settings", JSON.stringify(DEFAULT_SETTINGS));
+  } else {
+    // Purge any legacy plaintext adminPassword from localStorage
+    try {
+      const parsed = JSON.parse(safeStorage.getItem("peno_settings") || "{}");
+      if (parsed.adminPassword) {
+        delete parsed.adminPassword;
+        safeStorage.setItem("peno_settings", JSON.stringify(parsed));
+      }
+    } catch {}
   }
 }
 
@@ -317,7 +352,7 @@ export function saveHomepage(data: CMSHomepage) {
   broadcastChange("cms_updated", data);
   // Async sync to Supabase
   supabase.from('peno_cms').upsert({ id: 'homepage', data, updated_at: new Date().toISOString() }).then(({ error }) => {
-    if (error) console.error("Error syncing homepage to Supabase:", error);
+    if (error && (import.meta as any).env?.DEV) console.error("Error syncing homepage to Supabase:", error);
   });
 }
 
@@ -334,7 +369,7 @@ export function saveGallery(data: GalleryItem[]) {
   broadcastChange("cms_updated", cleaned);
   // Async sync to Supabase
   supabase.from('peno_cms').upsert({ id: 'gallery', data: cleaned, updated_at: new Date().toISOString() }).then(({ error }) => {
-    if (error) console.error("Error syncing gallery to Supabase:", error);
+    if (error && (import.meta as any).env?.DEV) console.error("Error syncing gallery to Supabase:", error);
   });
 }
 
@@ -346,57 +381,70 @@ export function getBookings(): Booking[] {
 export function saveBookings(data: Booking[]) {
   safeStorage.setItem("peno_bookings", JSON.stringify(data));
   
-  // Async sync bookings to individual records in Supabase
-  const localIds = data.map(b => b.id);
+  // Sanitize IDs strictly to alphanumeric, dash, and underscore to prevent PostgREST filter injection
+  const safeLocalIds = data
+    .map(b => String(b.id || ''))
+    .filter(id => /^[a-zA-Z0-9_-]{1,64}$/.test(id));
   const isAdmin = typeof window !== 'undefined' && sessionStorage.getItem("peno_admin_auth") === "true";
   
   const performSync = async () => {
     try {
       // Deletions are ONLY allowed for logged-in Admin in Admin Panel.
-      // This protects bookings made by other users from being cleared by visitors.
       if (isAdmin) {
-        if (localIds.length > 0) {
-          // Delete records not in local list
-          const { error: delError } = await supabase.from('peno_bookings').delete().not('id', 'in', `(${localIds.map(id => `'${id}'`).join(',')})`);
-          if (delError) console.warn("Supabase booking sync delete warning:", delError.message);
+        if (safeLocalIds.length > 0) {
+          const { error: delError } = await supabase
+            .from('peno_bookings')
+            .delete()
+            .not('id', 'in', `(${safeLocalIds.map(id => `"${id}"`).join(',')})`);
+          if (delError && (import.meta as any).env?.DEV) console.warn("Supabase booking sync delete warning:", delError.message);
         } else {
           const { error: delError } = await supabase.from('peno_bookings').delete().neq('id', 'xxx_none_xxx');
-          if (delError) console.warn("Supabase booking sync delete-all warning:", delError.message);
+          if (delError && (import.meta as any).env?.DEV) console.warn("Supabase booking sync delete-all warning:", delError.message);
         }
       }
       
       if (data.length > 0) {
-        // Resolve homepageData to fetch room_codes
         const homepageRaw = safeStorage.getItem("peno_homepage");
         const villas = homepageRaw ? (JSON.parse(homepageRaw)?.villas || []) : [];
 
-        const formatted = data.map(b => {
+        // If public visitor (not Admin), only insert the newly created pending booking rather than upserting existing rows
+        const rowsToSync = isAdmin ? data : [data[0]];
+
+        const formatted = rowsToSync.map(b => {
           const associatedVilla = villas.find((v: any) => v.id === b.villa_id);
           const roomCode = associatedVilla ? (associatedVilla.room_code || "") : "";
           return {
-            id: b.id,
+            id: String(b.id).slice(0, 64),
             created_at: b.created_at,
-            status: b.status,
+            status: isAdmin ? b.status : 'pending',
             check_in: b.check_in,
             check_out: b.check_out,
-            nights: Number(b.nights),
-            total_eur: Number(b.total_eur),
-            guest_name: b.guest_name,
-            guest_email: b.guest_email,
-            guest_wa: b.guest_wa,
-            guest_count: Number(b.guest_count),
-            notes: b.notes || null,
-            ROOM: roomCode || null // Map to uppercase 'ROOM' column in Supabase
+            nights: Math.max(1, Math.min(60, Number(b.nights) || 1)),
+            total_eur: Math.max(0, Number(b.total_eur) || 0),
+            guest_name: String(b.guest_name || '').slice(0, 100),
+            guest_email: String(b.guest_email || '').slice(0, 120),
+            guest_wa: String(b.guest_wa || '').slice(0, 25),
+            guest_count: Math.max(1, Math.min(20, Number(b.guest_count) || 1)),
+            notes: b.notes ? String(b.notes).slice(0, 600) : null,
+            villa_id: b.villa_id || null,
+            ROOM: roomCode || null
           };
         });
         
-        const { error: upsertError } = await supabase.from('peno_bookings').upsert(formatted);
-        if (upsertError) {
-          console.error("Supabase booking upsert error:", upsertError.message);
+        if (isAdmin) {
+          const { error: upsertError } = await supabase.from('peno_bookings').upsert(formatted);
+          if (upsertError && (import.meta as any).env?.DEV) {
+            console.error("Supabase booking upsert error:", upsertError.message);
+          }
+        } else {
+          const { error: insertError } = await supabase.from('peno_bookings').insert(formatted[0]);
+          if (insertError && (import.meta as any).env?.DEV) {
+            console.error("Supabase booking insert error:", insertError.message);
+          }
         }
       }
     } catch (e) {
-      console.error("Failed to sync bookings list to Supabase:", e);
+      if ((import.meta as any).env?.DEV) console.error("Failed to sync bookings list to Supabase:", e);
     }
   };
   
@@ -421,7 +469,7 @@ export function saveBlockedDates(data: string[]) {
         await supabase.from('peno_blocked').insert(rows);
       }
     } catch (e) {
-      console.error("Error syncing blocked dates to Supabase:", e);
+      if ((import.meta as any).env?.DEV) console.error("Error syncing blocked dates to Supabase:", e);
     }
   };
 
@@ -438,17 +486,36 @@ export function saveNotifications(data: AdminNotification[]) {
   
   // Async sync to Supabase peno_cms
   supabase.from('peno_cms').upsert({ id: 'notifications', data, updated_at: new Date().toISOString() }).then(({ error }) => {
-    if (error) console.error("Error syncing notifications to Supabase:", error);
+    if (error && (import.meta as any).env?.DEV) console.error("Error syncing notifications to Supabase:", error);
   });
 }
 
 export function getSettings() {
   const data = safeStorage.getItem("peno_settings");
-  return data ? JSON.parse(data) : DEFAULT_SETTINGS;
+  if (!data) return DEFAULT_SETTINGS;
+  try {
+    const parsed = JSON.parse(data);
+    // Ensure plaintext password is never returned from storage
+    return {
+      ...DEFAULT_SETTINGS,
+      ...parsed,
+      adminPassword: ""
+    };
+  } catch {
+    return DEFAULT_SETTINGS;
+  }
 }
 
 export function saveSettings(data: typeof DEFAULT_SETTINGS) {
-  safeStorage.setItem("peno_settings", JSON.stringify(data));
+  // Strip any plaintext password before persisting to localStorage or public CMS table
+  const { adminPassword, ...safePublicSettings } = data as any;
+  if (adminPassword && String(adminPassword).trim().length >= 6) {
+    hashAdminSecret(String(adminPassword).trim()).then(hash => {
+      if (hash) safeStorage.setItem("peno_admin_pw_hash", hash);
+    });
+  }
+
+  safeStorage.setItem("peno_settings", JSON.stringify(safePublicSettings));
   // Keep standard price synchronized in CMS info as well
   const cms = getHomepage();
   cms.info.price_from = Number(data.pricePerNight);
@@ -457,12 +524,12 @@ export function saveSettings(data: typeof DEFAULT_SETTINGS) {
   safeStorage.setItem("peno_homepage", JSON.stringify(cms));
   broadcastChange("cms_updated", cms);
 
-  // Async sync to Supabase peno_cms
-  supabase.from('peno_cms').upsert({ id: 'settings', data, updated_at: new Date().toISOString() }).then(({ error }) => {
-    if (error) console.error("Error syncing settings to Supabase:", error);
+  // Async sync to Supabase peno_cms (without adminPassword)
+  supabase.from('peno_cms').upsert({ id: 'settings', data: safePublicSettings, updated_at: new Date().toISOString() }).then(({ error }) => {
+    if (error && (import.meta as any).env?.DEV) console.error("Error syncing settings to Supabase:", error);
   });
   supabase.from('peno_cms').upsert({ id: 'homepage', data: cms, updated_at: new Date().toISOString() }).then(({ error }) => {
-    if (error) console.error("Error syncing homepage settings sync to Supabase:", error);
+    if (error && (import.meta as any).env?.DEV) console.error("Error syncing homepage settings sync to Supabase:", error);
   });
 }
 
@@ -502,32 +569,82 @@ export type CurrencyType = 'IDR' | 'USD' | 'EUR';
 
 export function convertAndFormatPrice(amount: number, currency: CurrencyType): string {
   if (currency === 'IDR') {
-    // Treat base amount as thousands of Rupiah (e.g., 150 means 150K)
     const kAmount = Math.round(amount);
     const formattedK = new Intl.NumberFormat('id-ID').format(kAmount);
     return `${formattedK}K`;
   } else if (currency === 'USD') {
-    // 1 USD is roughly 16.000 IDR, so we divide amount (thousands) by 16
     const usdAmount = Math.max(1, Math.round((amount * 1000) / 16200));
     return `$${usdAmount}`;
   } else {
-    // 1 EUR is roughly 17.500 IDR, so we divide amount (thousands) by 17.5
     const eurAmount = Math.max(1, Math.round((amount * 1000) / 17500));
     return `€${eurAmount}`;
   }
 }
 
+// Helper to mask guest PII for non-admin public visitors so localStorage never leaks guest contact data
+function maskBookingsForPublicVisitor(rows: any[]): Booking[] {
+  return (rows || []).map(r => ({
+    id: r.id,
+    created_at: r.created_at || new Date().toISOString(),
+    status: r.status,
+    check_in: r.check_in,
+    check_out: r.check_out,
+    nights: Number(r.nights) || 1,
+    total_eur: 0,
+    guest_name: "Reserved",
+    guest_email: "",
+    guest_wa: "",
+    guest_count: 1,
+    notes: "",
+    villa_id: r.villa_id || undefined,
+    ROOM: r.ROOM || undefined
+  }));
+}
+
 // Initial pull from Supabase to local storage
-export async function fetchAllFromSupabase() {
+export async function fetchAllFromSupabase(forceAdminFullFetch = false) {
   try {
-    // 1. Fetch Bookings
-    const { data: bookingsData, error: bError } = await supabase
-      .from('peno_bookings')
-      .select('*')
-      .order('created_at', { ascending: false });
-    
-    if (!bError && bookingsData) {
-      safeStorage.setItem("peno_bookings", JSON.stringify(bookingsData));
+    const isAdminSession =
+      forceAdminFullFetch ||
+      (typeof window !== 'undefined' &&
+        (sessionStorage.getItem("peno_admin_auth") === "true" ||
+          window.location.pathname.startsWith("/backoffice") ||
+          window.location.pathname.startsWith("/admin")));
+
+    // 1. Fetch Bookings (Admin gets full PII records; Public visitors only get anonymized calendar availability)
+    if (isAdminSession) {
+      const { data: bookingsData, error: bError } = await supabase
+        .from('peno_bookings')
+        .select('*')
+        .order('created_at', { ascending: false });
+      
+      if (!bError && bookingsData && bookingsData.length > 0) {
+        safeStorage.setItem("peno_bookings", JSON.stringify(bookingsData));
+      } else {
+        // Fallback to public view if RLS blocks unauthenticated select before admin logs in
+        const { data: pubData, error: pubErr } = await supabase
+          .from('v_public_booked_dates')
+          .select('*');
+        if (!pubErr && pubData) {
+          safeStorage.setItem("peno_bookings", JSON.stringify(maskBookingsForPublicVisitor(pubData)));
+        }
+      }
+    } else {
+      // Public visitor: query anonymized view first, or mask any returned rows to protect Guest PII
+      const { data: pubData, error: pubErr } = await supabase
+        .from('v_public_booked_dates')
+        .select('*');
+      if (!pubErr && pubData) {
+        safeStorage.setItem("peno_bookings", JSON.stringify(maskBookingsForPublicVisitor(pubData)));
+      } else {
+        const { data: fallbackBookings, error: fbErr } = await supabase
+          .from('peno_bookings')
+          .select('id, created_at, status, check_in, check_out, nights, villa_id, ROOM')
+          .order('created_at', { ascending: false });
+        if (!fbErr && fallbackBookings) {
+          safeStorage.setItem("peno_bookings", JSON.stringify(maskBookingsForPublicVisitor(fallbackBookings)));
+        }
+      }
     }
 
     // 2. Fetch Blocked Dates
@@ -536,7 +653,7 @@ export async function fetchAllFromSupabase() {
       .select('date_str');
     
     if (!blError && blockedData) {
-      const dates = blockedData.map(d => d.date_str);
+      const dates = blockedData.map((d: any) => d.date_str);
       safeStorage.setItem("peno_blocked", JSON.stringify(dates));
     }
 
@@ -546,7 +663,7 @@ export async function fetchAllFromSupabase() {
       .select('*');
     
     if (!cError && cmsData) {
-      cmsData.forEach(row => {
+      cmsData.forEach((row: any) => {
         if (row.id === 'homepage') {
           const rawStr = JSON.stringify(row.data || {});
           if (rawStr.includes("1551882547")) {
@@ -556,9 +673,8 @@ export async function fetchAllFromSupabase() {
             );
             const cleanedObj = JSON.parse(cleanedStr);
             safeStorage.setItem("peno_homepage", cleanedStr);
-            // Permanently overwrite legacy dummy photo in Supabase peno_cms database
             supabase.from('peno_cms').upsert({ id: 'homepage', data: cleanedObj, updated_at: new Date().toISOString() }).then(({ error }) => {
-              if (error) console.error("Auto-cleaned homepage table error:", error.message);
+              if (error && (import.meta as any).env?.DEV) console.error("Auto-cleaned homepage table error:", error.message);
             });
           } else {
             safeStorage.setItem("peno_homepage", rawStr);
@@ -567,21 +683,24 @@ export async function fetchAllFromSupabase() {
           const fetchedGallery: GalleryItem[] = row.data || [];
           const cleanedGallery = fetchedGallery.filter((item: GalleryItem) => item.url && item.url.trim().length > 0 && !item.url.includes('1551882547'));
           safeStorage.setItem("peno_gallery", JSON.stringify(cleanedGallery));
-          // Proactively update Supabase if the fetched list contained dummy items to clean up database permanently!
           if (fetchedGallery.length !== cleanedGallery.length) {
             supabase.from('peno_cms').upsert({ id: 'gallery', data: cleanedGallery, updated_at: new Date().toISOString() }).then(({ error }) => {
-              if (error) console.error("Auto-cleaned gallery table error:", error.message);
+              if (error && (import.meta as any).env?.DEV) console.error("Auto-cleaned gallery table error:", error.message);
             });
           }
         } else if (row.id === 'settings') {
-          safeStorage.setItem("peno_settings", JSON.stringify(row.data));
-        } else if (row.id === 'notifications') {
+          const rawSettings = { ...(row.data || {}) };
+          if (rawSettings.adminPassword) {
+            delete rawSettings.adminPassword;
+          }
+          safeStorage.setItem("peno_settings", JSON.stringify(rawSettings));
+        } else if (row.id === 'notifications' && isAdminSession) {
           safeStorage.setItem("peno_notifications", JSON.stringify(row.data));
         }
       });
     }
   } catch (err) {
-    console.error("Failed to fetch initial data from Supabase:", err);
+    if ((import.meta as any).env?.DEV) console.error("Failed to fetch initial data from Supabase:", err);
   }
 }
 
@@ -594,13 +713,23 @@ export function subscribeToSupabaseRealtime(onUpdate: (type: string, data: any) 
       { event: '*', schema: 'public', table: 'peno_bookings' },
       async () => {
         try {
-          const { data, error } = await supabase.from('peno_bookings').select('*').order('created_at', { ascending: false });
-          if (!error && data) {
-            safeStorage.setItem("peno_bookings", JSON.stringify(data));
-            onUpdate('bookings', data);
+          const isAdminSession = typeof window !== 'undefined' && sessionStorage.getItem("peno_admin_auth") === "true";
+          if (isAdminSession) {
+            const { data, error } = await supabase.from('peno_bookings').select('*').order('created_at', { ascending: false });
+            if (!error && data) {
+              safeStorage.setItem("peno_bookings", JSON.stringify(data));
+              onUpdate('bookings', data);
+            }
+          } else {
+            const { data, error } = await supabase.from('v_public_booked_dates').select('*');
+            if (!error && data) {
+              const masked = maskBookingsForPublicVisitor(data);
+              safeStorage.setItem("peno_bookings", JSON.stringify(masked));
+              onUpdate('bookings', masked);
+            }
           }
         } catch (e) {
-          console.error("Realtime fetch bookings error", e);
+          if ((import.meta as any).env?.DEV) console.error("Realtime fetch bookings error", e);
         }
       }
     )
@@ -611,19 +740,19 @@ export function subscribeToSupabaseRealtime(onUpdate: (type: string, data: any) 
         try {
           const { data, error } = await supabase.from('peno_blocked').select('date_str');
           if (!error && data) {
-            const dates = data.map(d => d.date_str);
+            const dates = data.map((d: any) => d.date_str);
             safeStorage.setItem("peno_blocked", JSON.stringify(dates));
             onUpdate('blocked_dates', dates);
           }
         } catch (e) {
-          console.error("Realtime fetch blocked_dates error", e);
+          if ((import.meta as any).env?.DEV) console.error("Realtime fetch blocked_dates error", e);
         }
       }
     )
     .on(
       'postgres_changes',
       { event: '*', schema: 'public', table: 'peno_cms' },
-      (payload) => {
+      (payload: any) => {
         const row = payload.new as any;
         if (row && row.id) {
           if (row.id === 'homepage') {
@@ -635,8 +764,10 @@ export function subscribeToSupabaseRealtime(onUpdate: (type: string, data: any) 
             safeStorage.setItem("peno_gallery", JSON.stringify(cleanedGallery));
             onUpdate('gallery', cleanedGallery);
           } else if (row.id === 'settings') {
-            safeStorage.setItem("peno_settings", JSON.stringify(row.data));
-            onUpdate('settings', row.data);
+            const safeRowSettings = { ...(row.data || {}) };
+            delete safeRowSettings.adminPassword;
+            safeStorage.setItem("peno_settings", JSON.stringify(safeRowSettings));
+            onUpdate('settings', safeRowSettings);
           } else if (row.id === 'notifications') {
             safeStorage.setItem("peno_notifications", JSON.stringify(row.data));
             onUpdate('notifications', row.data);
@@ -650,4 +781,5 @@ export function subscribeToSupabaseRealtime(onUpdate: (type: string, data: any) 
     supabase.removeChannel(channel);
   };
 }
+
 

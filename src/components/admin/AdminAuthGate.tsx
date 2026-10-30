@@ -41,12 +41,14 @@ export const AdminAuthGate: React.FC<AdminAuthGateProps> = ({
 
         <form onSubmit={handleLogin} className="space-y-6">
           <div className="space-y-2">
-            <label className="font-sans text-xs font-semibold uppercase text-text-dark tracking-wider">Username</label>
+            <label className="font-sans text-xs font-semibold uppercase text-text-dark tracking-wider">Email / Username Admin</label>
             <input
               id="auth-username"
               type="text"
               required
-              placeholder="Masukkan username"
+              maxLength={120}
+              autoComplete="username"
+              placeholder="email@domain.com atau username"
               value={usernameInput}
               onChange={(e) => setUsernameInput(e.target.value)}
               className="w-full bg-cream/30 border border-sand/40 hover:border-sand focus:border-green-soft px-4 py-3 rounded-xl font-sans text-sm text-text-dark outline-none focus:ring-1 focus:ring-green-soft transition-all"
@@ -69,6 +71,8 @@ export const AdminAuthGate: React.FC<AdminAuthGateProps> = ({
               id="auth-password"
               type={showPassword ? "text" : "password"}
               required
+              maxLength={128}
+              autoComplete="current-password"
               placeholder="Masukkan password"
               value={passwordInput}
               onChange={(e) => setPasswordInput(e.target.value)}

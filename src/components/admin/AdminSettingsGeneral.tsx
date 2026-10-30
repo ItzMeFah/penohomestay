@@ -220,7 +220,7 @@ export const AdminSettingsGeneral: React.FC<AdminSettingsGeneralProps> = ({
 
               <div className="space-y-1.5">
                 <label className="text-xs font-semibold text-text-dark flex justify-between">
-                  <span>Password Admin Portal</span>
+                  <span>Password Baru Admin (Kosongkan jika tidak diubah)</span>
                   <button
                     type="button"
                     onClick={() => setShowAdminPass(!showAdminPass)}
@@ -231,7 +231,9 @@ export const AdminSettingsGeneral: React.FC<AdminSettingsGeneralProps> = ({
                 </label>
                 <input
                   type={showAdminPass ? "text" : "password"}
-                  required
+                  minLength={6}
+                  maxLength={128}
+                  placeholder="Minimal 6 karakter (Disimpan sebagai SHA-256 Hash)"
                   value={setAdminPass}
                   onChange={(e) => setSetAdminPass(e.target.value)}
                   className="w-full bg-gray-50 border border-gray-200 focus:border-green-soft px-4 py-2.5 rounded-xl text-sm"

@@ -136,6 +136,15 @@ export const BookingEngine: React.FC<BookingEngineProps> = ({
   const nights = getNightsCount();
   const totalCost = nights * pricePerNight;
 
+  // Helper to strip raw HTML tags and control characters from user text inputs
+  const sanitizePlainText = (input: string, maxLen: number): string => {
+    return String(input || '')
+      .replace(/[<>]/g, '')
+      .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, '')
+      .trim()
+      .slice(0, maxLen);
+  };
+
   const handleBookingSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setFormError("");
@@ -144,16 +153,34 @@ export const BookingEngine: React.FC<BookingEngineProps> = ({
       setFormError(lang === 'ID' ? "Silakan pilih tanggal check-in dan check-out terlebih dahulu." : "Please select check-in and check-out dates first.");
       return;
     }
-    if (!guestName.trim()) {
-      setFormError(lang === 'ID' ? "Silakan masukkan nama lengkap Anda." : "Please enter your full name.");
+
+    if (nights < 1 || nights > 60) {
+      setFormError(lang === 'ID' ? "Durasi menginap harus antara 1 hingga 60 malam." : "Stay duration must be between 1 and 60 nights.");
       return;
     }
-    if (!guestEmail.trim() || !guestEmail.includes("@")) {
-      setFormError(lang === 'ID' ? "Silakan masukkan alamat email yang valid." : "Please enter a valid email address.");
+
+    const cleanName = sanitizePlainText(guestName, 100);
+    const cleanEmail = guestEmail.trim().slice(0, 120);
+    const cleanWa = guestWa.trim().slice(0, 20);
+    const cleanNotes = sanitizePlainText(guestNotes, 500);
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+    const phoneRegex = /^\+?[0-9\s\-()]{8,20}$/;
+
+    if (cleanName.length < 2 || cleanName.length > 100) {
+      setFormError(lang === 'ID' ? "Nama lengkap harus terdiri dari 2 hingga 100 karakter." : "Full name must be between 2 and 100 characters.");
       return;
     }
-    if (!guestWa.trim()) {
-      setFormError(lang === 'ID' ? "Silakan masukkan nomor WhatsApp Anda." : "Please enter your WhatsApp number.");
+    if (!emailRegex.test(cleanEmail)) {
+      setFormError(lang === 'ID' ? "Silakan masukkan format alamat email yang valid." : "Please enter a valid email address.");
+      return;
+    }
+    if (!phoneRegex.test(cleanWa)) {
+      setFormError(lang === 'ID' ? "Nomor WhatsApp harus berupa angka telepon valid (8–20 digit)." : "WhatsApp number must be a valid phone number (8–20 digits).");
+      return;
+    }
+    if (!Number.isInteger(guestCount) || guestCount < 1 || guestCount > 10) {
+      setFormError(lang === 'ID' ? "Jumlah tamu harus antara 1 hingga 10 orang." : "Guest count must be between 1 and 10.");
       return;
     }
     if (!agreeTerms) {
@@ -161,22 +188,31 @@ export const BookingEngine: React.FC<BookingEngineProps> = ({
       return;
     }
 
+    setGuestName(cleanName);
+    setGuestEmail(cleanEmail);
+    setGuestWa(cleanWa);
+    setGuestNotes(cleanNotes);
     setIsConfirmModalOpen(true);
   };
 
   const confirmSubmit = () => {
     if (!selectStart || !selectEnd) return;
 
-    const villaPrefix = selectedVilla ? `[Villa/Kamar: ${selectedVilla.title}] ` : "";
+    const cleanName = sanitizePlainText(guestName, 100);
+    const cleanEmail = guestEmail.trim().slice(0, 120);
+    const cleanWa = guestWa.trim().slice(0, 20);
+    const cleanNotes = sanitizePlainText(guestNotes, 500);
+
+    const villaPrefix = selectedVilla ? `[Villa/Kamar: ${sanitizePlainText(selectedVilla.title, 80)}] ` : "";
     const newBooking = onSubmitBooking({
       check_in: selectStart.toISOString(),
       check_out: selectEnd.toISOString(),
       nights: nights,
-      guest_name: guestName,
-      guest_email: guestEmail,
-      guest_wa: guestWa,
-      guest_count: guestCount,
-      notes: `${villaPrefix}${guestNotes}`.trim(),
+      guest_name: cleanName,
+      guest_email: cleanEmail,
+      guest_wa: cleanWa,
+      guest_count: Math.min(Math.max(1, Number(guestCount) || 1), 10),
+      notes: `${villaPrefix}${cleanNotes}`.trim().slice(0, 600),
       villa_id: activeVillaId
     });
 

@@ -7,7 +7,7 @@ import {
   MessageSquare, Upload, Layers, MapPin, Star, Menu, Home
 } from 'lucide-react';
 import { Booking, CMSHomepage, GalleryItem, AdminNotification, CMSTourPackage, CMSHighlightItem } from '../types';
-import { DEFAULT_GALLERY, convertAndFormatPrice, supabase, getSupabaseCredentials } from '../utils/storage';
+import { DEFAULT_GALLERY, convertAndFormatPrice, supabase, getSupabaseCredentials, verifyFallbackAdminPassword, fetchAllFromSupabase, getBookings, getNotifications } from '../utils/storage';
 import { isBookingCurrentlyOccupied } from '../utils/bookingStatus';
 
 interface AdminPanelProps {
@@ -247,12 +247,36 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
     };
   }, [dbUrl, dbKey]);
 
-  // Authenticate Session on mount
+  // Authenticate Session on mount (Check Supabase Auth session first, then timed session token)
   useEffect(() => {
-    const auth = sessionStorage.getItem("peno_admin_auth");
-    if (auth === "true") {
-      setIsAuthenticated(true);
-    }
+    let isMounted = true;
+    const verifySession = async () => {
+      try {
+        const client = supabase;
+        if (client?.auth?.getSession) {
+          const { data } = await client.auth.getSession();
+          if (data?.session?.user && isMounted) {
+            sessionStorage.setItem("peno_admin_auth", "true");
+            sessionStorage.setItem("peno_admin_auth_exp", String(Date.now() + 2 * 60 * 60 * 1000));
+            setIsAuthenticated(true);
+            return;
+          }
+        }
+      } catch {}
+
+      const auth = sessionStorage.getItem("peno_admin_auth");
+      const exp = Number(sessionStorage.getItem("peno_admin_auth_exp") || 0);
+      if (auth === "true" && exp > Date.now()) {
+        if (isMounted) setIsAuthenticated(true);
+      } else {
+        sessionStorage.removeItem("peno_admin_auth");
+        sessionStorage.removeItem("peno_admin_auth_exp");
+      }
+    };
+    verifySession();
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   const [hasShownPendingToast, setHasShownPendingToast] = useState(false);
@@ -293,8 +317,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
     setSetMaps(settings.mapsUrl);
     setSetInTime(settings.checkIn);
     setSetOutTime(settings.checkOut);
-    setSetAdminUser(settings.adminUsername);
-    setSetAdminPass(settings.adminPassword);
+    setSetAdminUser(settings.adminUsername || "admin");
+    setSetAdminPass("");
     setSetHeroOverlayOpacity(settings.heroOverlayOpacity ?? 28);
   }, [settings]);
 
@@ -307,23 +331,81 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
     }, 4000);
   };
 
-  // Login handler
-  const handleLogin = (e: React.FormEvent) => {
+  // Login handler with Brute-Force Rate Limiting & Server-Side Supabase Auth + Salted SHA-256 verification
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoginError("");
 
-    if (usernameInput === settings.adminUsername && passwordInput === settings.adminPassword) {
+    const LOCKOUT_KEY = "peno_auth_lockout";
+    const ATTEMPTS_KEY = "peno_auth_attempts";
+    const lockoutUntil = Number(localStorage.getItem(LOCKOUT_KEY) || 0);
+
+    if (lockoutUntil > Date.now()) {
+      const remainingMinutes = Math.ceil((lockoutUntil - Date.now()) / 60000);
+      setLoginError(`Terlalu banyak percobaan gagal. Silakan tunggu ${remainingMinutes} menit lagi.`);
+      return;
+    }
+
+    const cleanUser = usernameInput.trim();
+    let authenticatedSuccess = false;
+
+    // 1. Primary: Server-Side Supabase Auth (JWT + bcrypt on Supabase server)
+    if (supabase?.auth?.signInWithPassword) {
+      const candidateEmail = cleanUser.includes("@") ? cleanUser : "admin@penohomestay.com";
+      try {
+        const { data, error } = await supabase.auth.signInWithPassword({
+          email: candidateEmail,
+          password: passwordInput
+        });
+        if (!error && data?.session) {
+          authenticatedSuccess = true;
+        }
+      } catch {}
+    }
+
+    // 2. Fallback: Salted SHA-256 cryptographic digest verification (never plaintext)
+    if (!authenticatedSuccess) {
+      const expectedUser = (settings.adminUsername || "admin").trim();
+      const isPasswordValid = await verifyFallbackAdminPassword(passwordInput);
+      if (cleanUser === expectedUser && isPasswordValid) {
+        authenticatedSuccess = true;
+      }
+    }
+
+    if (authenticatedSuccess) {
+      localStorage.removeItem(ATTEMPTS_KEY);
+      localStorage.removeItem(LOCKOUT_KEY);
       sessionStorage.setItem("peno_admin_auth", "true");
+      sessionStorage.setItem("peno_admin_auth_exp", String(Date.now() + 2 * 60 * 60 * 1000));
       setIsAuthenticated(true);
+      setPasswordInput("");
+      // Fetch full unmasked bookings & notifications now that Admin is authenticated
+      await fetchAllFromSupabase(true);
+      onUpdateBookings(getBookings());
+      onUpdateNotifications(getNotifications());
       showAdminToast("Selamat datang kembali, Admin!");
     } else {
-      setLoginError("Username atau password salah!");
+      const attempts = Number(localStorage.getItem(ATTEMPTS_KEY) || 0) + 1;
+      localStorage.setItem(ATTEMPTS_KEY, String(attempts));
+      if (attempts >= 5) {
+        localStorage.setItem(LOCKOUT_KEY, String(Date.now() + 5 * 60 * 1000));
+        localStorage.removeItem(ATTEMPTS_KEY);
+        setLoginError("Akun dikunci sementara selama 5 menit karena 5x gagal login.");
+      } else {
+        setLoginError(`Username/Email atau password salah! (Sisa percobaan: ${5 - attempts})`);
+      }
     }
   };
 
   // Logout handler
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    try {
+      if (supabase?.auth?.signOut) {
+        await supabase.auth.signOut();
+      }
+    } catch {}
     sessionStorage.removeItem("peno_admin_auth");
+    sessionStorage.removeItem("peno_admin_auth_exp");
     setIsAuthenticated(false);
     setUsernameInput("");
     setPasswordInput("");
@@ -517,7 +599,14 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
     showAdminToast(`Tanggal ${key} kembali tersedia!`, "success");
   };
 
-  // CSV Export
+  // CSV Export (Sanitized against CSV Formula Injection)
+  const sanitizeCsvField = (val: unknown): string => {
+    const raw = String(val ?? '').replace(/"/g, '""');
+    // Prefix dangerous spreadsheet formula triggers (=, +, -, @, tab, CR) with a single quote
+    const safe = /^[=+\-@\t\r]/.test(raw) ? `'${raw}` : raw;
+    return `"${safe}"`;
+  };
+
   const handleExportCSV = () => {
     let csvContent = "data:text/csv;charset=utf-8,";
     csvContent += "ID,Tanggal Pesan,Nama,Email,WhatsApp,Kamar/Villa,Check-in,Check-out,Malam,Tamu,Total EUR,Status,Catatan\n";
@@ -527,19 +616,19 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
       const roomName = matchingVilla ? matchingVilla.title : "Kamar Utama";
 
       const row = [
-        b.id,
-        b.created_at,
-        `"${b.guest_name.replace(/"/g, '""')}"`,
-        b.guest_email,
-        b.guest_wa,
-        `"${roomName.replace(/"/g, '""')}"`,
-        b.check_in,
-        b.check_out,
-        b.nights,
-        b.guest_count,
-        b.total_eur,
-        b.status,
-        `"${(b.notes || '').replace(/"/g, '""')}"`
+        sanitizeCsvField(b.id),
+        sanitizeCsvField(b.created_at),
+        sanitizeCsvField(b.guest_name),
+        sanitizeCsvField(b.guest_email),
+        sanitizeCsvField(b.guest_wa),
+        sanitizeCsvField(roomName),
+        sanitizeCsvField(b.check_in),
+        sanitizeCsvField(b.check_out),
+        Number(b.nights) || 1,
+        Number(b.guest_count) || 1,
+        Number(b.total_eur) || 0,
+        sanitizeCsvField(b.status),
+        sanitizeCsvField(b.notes || '')
       ].join(",");
       csvContent += row + "\n";
     });
@@ -1176,20 +1265,44 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
     });
   };
 
+  // Strict Upload Validation Constants (Blocks SVG XSS & oversized files)
+  const ALLOWED_UPLOAD_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
+  const ALLOWED_UPLOAD_EXTENSIONS = ['jpg', 'jpeg', 'png', 'webp'];
+  const MAX_UPLOAD_SIZE_BYTES = 5 * 1024 * 1024; // 5 MB
+
+  // Convert Base64 DataURL to clean JPEG Blob (strips EXIF metadata & embedded script payloads)
+  const dataUrlToSanitizedFile = (dataUrl: string, originalName: string): File => {
+    const arr = dataUrl.split(',');
+    const bstr = atob(arr[1] || '');
+    let n = bstr.length;
+    const u8arr = new Uint8Array(n);
+    while (n--) {
+      u8arr[n] = bstr.charCodeAt(n);
+    }
+    const cleanBaseName = originalName.replace(/[^a-zA-Z0-9_-]/g, '_').slice(0, 40) || 'photo';
+    return new File([u8arr], `${cleanBaseName}.jpg`, { type: 'image/jpeg' });
+  };
+
   // Memproses file yang dipilih untuk dibaca menjadi string Base64
   const handleFileRead = (file: File) => {
     setUploadError("");
     setCloudUploadSuccess(null);
-    setSelectedImageFile(file);
-    
-    if (!file.type.startsWith("image/")) {
-      setUploadError("Format berkas harus berupa gambar (.jpg, .jpeg, .png, .webp, .gif)!");
-      setSelectedImageFile(null);
+    setSelectedImageFile(null);
+
+    const ext = (file.name.split('.').pop() || '').toLowerCase();
+
+    if (!ALLOWED_UPLOAD_MIME_TYPES.includes(file.type) || !ALLOWED_UPLOAD_EXTENSIONS.includes(ext)) {
+      setUploadError("Format berkas hanya boleh gambar raster (.JPG, .JPEG, .PNG, atau .WEBP). File .SVG tidak diizinkan demi keamanan.");
       return;
     }
-    
+
+    if (file.size > MAX_UPLOAD_SIZE_BYTES) {
+      setUploadError("Ukuran berkas terlalu besar! Maksimal 5 MB per foto.");
+      return;
+    }
+
     // Tampilkan informasi kompresi otomatis
-    showAdminToast("Membaca file & mengompresi gambar otomatis agar hemat ruang...", "info");
+    showAdminToast("Memvalidasi & mengenkode ulang gambar secara aman...", "info");
 
     const reader = new FileReader();
     reader.onload = async (event) => {
@@ -1197,6 +1310,10 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
         const rawBase64 = event.target.result as string;
         try {
           const compressedBase64 = await compressImage(rawBase64);
+          // Re-encode file through Canvas into a clean, EXIF-stripped JPEG File object
+          const sanitizedFile = dataUrlToSanitizedFile(compressedBase64, file.name);
+          setSelectedImageFile(sanitizedFile);
+
           if (showTourModal) {
             setTourImageUrl(compressedBase64);
           } else if (showHighlightModal) {
@@ -1206,24 +1323,15 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
           } else {
             setGalleryUrl(compressedBase64);
           }
-          showAdminToast("Gambar berhasil dikompresi dan dimuat secara lokal!", "success");
+          showAdminToast("Gambar berhasil divalidasi dan dikompresi!", "success");
         } catch (e) {
-          console.error("Gagal kompresi, menggunakan file asli", e);
-          if (showTourModal) {
-            setTourImageUrl(rawBase64);
-          } else if (showHighlightModal) {
-            setHighlightImageUrl(rawBase64);
-          } else if (showVillaModal) {
-            setVillaImageUrl(rawBase64);
-          } else {
-            setGalleryUrl(rawBase64);
-          }
-          showAdminToast("Gambar berhasil dimuat lokal tanpa kompresi.", "info");
+          if ((import.meta as any).env?.DEV) console.error("Gagal kompresi:", e);
+          setUploadError("Berkas gambar rusak atau tidak dapat diproses.");
         }
       }
     };
     reader.onerror = () => {
-      setUploadError("Gagal membaca file gambar lokal!");
+      setUploadError("Gagal membaca berkas gambar lokal!");
     };
     reader.readAsDataURL(file);
   };
@@ -1262,33 +1370,43 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
       setUploadError("Pilih file gambar terlebih dahulu!");
       return null;
     }
+
+    const ext = (fileToUpload.name.split('.').pop() || '').toLowerCase();
+    if (!ALLOWED_UPLOAD_MIME_TYPES.includes(fileToUpload.type) || !ALLOWED_UPLOAD_EXTENSIONS.includes(ext)) {
+      setUploadError("Format berkas tidak valid. Gunakan JPG, PNG, atau WEBP.");
+      return null;
+    }
+    if (fileToUpload.size > MAX_UPLOAD_SIZE_BYTES) {
+      setUploadError("Ukuran berkas melebihi batas maksimal 5 MB.");
+      return null;
+    }
     
     setIsUploadingCloud(true);
     setUploadError("");
     setCloudUploadSuccess(null);
-    showAdminToast("Mengunggah foto ke Supabase Storage...", "info");
+    showAdminToast("Mengunggah foto ke Cloud Storage...", "info");
     
     try {
-      const fileExt = fileToUpload.name.split('.').pop();
-      const fileName = `gallery/${Date.now()}-${Math.round(Math.random() * 1e9)}.${fileExt}`;
+      const safeExt = ALLOWED_UPLOAD_EXTENSIONS.includes(ext) ? ext : 'jpg';
+      const fileName = `gallery/${Date.now()}-${Math.round(Math.random() * 1e9)}.${safeExt}`;
       
-      // Try to upload to 'gallery' bucket first, fall back to 'avatars' if there is any issue
       let bucketName = 'gallery';
       let uploadResult = await supabase.storage
         .from(bucketName)
         .upload(fileName, fileToUpload, {
+          contentType: fileToUpload.type,
           cacheControl: '3600',
-          upsert: true
+          upsert: false
         });
 
       if (uploadResult.error) {
-        console.warn("Failed to upload to 'gallery' bucket, trying 'avatars' bucket...", uploadResult.error.message);
         bucketName = 'avatars';
         uploadResult = await supabase.storage
           .from(bucketName)
           .upload(fileName, fileToUpload, {
+            contentType: fileToUpload.type,
             cacheControl: '3600',
-            upsert: true
+            upsert: false
           });
       }
 
@@ -1311,21 +1429,23 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
         setGalleryUrl(publicUrl);
       }
       setCloudUploadSuccess(true);
-      showAdminToast("Foto berhasil diunggah ke Supabase Cloud!", "success");
+      showAdminToast("Foto berhasil diunggah ke Cloud!", "success");
       return publicUrl;
     } catch (err: any) {
-      console.error("Gagal mengunggah berkas ke Supabase:", err);
+      if ((import.meta as any).env?.DEV) {
+        console.error("Diagnostic upload error:", err);
+      }
       
       const isRlsError = err.message?.toLowerCase().includes("row-level security") || 
                          err.message?.toLowerCase().includes("security policy") ||
                          err.message?.toLowerCase().includes("violates");
       
       if (isRlsError) {
-        setUploadError("Gagal upload cloud karena kebijakan keamanan Supabase (RLS). Namun jangan khawatir, gambar Anda TELAH berhasil dikompresi dan dimuat secara lokal (Base64 luring)! Anda dapat langsung mengklik tombol Simpan/Tambah di bawah untuk menyimpannya.");
-        showAdminToast("Gambar lokal siap digunakan sebagai Base64 luring!", "success");
+        setUploadError("Unggahan cloud memerlukan sesi Supabase Auth aktif. Gambar Anda telah dikompresi secara aman dalam format lokal dan siap disimpan.");
+        showAdminToast("Gambar lokal terenkode siap disimpan!", "success");
       } else {
-        setUploadError(`Gagal upload cloud: ${err.message}. Pastikan bucket 'avatars' sudah ada dan RLS storage telah dikonfigurasi.`);
-        showAdminToast("Gagal mengunggah gambar ke cloud.", "danger");
+        setUploadError("Gagal mengunggah gambar ke penyimpanan cloud. Gambar lokal yang telah dikompresi tetap dapat disimpan.");
+        showAdminToast("Menggunakan penyimpanan gambar lokal.", "info");
       }
       setCloudUploadSuccess(false);
       return null;
@@ -1684,11 +1804,13 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
 
           <form onSubmit={handleLogin} className="space-y-6">
             <div className="space-y-2">
-              <label className="font-sans text-xs font-semibold uppercase text-text-dark tracking-wider">Username</label>
+              <label className="font-sans text-xs font-semibold uppercase text-text-dark tracking-wider">Email / Username Admin</label>
               <input
                 type="text"
                 required
-                placeholder="Masukkan username"
+                maxLength={120}
+                autoComplete="username"
+                placeholder="email@domain.com atau username"
                 value={usernameInput}
                 onChange={(e) => setUsernameInput(e.target.value)}
                 className="w-full bg-cream/30 border border-sand/40 hover:border-sand focus:border-green-soft px-4 py-3 rounded-xl font-sans text-sm text-text-dark outline-none focus:ring-1 focus:ring-green-soft transition-all"
@@ -1709,6 +1831,8 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
               <input
                 type={showPassword ? "text" : "password"}
                 required
+                maxLength={128}
+                autoComplete="current-password"
                 placeholder="Masukkan password"
                 value={passwordInput}
                 onChange={(e) => setPasswordInput(e.target.value)}
@@ -3652,7 +3776,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
 
                       <div className="space-y-1.5">
                         <label className="text-xs font-semibold text-text-dark flex justify-between">
-                          <span>Password Admin Portal</span>
+                          <span>Password Baru Admin (Kosongkan jika tidak diubah)</span>
                           <button
                             type="button"
                             onClick={() => setShowAdminPass(!showAdminPass)}
@@ -3663,7 +3787,9 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({
                         </label>
                         <input
                           type={showAdminPass ? "text" : "password"}
-                          required
+                          minLength={6}
+                          maxLength={128}
+                          placeholder="Minimal 6 karakter (Disimpan sebagai SHA-256 Hash)"
                           value={setAdminPass}
                           onChange={(e) => setSetAdminPass(e.target.value)}
                           className="w-full bg-gray-50 border border-gray-200 focus:border-green-soft px-4 py-2.5 rounded-xl text-sm"

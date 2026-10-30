@@ -78,6 +78,9 @@ export const BookingForm: React.FC<BookingFormProps> = ({
             <input
               type="text"
               required
+              minLength={2}
+              maxLength={100}
+              autoComplete="name"
               placeholder={t.bookFormNamePlaceholder}
               value={guestName}
               onChange={(e) => setGuestName(e.target.value)}
@@ -93,6 +96,8 @@ export const BookingForm: React.FC<BookingFormProps> = ({
             <input
               type="email"
               required
+              maxLength={120}
+              autoComplete="email"
               placeholder="your-email@example.com"
               value={guestEmail}
               onChange={(e) => setGuestEmail(e.target.value)}
@@ -108,6 +113,9 @@ export const BookingForm: React.FC<BookingFormProps> = ({
             <input
               type="tel"
               required
+              minLength={8}
+              maxLength={20}
+              autoComplete="tel"
               placeholder="+6281234567890"
               value={guestWa}
               onChange={(e) => setGuestWa(e.target.value)}
@@ -142,6 +150,7 @@ export const BookingForm: React.FC<BookingFormProps> = ({
             <textarea
               placeholder={t.bookFormNotesPlaceholder}
               rows={4}
+              maxLength={500}
               value={guestNotes}
               onChange={(e) => setGuestNotes(e.target.value)}
               className="w-full bg-cream/30 border border-sand/40 hover:border-sand focus:border-green-soft p-4 rounded-xl font-sans text-sm text-text-dark outline-none focus:ring-1 focus:ring-green-soft transition-all resize-none"
